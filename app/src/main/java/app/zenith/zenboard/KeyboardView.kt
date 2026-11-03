@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -115,7 +116,11 @@ fun KeyboardView(
                 val pad = (ROW_UNITS - row.sumOf { keyWeight(it, row).toDouble() }.toFloat()) / 2
                 if (pad > 0f) Spacer(Modifier.weight(pad))
                 row.forEach { key ->
-                    KeyButton(key, state, enterAction, preview, onKey, onChangeKeyboard, Modifier.weight(keyWeight(key, row)))
+                    // Identity by key, not slot: switching layers must not hand one key's press and
+                    // colour animations to whichever key lands in the same position.
+                    key(key) {
+                        KeyButton(key, state, enterAction, preview, onKey, onChangeKeyboard, Modifier.weight(keyWeight(key, row)))
+                    }
                 }
                 if (pad > 0f) Spacer(Modifier.weight(pad))
             }
