@@ -1,6 +1,7 @@
 package app.zenith.zenboard
 
 import android.content.Context
+import android.content.SharedPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
@@ -254,7 +255,8 @@ fun suggest(dict: Dictionary, typed: String, allowAutocorrect: Boolean): Suggest
     val known = dict.isKnown(typed)
     val fixes = if (known) emptyList() else dict.corrections(typed, 3)
     val auto = fixes.firstOrNull()
-        ?.takeIf { allowAutocorrect && (typed.length >= 2 || it.distance == 0.0) && confident(it, typed) }
+        // One letter is only ever corrected for "i" -> "I"; "u" or "a" are left alone.
+        ?.takeIf { allowAutocorrect && (typed.length >= 2 || typed == "i") && confident(it, typed) }
         ?.word?.let { matchCase(it, typed) }
     // Fixes and completions compete on one score; each letter a completion still needs costs a little,
     // so "hel" offers "help" and "hello" before the typo fix "hell".
@@ -271,5 +273,27 @@ fun suggest(dict: Dictionary, typed: String, allowAutocorrect: Boolean): Suggest
     } else {
         // Unknown word: offer it verbatim on one side so it can be kept.
         Suggestions(primary = words.firstOrNull(), others = listOf(typed) + words.drop(1).take(1), autocorrect = auto, typedIsUnknown = true)
+    }
+}
+
+/**
+ * Words the user chose to keep (undid an autocorrect, or tapped the typed word), stored only on this
+ * device. Never written from password or incognito fields.
+ */
+class LearnedWords(context: Context) {
+    private val prefs: SharedPreferences = context.getSharedPreferences("learned_words", Context.MODE_PRIVATE)
+
+    fun load(): Set<String> = prefs.getStringSet(KEY, emptySet()).orEmpty()
+
+    fun add(word: String) {
+        val words = load().toMutableSet()
+        if (!words.add(word.lowercase())) return
+        // shortcut: keeps an arbitrary subset past the cap; switch to least-recently-used if it matters.
+        prefs.edit().putStringSet(KEY, words.take(MAX).toSet()).apply()
+    }
+
+    private companion object {
+        const val KEY = "words"
+        const val MAX = 1000
     }
 }

@@ -11,6 +11,10 @@ Zenboard is built so that what you type stays on your device.
   type in asks for incognito (`IME_FLAG_NO_PERSONALIZED_LEARNING`). Clearing the app's storage
   removes them.
 - **No logging** of typed content.
+- **Learned words** (up to 1,000): a word is learned only when you undo an autocorrect or tap the
+  word you typed in the suggestion strip. Learned words are stored in app-private storage so they
+  are not corrected again. They are never learned from password or incognito fields. No other typing
+  is recorded.
 - **Settings** (pure black, key-press popup) are stored in app-private storage on the device.
 - **Backups:** disabled (`allowBackup="false"`), so recent emoji never leave the device.
 

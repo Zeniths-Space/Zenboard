@@ -27,6 +27,8 @@
     <string name="settings_typing_words">Words</string>
     <string name="settings_suggestions">Word suggestions</string>
     <string name="settings_suggestions_sub">Show words above the keys as you type. Off in password fields.</string>
+    <string name="settings_autocorrect">Autocorrect</string>
+    <string name="settings_autocorrect_sub">Fix typos when you press space. Backspace right after undoes it.</string>
     <string name="settings_typing_summary_on">Key-press popup on</string>
     <string name="settings_typing_summary_off">Key-press popup off</string>
 

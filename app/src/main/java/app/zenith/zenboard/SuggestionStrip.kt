@@ -46,6 +46,7 @@ fun SuggestionStrip(suggestions: Suggestions, onPick: (String) -> Unit) {
             Slot(
                 word = word,
                 center = i == 1,
+                willApply = i == 1 && word != null && word == suggestions.autocorrect,
                 verbatim = suggestions.typedIsUnknown && i == 0 && word != null,
                 onPick = onPick,
                 modifier = Modifier.weight(1f),
@@ -55,7 +56,7 @@ fun SuggestionStrip(suggestions: Suggestions, onPick: (String) -> Unit) {
 }
 
 @Composable
-private fun Slot(word: String?, center: Boolean, verbatim: Boolean, onPick: (String) -> Unit, modifier: Modifier) {
+private fun Slot(word: String?, center: Boolean, willApply: Boolean, verbatim: Boolean, onPick: (String) -> Unit, modifier: Modifier) {
     val view = LocalView.current
     val cs = MaterialTheme.colorScheme
     Box(
@@ -78,7 +79,12 @@ private fun Slot(word: String?, center: Boolean, verbatim: Boolean, onPick: (Str
         if (word != null) {
             Text(
                 if (verbatim) "“$word”" else word,
-                color = if (center) cs.onSurface else cs.onSurfaceVariant,
+                // The accent marks the word space will type (autocorrect).
+                color = when {
+                    willApply -> cs.secondary
+                    center -> cs.onSurface
+                    else -> cs.onSurfaceVariant
+                },
                 fontSize = 16.sp,
                 fontWeight = if (center) FontWeight.SemiBold else FontWeight.Normal,
                 maxLines = 1,

@@ -79,6 +79,19 @@ fun suggestionsAllowed(inputType: Int): Boolean {
     }
 }
 
+/** Autocorrect also stays off where text is not prose: email addresses, URLs and filters. */
+fun autocorrectAllowed(inputType: Int): Boolean = suggestionsAllowed(inputType) &&
+    when (inputType and android.text.InputType.TYPE_MASK_VARIATION) {
+        android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+        android.text.InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS,
+        android.text.InputType.TYPE_TEXT_VARIATION_URI,
+        android.text.InputType.TYPE_TEXT_VARIATION_FILTER -> false
+        else -> true
+    }
+
+/** Punctuation that ends a word and triggers autocorrect, like space does. */
+fun endsWord(text: String): Boolean = text.length == 1 && text[0] in ".,?!:;"
+
 /** Letters always continue a word; an apostrophe only inside one ("don't"). */
 fun isWordChar(text: String, composing: CharSequence): Boolean =
     text.length == 1 && (text[0].isLetter() || (text[0] == '\'' && composing.isNotEmpty()))

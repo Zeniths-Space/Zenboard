@@ -99,4 +99,11 @@ class DictionaryTest {
         // A real completion ("held", "help", "hello"...), not the one-letter typo fix "hell".
         assertTrue(s.primary, s.primary!!.startsWith("hel") && s.primary != "hell")
     }
+
+    @Test
+    fun `single letters other than i are never autocorrected`() {
+        val dict = real ?: return
+        assertEquals("I", suggest(dict, "i", allowAutocorrect = true).autocorrect)
+        assertNull(suggest(dict, "u", allowAutocorrect = true).autocorrect)
+    }
 }

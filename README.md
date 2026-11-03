@@ -23,6 +23,8 @@ it needs no other Zenith app.
 - Hold space to change keyboard (Android's keyboard picker).
 - Word suggestions above the keys: completions and likely fixes, best in the middle. Tap one to
   type it. Off in password fields.
+- Autocorrect on space or end punctuation, with the word it will type highlighted in the strip.
+  Backspace right after undoes it and keeps your word. Off in email, URL and password fields.
 - Settings by category: Setup, Appearance (pure black, off by default), Typing (key-press
   popup, on by default) and About, each on its own page.
 - Material 3 Expressive look: wallpaper colours, AMOLED-black dark mode, spring key-press morph.

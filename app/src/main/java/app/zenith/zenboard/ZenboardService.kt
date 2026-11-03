@@ -57,6 +57,12 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private val composing = StringBuilder()
     private var suggestions by mutableStateOf(Suggestions.NONE)
     private var stripShown by mutableStateOf(false)
+    private var autocorrectOn = false
+    private val learnedWords by lazy { LearnedWords(this) }
+
+    /** The last autocorrection and what followed it, so an immediate backspace can undo it. */
+    private class Correction(val original: String, val corrected: String, val separator: String)
+    private var lastCorrection: Correction? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -129,7 +135,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         composing.clear()
         suggestions = Suggestions.NONE
         stripShown = settings.suggestions && suggestionsAllowed(info.inputType)
-        if (stripShown) ensureDictionary()
+        autocorrectOn = settings.autocorrect && autocorrectAllowed(info.inputType)
+        lastCorrection = null
+        if (stripShown || autocorrectOn) ensureDictionary()
     }
 
     // The preview overlay window exists only while the keyboard is on screen.
@@ -181,24 +189,30 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
 
     private fun onKey(key: Key) {
         val ic = currentInputConnection ?: return
+        // Undo only applies to the very next key.
+        val undo = lastCorrection.takeIf { key == Key.Backspace }
+        lastCorrection = null
         when (key) {
             is Key.Text -> {
                 val text = state.textFor(key)
-                if (stripShown && isWordChar(text, composing) && startOrContinueWord(ic)) {
-                    composing.append(text)
-                    ic.setComposingText(composing, 1)
-                    refreshSuggestions()
-                } else {
-                    finishComposing()
-                    ic.commitText(text, 1)
+                when {
+                    (stripShown || autocorrectOn) && isWordChar(text, composing) && startOrContinueWord(ic) -> {
+                        composing.append(text)
+                        ic.setComposingText(composing, 1)
+                        refreshSuggestions()
+                    }
+                    endsWord(text) -> commitWord(ic, text)
+                    else -> {
+                        finishComposing()
+                        ic.commitText(text, 1)
+                    }
                 }
                 state = state.afterText()
             }
-            Key.Space -> {
-                finishComposing()
-                ic.commitText(" ", 1)
-            }
-            Key.Backspace -> if (composing.isNotEmpty()) {
+            Key.Space -> commitWord(ic, " ")
+            Key.Backspace -> if (undo != null && undoCorrection(ic, undo)) {
+                // Reverted to what was typed.
+            } else if (composing.isNotEmpty()) {
                 composing.deleteCharAt(composing.lastIndex)
                 ic.setComposingText(composing, 1)
                 refreshSuggestions()
@@ -207,7 +221,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                 sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)
             }
             Key.Enter -> {
-                finishComposing()
+                commitWord(ic, "", record = false)
                 enterAction?.let { ic.performEditorAction(it) } ?: sendDownUpKeyEvents(KeyEvent.KEYCODE_ENTER)
             }
             Key.Shift -> state = state.tapShift(SystemClock.uptimeMillis())
@@ -220,7 +234,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private fun ensureDictionary() {
         if (dictionary != null || dictionaryLoading) return
         dictionaryLoading = true
-        lifecycleScope.launch { dictionary = Dictionary.load(this@ZenboardService) }
+        lifecycleScope.launch {
+            dictionary = Dictionary.load(this@ZenboardService).also { it.learnAll(learnedWords.load()) }
+        }
     }
 
     /**
@@ -244,6 +260,43 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         return true
     }
 
+    /**
+     * End the word being typed with [separator]: autocorrected when there is a confident fix,
+     * otherwise as typed. Remembers the correction so the next backspace can undo it.
+     */
+    private fun commitWord(ic: android.view.inputmethod.InputConnection, separator: String, record: Boolean = true) {
+        val typed = composing.toString()
+        val fix = suggestions.autocorrect?.takeIf { autocorrectOn && typed.isNotEmpty() && it != typed }
+        ic.beginBatchEdit()
+        if (fix != null) ic.commitText(fix, 1) else ic.finishComposingText()
+        if (separator.isNotEmpty()) ic.commitText(separator, 1)
+        ic.endBatchEdit()
+        composing.clear()
+        suggestions = Suggestions.NONE
+        if (fix != null && record) lastCorrection = Correction(typed, fix, separator)
+    }
+
+    /** Backspace right after an autocorrect: put back what was typed, and stop correcting it. */
+    private fun undoCorrection(ic: android.view.inputmethod.InputConnection, undo: Correction): Boolean {
+        val tail = undo.corrected + undo.separator
+        if (ic.getTextBeforeCursor(tail.length, 0)?.toString() != tail) return false
+        ic.beginBatchEdit()
+        ic.deleteSurroundingText(tail.length, 0)
+        ic.setComposingText(undo.original, 1)
+        ic.endBatchEdit()
+        composing.clear()
+        composing.append(undo.original)
+        keep(undo.original)
+        refreshSuggestions()
+        return true
+    }
+
+    /** The user insisted on this word: learn it, unless the field is private. */
+    private fun keep(word: String) {
+        dictionary?.learn(word)
+        if (!isIncognito(currentInputEditorInfo)) learnedWords.add(word)
+    }
+
     /** Commit the word being typed as it is. */
     private fun finishComposing() {
         if (composing.isEmpty()) return
@@ -254,12 +307,15 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
 
     private fun refreshSuggestions() {
         val dict = dictionary
-        suggestions = if (dict == null || composing.isEmpty()) Suggestions.NONE else suggest(dict, composing.toString(), allowAutocorrect = false)
+        suggestions = if (dict == null || composing.isEmpty()) Suggestions.NONE else suggest(dict, composing.toString(), allowAutocorrect = autocorrectOn)
     }
 
     /** Tap on a suggestion: it replaces the word being typed, followed by a space. */
     private fun onPick(word: String) {
         val ic = currentInputConnection ?: return
+        lastCorrection = null
+        // Tapping the typed word itself means "this is a word": stop correcting it.
+        if (suggestions.typedIsUnknown && word == composing.toString()) keep(word)
         ic.beginBatchEdit()
         ic.commitText(word, 1)
         ic.commitText(" ", 1)

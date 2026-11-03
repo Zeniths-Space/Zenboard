@@ -26,8 +26,9 @@
 
 ## 0.3 — Suggestions
 - [x] On-device word suggestions (no suggestions in password fields)
-- [ ] Autocorrection
-- [ ] Personal dictionary, stored locally
+- [x] Autocorrection, with backspace to undo
+- [x] Learned words, stored locally (from undone corrections)
+- [ ] Personal dictionary editor
 
 ## Later
 - [ ] More layouts and languages

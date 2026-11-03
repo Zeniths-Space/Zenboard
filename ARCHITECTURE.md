@@ -82,6 +82,11 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   for lookups and prefix ranges and no hash map, to keep the IME's memory small. Fixes (edit
   distance: apostrophe 0.2, doubled letter 0.4, swap 0.5, neighbouring key 0.6, other 1.0) and
   completions (0.3 per letter still to type) are ranked on one score.
+- **Autocorrect** applies on space and `. , ? ! : ;` when the best fix is confident: one weighted
+  edit, or up to 1.6 in words of five or more letters. A single letter is corrected only for
+  "i" -> "I". The next backspace undoes it if the text still ends with the correction and its
+  separator. The original word is then learned, kept in memory and in `LearnedWords` unless the
+  field is incognito.
 - **Accent colour** is the scheme's secondary (Enter, caps lock, press tint, previews, selection).
 - **Row height** is min(54dp, 9% of screen height), so landscape keeps the app visible.
 - **No dependency injection framework and no navigation library.** They are not needed at this size.

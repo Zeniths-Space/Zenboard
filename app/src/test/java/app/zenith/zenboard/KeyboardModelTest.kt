@@ -139,4 +139,28 @@ class KeyboardModelTest {
         assertEquals(listOf("a", "b"), pushRecent(listOf("b", "a"), "a"))
         assertEquals(3, pushRecent(listOf("a", "b", "c"), "d", max = 3).size)
     }
+
+    @Test
+    fun `suggestions and autocorrect follow the field type`() {
+        val text = InputType.TYPE_CLASS_TEXT
+        assert(suggestionsAllowed(text))
+        assert(autocorrectAllowed(text))
+        assert(!suggestionsAllowed(text or InputType.TYPE_TEXT_VARIATION_PASSWORD))
+        assert(!suggestionsAllowed(text or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS))
+        assert(!suggestionsAllowed(InputType.TYPE_CLASS_NUMBER))
+        assert(suggestionsAllowed(text or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS))
+        assert(!autocorrectAllowed(text or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS))
+        assert(!autocorrectAllowed(text or InputType.TYPE_TEXT_VARIATION_URI))
+    }
+
+    @Test
+    fun `word characters and word-ending punctuation`() {
+        assert(isWordChar("a", ""))
+        assert(!isWordChar("'", ""))
+        assert(isWordChar("'", "don"))
+        assert(!isWordChar("1", "a"))
+        assert(endsWord("."))
+        assert(endsWord("?"))
+        assert(!endsWord("-"))
+    }
 }
