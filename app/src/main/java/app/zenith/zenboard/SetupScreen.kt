@@ -68,8 +68,6 @@ fun SetupScreen(enabled: Boolean, selected: Boolean, onEnable: () -> Unit, onSel
                 ),
             )
 
-            SectionHeader(stringResource(R.string.setup_try_section))
-            TryField()
             Spacer(Modifier.height(24.dp))
         }
 

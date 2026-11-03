@@ -6,15 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ColumnScope
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -330,51 +324,6 @@ internal fun PageTopBar(title: String, onBack: () -> Unit) {
 }
 
 /** Field tile: large rounded container with a scallop icon that turns solid on focus. */
-@Composable
-internal fun TryField() {
-    val cs = MaterialTheme.colorScheme
-    var text by rememberSaveable { mutableStateOf("") }
-    val interaction = remember { MutableInteractionSource() }
-    val focused by interaction.collectIsFocusedAsState()
-    // Keep the whole tile above the keyboard while it slides in (the field alone only reveals its cursor).
-    val requester = remember { BringIntoViewRequester() }
-    val imeBottom = WindowInsets.ime.getBottom(LocalDensity.current)
-    LaunchedEffect(focused, imeBottom) { if (focused) requester.bringIntoView() }
-    Row(
-        Modifier
-            .bringIntoViewRequester(requester)
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)
-            .background(cs.surfaceContainerHigh, RoundedCornerShape(28.dp))
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (focused) {
-            ScallopBadge(KeyIcons.Keyboard, cs.secondary, cs.onSecondary)
-        } else {
-            ScallopBadge(KeyIcons.Keyboard, ZenithColors.indicator, ZenithColors.onIndicator)
-        }
-        Spacer(Modifier.width(16.dp))
-        val placeholder = stringResource(R.string.setup_try_it)
-        BasicTextField(
-            value = text,
-            onValueChange = { text = it },
-            interactionSource = interaction,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = cs.onSurface),
-            cursorBrush = SolidColor(cs.secondary),
-            modifier = Modifier.weight(1f),
-            decorationBox = { inner ->
-                Box {
-                    if (text.isEmpty()) {
-                        Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
-                    }
-                    inner()
-                }
-            },
-        )
-    }
-}
-
 /** Scalloped badge with an icon or a short label. */
 @Composable
 internal fun ScallopBadge(

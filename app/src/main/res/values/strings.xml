@@ -66,7 +66,6 @@
     <string name="setup_privacy_sub">Nothing you type can leave this device. No accounts, no analytics.</string>
     <string name="setup_open_settings">Enable keyboard</string>
     <string name="setup_choose_keyboard">Choose keyboard</string>
-    <string name="setup_try_section">Try it</string>
     <string name="setup_try_it">Type something…</string>
     <string name="try_keyboard">Try the keyboard</string>
     <string name="try_keyboard_close">Close</string>
