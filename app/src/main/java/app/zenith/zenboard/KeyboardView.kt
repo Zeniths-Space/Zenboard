@@ -31,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -58,7 +59,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -92,8 +92,10 @@ fun KeyboardView(
     suggestions: Suggestions,
     onPick: (String) -> Unit,
     onChangeKeyboard: () -> Unit,
+    keyHeight: Float,
+    feedback: KeyFeedback,
     onKey: (Key) -> Unit,
-) {
+) = CompositionLocalProvider(LocalKeyFeedback provides feedback) {
     val preview = remember { PreviewState() }
     preview.bubbles = keyPopup
     var size by remember { mutableStateOf(IntSize.Zero) }
@@ -112,7 +114,7 @@ fun KeyboardView(
     ) {
         if (stripShown) SuggestionStrip(suggestions, onPick)
         // Cap rows at 9% of screen height so landscape keeps most of the app visible.
-        val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp)
+        val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
         if (state.layer == Layer.EMOJI) {
             // Takes the place of the three upper rows, so the keyboard height does not jump.
             EmojiPanel(emoji, recentEmoji, height = rowHeight * 3 + 4.dp, onEmoji = onEmoji)
@@ -147,7 +149,7 @@ private fun KeyButton(
     onChangeKeyboard: () -> Unit,
     modifier: Modifier,
 ) {
-    val view = LocalView.current
+    val feedback = LocalKeyFeedback.current
     val interaction = remember { MutableInteractionSource() }
     val clickPressed by interaction.collectIsPressedAsState()
     var heldPressed by remember { mutableStateOf(false) }
@@ -176,7 +178,7 @@ private fun KeyButton(
 
     val description = keyDescription(key, state, enterAction)
     val press = {
-        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        feedback.press(key)
         onKey(key)
     }
 
@@ -189,7 +191,7 @@ private fun KeyButton(
         val layout = altLayout(b.left, b.right, b.width, options.size, preview.keyboardWidth)
         preview.current = null
         preview.panel = AltPanel(options, layout, b.width, b, altIndexAt(b.center.x, layout, b.width, options.size))
-        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        feedback.haptic(HapticFeedbackConstants.LONG_PRESS)
     }
     val movePanel = { localX: Float ->
         val panel = preview.panel
@@ -199,7 +201,7 @@ private fun KeyButton(
             val index = altIndexAt(rootX, panel.layout, panel.cellWidth, panel.options.size)
             if (index != panel.selected) {
                 panel.selected = index
-                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                feedback.haptic(HapticFeedbackConstants.CLOCK_TICK)
             }
         }
     }
@@ -207,7 +209,7 @@ private fun KeyButton(
         val panel = preview.panel
         preview.panel = null
         if (commit && panel != null) {
-            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            feedback.press()
             onKey(Key.Text(panel.options[panel.selected]))
         }
     }
@@ -256,7 +258,7 @@ private fun KeyButton(
                         indication = null,
                         onLongClickLabel = stringResource(R.string.key_change_keyboard),
                         onLongClick = {
-                            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                            feedback.haptic(HapticFeedbackConstants.LONG_PRESS)
                             onChangeKeyboard()
                         },
                         onClick = press,

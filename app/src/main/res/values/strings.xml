@@ -25,6 +25,11 @@
     <string name="settings_appearance_summary_black">Pure black in dark mode</string>
     <string name="settings_typing_keys">Keys</string>
     <string name="settings_typing_words">Words</string>
+    <string name="settings_key_height">Key height</string>
+    <string name="settings_haptics">Vibrate on keypress</string>
+    <string name="settings_haptics_sub">Also follows your phone\'s touch vibration setting</string>
+    <string name="settings_sound">Sound on keypress</string>
+    <string name="settings_sound_sub">Uses the system key click. Silent when your phone is on silent.</string>
     <string name="settings_suggestions">Word suggestions</string>
     <string name="settings_suggestions_sub">Show words above the keys as you type. Off in password fields.</string>
     <string name="settings_autocorrect">Autocorrect</string>

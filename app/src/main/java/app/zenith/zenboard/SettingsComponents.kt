@@ -35,6 +35,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
@@ -53,6 +55,8 @@ import androidx.compose.ui.unit.dp
 
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 
@@ -169,6 +173,41 @@ internal fun SwitchTile(
             )
         },
     )
+}
+
+/**
+ * A tile with a slider under its title. The value is saved once, when the finger lifts,
+ * not on every frame of the drag.
+ */
+@Composable
+internal fun SliderTile(
+    icon: ImageVector,
+    title: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    steps: Int,
+    valueLabel: (Float) -> String,
+    onValueChangeFinished: (Float) -> Unit,
+) {
+    val cs = MaterialTheme.colorScheme
+    var current by remember(value) { mutableFloatStateOf(value) }
+    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ScallopBadge(icon, ZenithColors.indicator, ZenithColors.onIndicator)
+            Spacer(Modifier.width(16.dp))
+            Text(title, style = MaterialTheme.typography.titleMedium, color = cs.onSurface, modifier = Modifier.weight(1f))
+            Text(valueLabel(current), style = MaterialTheme.typography.labelLarge, color = cs.secondary)
+        }
+        Slider(
+            value = current,
+            onValueChange = { current = it },
+            onValueChangeFinished = { onValueChangeFinished(current) },
+            valueRange = range,
+            steps = steps,
+            colors = SliderDefaults.colors(thumbColor = cs.secondary, activeTrackColor = cs.secondary),
+            modifier = Modifier.semantics { contentDescription = title },
+        )
+    }
 }
 
 /** A category page: header with back button, then scrolling content. */

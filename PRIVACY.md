@@ -15,7 +15,7 @@ Zenboard is built so that what you type stays on your device.
   word you typed in the suggestion strip. Learned words are stored in app-private storage so they
   are not corrected again. They are never learned from password or incognito fields. No other typing
   is recorded.
-- **Settings** (pure black, key-press popup) are stored in app-private storage on the device.
+- **Settings** (theme, key height, popup, vibration, sound, suggestions, autocorrect) are stored in app-private storage on the device.
 - **Backups:** disabled (`allowBackup="false"`), so recent emoji never leave the device.
 
 Future features that store data on the device, such as a personal dictionary or

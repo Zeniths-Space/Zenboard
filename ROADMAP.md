@@ -14,7 +14,7 @@
 - [ ] Swipe left on backspace to delete a word
 - [ ] Space-bar cursor movement
 - [x] Settings: pure black, key-press popup
-- [ ] Settings: key height, haptics, sound
+- [x] Settings: key height, haptics, sound
 
 ## 0.2 — also done
 - [x] Emoji panel with categories and recents

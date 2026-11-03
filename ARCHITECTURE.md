@@ -11,8 +11,9 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 | `KeyboardView.kt` | Compose UI for the keys. Stateless: it renders `KeyboardState` and reports `Key` presses. |
 | `SettingsActivity.kt` | Launcher entry and the IME's settings activity: category home, Appearance and Typing pages, page switching. |
 | `SetupScreen.kt` / `AboutScreen.kt` | Setup steps page; about page with version, privacy, license status and credits. |
-| `SettingsComponents.kt` | Shared grouped tiles, switch tile, page header, scallop badge, try-it field. |
-| `SettingsStore.kt` | DataStore-backed settings (pure black, key-press popup), observed live by the keyboard. |
+| `SettingsComponents.kt` | Shared grouped tiles, switch and slider tiles, page header, scallop badge, try-it field. |
+| `SettingsStore.kt` | DataStore-backed settings, observed live by the keyboard. |
+| `Feedback.kt` | Key vibration and click sound, switched by settings. |
 | `Theme.kt` | Theme: wallpaper colours with the AMOLED / tinted-page surface treatment, semibold type, motion tokens. |
 | `KeyPreview.kt` | Key-press preview bubble, drawn in one overlay window. |
 | `EmojiData.kt` / `EmojiPanel.kt` | Emoji list (asset), recents, and the tabbed emoji grid. |
@@ -68,7 +69,12 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   emoji key took the old globe key's place.
 - **Settings live in DataStore** (`datastore-preferences`, Apache-2.0, as the project brief specifies).
   Both the settings screen and the IME collect the same `Flow`, so a toggle changes the open
-  keyboard at once. An unreadable store falls back to the defaults: pure black off, key-press popup on.
+  keyboard at once. An unreadable store falls back to the defaults. The key-height slider saves once,
+  when the finger lifts, not on every frame of the drag.
+- **Key feedback** (`Feedback.kt`) goes through one `KeyFeedback` object provided as a
+  CompositionLocal. Vibration uses `View.performHapticFeedback`, which also obeys the system
+  touch-vibration setting. Sound uses `AudioManager.playSoundEffect` with the key-click effects,
+  which are muted when the phone is on silent or vibrate.
 - **Pure black is opt-in.** Dark mode uses the wallpaper scheme's own surfaces by default. Pure black
   swaps in the near-black AMOLED ladder.
 - **No navigation library.** The settings home lists the categories (Setup, Appearance, Typing,

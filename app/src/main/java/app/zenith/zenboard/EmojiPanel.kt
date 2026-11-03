@@ -1,6 +1,5 @@
 package app.zenith.zenboard
 
-import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -42,7 +40,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun EmojiPanel(categories: List<EmojiCategory>?, recents: List<String>, height: Dp, onEmoji: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
-    val view = LocalView.current
+    val feedback = LocalKeyFeedback.current
     // Tab 0 is recents; open on the first category until something has been used.
     var tab by remember { mutableIntStateOf(if (recents.isEmpty()) 1 else 0) }
     val recentsLabel = stringResource(R.string.emoji_recents)
@@ -89,7 +87,7 @@ fun EmojiPanel(categories: List<EmojiCategory>?, recents: List<String>, height: 
                                 .padding(1.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .clickable {
-                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                    feedback.press()
                                     onEmoji(emoji)
                                 },
                             contentAlignment = Alignment.Center,

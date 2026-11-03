@@ -1,6 +1,5 @@
 package app.zenith.zenboard
 
-import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -17,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,7 +55,7 @@ fun SuggestionStrip(suggestions: Suggestions, onPick: (String) -> Unit) {
 
 @Composable
 private fun Slot(word: String?, center: Boolean, willApply: Boolean, verbatim: Boolean, onPick: (String) -> Unit, modifier: Modifier) {
-    val view = LocalView.current
+    val feedback = LocalKeyFeedback.current
     val cs = MaterialTheme.colorScheme
     Box(
         modifier
@@ -67,7 +65,7 @@ private fun Slot(word: String?, center: Boolean, willApply: Boolean, verbatim: B
             .then(
                 if (word != null) {
                     Modifier.clickable {
-                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        feedback.press()
                         onPick(word)
                     }
                 } else {

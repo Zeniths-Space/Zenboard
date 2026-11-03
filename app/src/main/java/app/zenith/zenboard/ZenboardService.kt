@@ -119,6 +119,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         suggestions = suggestions,
                         onPick = ::onPick,
                         onChangeKeyboard = ::showKeyboardPicker,
+                        keyHeight = settings.keyHeight,
+                        feedback = rememberKeyFeedback(settings.haptics, settings.sound),
                         onKey = ::onKey,
                     )
                 }

@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 private enum class Page { HOME, SETUP, APPEARANCE, TYPING, ABOUT }
 
@@ -226,15 +227,46 @@ private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
     CategoryPage(stringResource(R.string.settings_section_typing), onBack) {
         SectionHeader(stringResource(R.string.settings_typing_keys))
         SegmentedGroup(
-            listOf {
-                SwitchTile(
-                    icon = KeyIcons.Bubble,
-                    title = stringResource(R.string.settings_key_popup),
-                    subtitle = stringResource(R.string.settings_key_popup_sub),
-                    checked = settings.keyPopup,
-                    onCheckedChange = { scope.launch { SettingsStore.setKeyPopup(context, it) } },
-                )
-            },
+            listOf<@Composable () -> Unit>(
+                {
+                    SliderTile(
+                        icon = KeyIcons.Height,
+                        title = stringResource(R.string.settings_key_height),
+                        value = settings.keyHeight,
+                        range = KEY_HEIGHT_MIN..KEY_HEIGHT_MAX,
+                        steps = 9, // 5% steps from 80% to 130%
+                        valueLabel = { "${(it * 100).roundToInt()}%" },
+                        onValueChangeFinished = { scope.launch { SettingsStore.setKeyHeight(context, it) } },
+                    )
+                },
+                {
+                    SwitchTile(
+                        icon = KeyIcons.Bubble,
+                        title = stringResource(R.string.settings_key_popup),
+                        subtitle = stringResource(R.string.settings_key_popup_sub),
+                        checked = settings.keyPopup,
+                        onCheckedChange = { scope.launch { SettingsStore.setKeyPopup(context, it) } },
+                    )
+                },
+                {
+                    SwitchTile(
+                        icon = KeyIcons.Vibration,
+                        title = stringResource(R.string.settings_haptics),
+                        subtitle = stringResource(R.string.settings_haptics_sub),
+                        checked = settings.haptics,
+                        onCheckedChange = { scope.launch { SettingsStore.setHaptics(context, it) } },
+                    )
+                },
+                {
+                    SwitchTile(
+                        icon = KeyIcons.Sound,
+                        title = stringResource(R.string.settings_sound),
+                        subtitle = stringResource(R.string.settings_sound_sub),
+                        checked = settings.sound,
+                        onCheckedChange = { scope.launch { SettingsStore.setSound(context, it) } },
+                    )
+                },
+            ),
         )
         SectionHeader(stringResource(R.string.settings_typing_words))
         SegmentedGroup(
