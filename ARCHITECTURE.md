@@ -79,9 +79,12 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   keyboard at once. An unreadable store falls back to the defaults. The key-height slider saves once,
   when the finger lifts, not on every frame of the drag.
 - **Key feedback** (`Feedback.kt`) goes through one `KeyFeedback` object provided as a
-  CompositionLocal. Vibration uses `View.performHapticFeedback`, which also obeys the system
-  touch-vibration setting. Sound uses `AudioManager.playSoundEffect` with the key-click effects,
-  which are muted when the phone is on silent or vibrate.
+  CompositionLocal. Vibration calls the `Vibrator` directly with predefined click and tick effects
+  and `USAGE_TOUCH`, so it follows the system touch-vibration setting. `View.performHapticFeedback`
+  is not used: on Samsung (One UI, Android 17) an IME's calls are filed under usage `UNKNOWN`,
+  whose intensity is off, so they were silently dropped. This needs the `VIBRATE` permission.
+  Sound uses `AudioManager.playSoundEffect` with the key-click effects. It plays at the System
+  volume and is muted when the phone is on silent or vibrate.
 - **Pure black is opt-in.** Dark mode uses the wallpaper scheme's own surfaces by default. Pure black
   swaps in the near-black AMOLED ladder.
 - **No navigation library.** The settings home lists the categories (Setup, Appearance, Typing,

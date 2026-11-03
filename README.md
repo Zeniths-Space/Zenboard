@@ -6,7 +6,7 @@ it needs no other Zenith app.
 
 - **Application ID:** `app.zenith.zenboard`
 - **Status:** early development (0.1.0). Not yet released.
-- **Permissions:** none. No internet access.
+- **Permissions:** only `VIBRATE`, for key vibration. No internet access.
 
 ## Features (0.1.0)
 

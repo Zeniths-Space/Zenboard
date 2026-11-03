@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- No permissions. In particular no INTERNET: typed text cannot leave the device. -->
+    <!-- No INTERNET permission: typed text cannot leave the device. -->
+    <!-- VIBRATE: key vibration. A normal permission, granted at install; no data access. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="false"

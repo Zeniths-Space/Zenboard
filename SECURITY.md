@@ -8,5 +8,5 @@ Please report security issues privately through GitHub Security Advisories
 ## Design
 
 - The input method service is protected by `BIND_INPUT_METHOD`, so only the system can bind to it.
-- The app requests no permissions.
+- The app requests one permission, `VIBRATE`, for key vibration. It gives no access to any data.
 - Release signing keys and passwords are never committed. They live in protected CI secrets.
