@@ -43,6 +43,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerInputChange
@@ -234,16 +236,8 @@ private fun KeyButton(
     Box(
         modifier
             .fillMaxHeight()
-            .padding(horizontal = 2.5.dp, vertical = 2.5.dp)
-            .onGloballyPositioned { bounds.rect = it.boundsInRoot() }
-            .graphicsLayer {
-                val s = 1f - 0.05f * morph
-                scaleX = s
-                scaleY = s
-                this.shape = shape
-                clip = true
-            }
-            .background(fill)
+            // Gestures cover the whole cell, gaps included, and ignore the press scale: fast taps
+            // that land between keys or near an edge still count.
             .onGloballyPositioned { bounds.inner = it }
             .then(
                 when {
@@ -261,9 +255,11 @@ private fun KeyButton(
                             onClick { press(); true }
                             customActions = listOf(CustomAccessibilityAction(deleteWordLabel) { onDeleteWord(); true })
                         }
-                    alternates.isNotEmpty() -> Modifier
+                    // Every character key, so a tap whose finger drifts off the key still types.
+                    key is Key.Text -> Modifier
                         .longPressAlternates(
                             longPressMs = longPressMs,
+                            hasAlternates = alternates.isNotEmpty(),
                             onPressedChange = { heldPressed = it },
                             onTap = press,
                             onOpen = openPanel,
@@ -298,7 +294,17 @@ private fun KeyButton(
                     else -> Modifier.clickable(interactionSource = interaction, indication = null, onClick = press)
                 },
             )
-            .semantics { contentDescription = description },
+            .semantics { contentDescription = description }
+            .padding(horizontal = 2.5.dp, vertical = 2.5.dp)
+            .onGloballyPositioned { bounds.rect = it.boundsInRoot() }
+            .graphicsLayer {
+                val s = 1f - 0.05f * morph
+                scaleX = s
+                scaleY = s
+                this.shape = shape
+                clip = true
+            }
+            .background(fill),
         contentAlignment = Alignment.Center,
     ) {
         val icon = keyIcon(key, state, enterAction)
@@ -394,12 +400,14 @@ private fun keyIcon(key: Key, state: KeyboardState, enterAction: Int?): ImageVec
 }
 
 /**
- * Tap types the key on release. Holding past [longPressMs] opens the alternates; the finger then
- * slides to pick and release types the pick. Cancellation (keyboard hidden mid-hold) closes the panel.
+ * Tap types the key on release, wherever the finger lifts. Holding past [longPressMs] opens the
+ * alternates (when [hasAlternates]); the finger then slides to pick and release types the pick.
+ * Cancellation (keyboard hidden mid-hold) closes the panel.
  */
 @Composable
 private fun Modifier.longPressAlternates(
     longPressMs: Long,
+    hasAlternates: Boolean,
     onPressedChange: (Boolean) -> Unit,
     onTap: () -> Unit,
     onOpen: () -> Unit,
@@ -420,12 +428,12 @@ private fun Modifier.longPressAlternates(
             try {
                 var finished = false
                 var up: PointerInputChange? = null
-                withTimeoutOrNull(longPressMs) {
-                    up = waitForUpOrCancellation()
+                withTimeoutOrNull(if (hasAlternates) longPressMs else Long.MAX_VALUE) {
+                    up = awaitRelease(down.id)
                     finished = true
                 }
                 if (finished) {
-                    // Released before the long press: a normal tap (null means it slid off the key).
+                    // Released before the long press: a normal tap (null means the gesture was cancelled).
                     if (up != null) tap()
                     return@awaitEachGesture
                 }
@@ -445,6 +453,17 @@ private fun Modifier.longPressAlternates(
                 pressedChange(false)
             }
         }
+    }
+}
+
+/**
+ * Waits for pointer [id] to lift, even outside the key: fast typists' fingers drift past the edge
+ * before release. Null when the pointer is gone without lifting (gesture cancelled).
+ */
+private suspend fun AwaitPointerEventScope.awaitRelease(id: PointerId): PointerInputChange? {
+    while (true) {
+        val change = awaitPointerEvent().changes.firstOrNull { it.id == id } ?: return null
+        if (change.changedToUp()) return change
     }
 }
 
