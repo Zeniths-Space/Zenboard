@@ -40,8 +40,12 @@ fun KeyboardState.tapShift(now: Long): KeyboardState = when (shift) {
     ShiftMode.LOCKED -> copy(shift = ShiftMode.OFF, lastShiftTap = null)
 }
 
-fun KeyboardState.textFor(key: Key.Text): String =
-    if (layer == Layer.LETTERS && shift != ShiftMode.OFF) key.value.uppercase() else key.value
+/** Shifted letters are uppercased, except where the capital is not one character (ß -> "SS"). */
+fun KeyboardState.textFor(key: Key.Text): String {
+    if (layer != Layer.LETTERS || shift == ShiftMode.OFF) return key.value
+    val upper = key.value.uppercase()
+    return if (upper.length == key.value.length) upper else key.value
+}
 
 /** One-shot shift ends after a character is typed. */
 fun KeyboardState.afterText(): KeyboardState =
@@ -102,3 +106,73 @@ fun keyWeight(key: Key, row: List<Key>): Float = when (key) {
     Key.Space -> ROW_UNITS - row.filter { it != Key.Space }.sumOf { keyWeight(it, row).toDouble() }.toFloat()
 }
 
+/**
+ * Long-press alternates, first option first. Top-row letters lead with their digit (shown as a hint).
+ * shortcut: one English/Western-European set, upgrade to per-language sets with multilingual layouts.
+ */
+private val ALTERNATES: Map<String, List<String>> = mapOf(
+    "q" to listOf("1"),
+    "w" to listOf("2"),
+    "e" to listOf("3", "è", "é", "ê", "ë", "ē", "ę"),
+    "r" to listOf("4"),
+    "t" to listOf("5", "þ"),
+    "y" to listOf("6", "ý", "ÿ"),
+    "u" to listOf("7", "ù", "ú", "û", "ü", "ū"),
+    "i" to listOf("8", "ì", "í", "î", "ï", "ī"),
+    "o" to listOf("9", "ò", "ó", "ô", "ö", "õ", "ø", "œ", "ō"),
+    "p" to listOf("0"),
+    "a" to listOf("à", "á", "â", "ä", "æ", "ã", "å", "ā"),
+    "s" to listOf("ß", "ś", "š"),
+    "d" to listOf("ð"),
+    "g" to listOf("ğ"),
+    "l" to listOf("ł"),
+    "z" to listOf("ž", "ź", "ż"),
+    "c" to listOf("ç", "ć", "č"),
+    "n" to listOf("ñ", "ń"),
+    "." to listOf(",", "?", "!", "'", "\"", ":", ";", "…"),
+    "1" to listOf("¹", "½", "⅓", "¼", "⅛"),
+    "2" to listOf("²", "⅔"),
+    "3" to listOf("³", "¾", "⅜"),
+    "4" to listOf("⁴"),
+    "5" to listOf("⅝"),
+    "7" to listOf("⅞"),
+    "0" to listOf("°", "ⁿ", "∅"),
+    "$" to listOf("€", "£", "¥", "¢", "₹", "₩"),
+    "-" to listOf("–", "—", "·"),
+    "+" to listOf("±"),
+    "(" to listOf("<", "[", "{"),
+    ")" to listOf(">", "]", "}"),
+    "/" to listOf("\\", "|"),
+    "&" to listOf("§", "¶"),
+    "#" to listOf("№"),
+    "%" to listOf("‰", "℅"),
+    "*" to listOf("†", "‡", "★"),
+    "\"" to listOf("“", "”", "„", "«", "»"),
+    "'" to listOf("‘", "’", "‚", "‹", "›"),
+    "?" to listOf("¿"),
+    "!" to listOf("¡"),
+)
+
+fun alternatesFor(key: Key): List<String> = if (key is Key.Text) ALTERNATES[key.value].orEmpty() else emptyList()
+
+/** Small corner hint: the digit on top-row letters. */
+fun hintFor(key: Key, layer: Layer): String? =
+    alternatesFor(key).firstOrNull()?.takeIf { layer == Layer.LETTERS && it.single().isDigit() }
+
+/** Where the alternates row sits: starts at the key, or ends at it (reversed) when it would overflow. */
+data class AltLayout(val left: Float, val reversed: Boolean)
+
+fun altLayout(keyLeft: Float, keyRight: Float, cellWidth: Float, count: Int, maxWidth: Float): AltLayout {
+    val width = cellWidth * count
+    return if (keyLeft + width <= maxWidth) {
+        AltLayout(keyLeft, reversed = false)
+    } else {
+        AltLayout((keyRight - width).coerceAtLeast(0f), reversed = true)
+    }
+}
+
+/** Option under x. In a reversed row the first option is the rightmost cell, above the key. */
+fun altIndexAt(x: Float, layout: AltLayout, cellWidth: Float, count: Int): Int {
+    val cell = ((x - layout.left) / cellWidth).toInt().coerceIn(0, count - 1)
+    return if (layout.reversed) count - 1 - cell else cell
+}

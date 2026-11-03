@@ -68,4 +68,45 @@ class KeyboardModelTest {
             assertEquals(ROW_UNITS.toDouble(), bottom.sumOf { keyWeight(it, bottom).toDouble() }, 1e-6)
         }
     }
+
+    @Test
+    fun `shift keeps letters whose capital is not one character`() {
+        val shifted = KeyboardState(shift = ShiftMode.ONCE)
+        assertEquals("ß", shifted.textFor(Key.Text("ß")))
+        assertEquals("À", shifted.textFor(Key.Text("à")))
+    }
+
+    @Test
+    fun `top row hints are digits, other keys have none`() {
+        assertEquals("1", hintFor(Key.Text("q"), Layer.LETTERS))
+        assertEquals("0", hintFor(Key.Text("p"), Layer.LETTERS))
+        assertNull(hintFor(Key.Text("a"), Layer.LETTERS))
+        assertNull(hintFor(Key.Text("1"), Layer.SYMBOLS))
+        assertNull(hintFor(Key.Space, Layer.LETTERS))
+    }
+
+    @Test
+    fun `alternates row starts at the key and selects by finger position`() {
+        val layout = altLayout(keyLeft = 100f, keyRight = 160f, cellWidth = 60f, count = 3, maxWidth = 720f)
+        assertEquals(AltLayout(100f, reversed = false), layout)
+        assertEquals(0, altIndexAt(130f, layout, 60f, 3))
+        assertEquals(2, altIndexAt(250f, layout, 60f, 3))
+        assertEquals(2, altIndexAt(5000f, layout, 60f, 3))
+        assertEquals(0, altIndexAt(-50f, layout, 60f, 3))
+    }
+
+    @Test
+    fun `alternates row flips at the right edge so the first option stays above the key`() {
+        val layout = altLayout(keyLeft = 580f, keyRight = 640f, cellWidth = 60f, count = 5, maxWidth = 720f)
+        assertEquals(AltLayout(340f, reversed = true), layout)
+        assertEquals(0, altIndexAt(610f, layout, 60f, 5))
+        assertEquals(4, altIndexAt(350f, layout, 60f, 5))
+    }
+
+    @Test
+    fun `every alternate is a single character`() {
+        for (layer in Layer.entries) for (key in keyboardRows(layer).flatten()) {
+            alternatesFor(key).forEach { assertEquals("$key -> $it", 1, it.codePointCount(0, it.length)) }
+        }
+    }
 }

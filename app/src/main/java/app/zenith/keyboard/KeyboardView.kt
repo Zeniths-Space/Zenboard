@@ -43,6 +43,13 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.changedToUp
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
@@ -85,7 +92,10 @@ fun KeyboardView(
     Column(
         Modifier
             .fillMaxWidth()
-            .onSizeChanged { size = it }
+            .onSizeChanged {
+                size = it
+                preview.keyboardWidth = it.width.toFloat()
+            }
             .background(MaterialTheme.colorScheme.surface)
             .padding(systemBars)
             .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
@@ -130,7 +140,8 @@ private fun KeyButton(
 
     // Character keys show a preview bubble while pressed. Bounds are kept out of state: layout
     // updates them without recomposing.
-    val bounds = remember { object { var rect = Rect.Zero } }
+    // inner: the key's own coordinates inside the press-scale layer, for mapping finger x to the root.
+    val bounds = remember { object { var rect = Rect.Zero; var inner: LayoutCoordinates? = null } }
     if (key is Key.Text) {
         val label = state.textFor(key)
         LaunchedEffect(pressed) {
@@ -148,6 +159,37 @@ private fun KeyButton(
         onKey(key)
     }
 
+    // Long-press alternates: open above the key, follow the finger, type the pick on release.
+    val alternates = alternatesFor(key)
+    val longPressMs = LocalViewConfiguration.current.longPressTimeoutMillis
+    val openPanel: () -> Unit = {
+        val b = bounds.rect
+        val options = alternates.map { state.textFor(Key.Text(it)) }
+        val layout = altLayout(b.left, b.right, b.width, options.size, preview.keyboardWidth)
+        preview.current = null
+        preview.panel = AltPanel(options, layout, b.width, b, altIndexAt(b.center.x, layout, b.width, options.size))
+        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+    }
+    val movePanel = { localX: Float ->
+        val panel = preview.panel
+        val inner = bounds.inner
+        if (panel != null && inner != null && inner.isAttached) {
+            val rootX = inner.localToRoot(Offset(localX, 0f)).x
+            val index = altIndexAt(rootX, panel.layout, panel.cellWidth, panel.options.size)
+            if (index != panel.selected) {
+                panel.selected = index
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            }
+        }
+    }
+    val closePanel = { commit: Boolean ->
+        val panel = preview.panel
+        preview.panel = null
+        if (commit && panel != null) {
+            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            onKey(Key.Text(panel.options[panel.selected]))
+        }
+    }
     Box(
         modifier
             .fillMaxHeight()
@@ -161,6 +203,7 @@ private fun KeyButton(
                 clip = true
             }
             .background(fill)
+            .onGloballyPositioned { bounds.inner = it }
             .then(
                 when {
                     key == Key.Backspace -> Modifier
@@ -168,6 +211,23 @@ private fun KeyButton(
                         .semantics {
                             role = Role.Button
                             onClick { press(); true }
+                        }
+                    alternates.isNotEmpty() -> Modifier
+                        .longPressAlternates(
+                            longPressMs = longPressMs,
+                            onPressedChange = { heldPressed = it },
+                            onTap = press,
+                            onOpen = openPanel,
+                            onMove = movePanel,
+                            onEnd = closePanel,
+                        )
+                        .semantics {
+                            role = Role.Button
+                            onClick { press(); true }
+                            // Screen readers get each alternate as an action instead of the drag gesture.
+                            customActions = alternates.map { alt ->
+                                CustomAccessibilityAction(alt) { onKey(Key.Text(alt)); true }
+                            }
                         }
                     // Hold space to change keyboard (the system input-method picker).
                     key == Key.Space -> Modifier.combinedClickable(
@@ -209,12 +269,23 @@ private fun KeyButton(
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
-            key is Key.Text -> Text(
-                state.textFor(key),
-                color = content,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Medium,
-            )
+            key is Key.Text -> {
+                Text(
+                    state.textFor(key),
+                    color = content,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                hintFor(key, state.layer)?.let { hint ->
+                    Text(
+                        hint,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.align(Alignment.TopEnd).padding(top = 3.dp, end = 5.dp),
+                    )
+                }
+            }
             else -> Text(
                 if (key == Key.ToSymbols) "?123" else "ABC",
                 color = content,
@@ -259,6 +330,61 @@ private fun keyIcon(key: Key, state: KeyboardState, enterAction: Int?): ImageVec
         else -> KeyIcons.Return
     }
     else -> null
+}
+
+/**
+ * Tap types the key on release. Holding past [longPressMs] opens the alternates; the finger then
+ * slides to pick and release types the pick. Cancellation (keyboard hidden mid-hold) closes the panel.
+ */
+@Composable
+private fun Modifier.longPressAlternates(
+    longPressMs: Long,
+    onPressedChange: (Boolean) -> Unit,
+    onTap: () -> Unit,
+    onOpen: () -> Unit,
+    onMove: (Float) -> Unit,
+    onEnd: (commit: Boolean) -> Unit,
+): Modifier {
+    val pressedChange by rememberUpdatedState(onPressedChange)
+    val tap by rememberUpdatedState(onTap)
+    val open by rememberUpdatedState(onOpen)
+    val move by rememberUpdatedState(onMove)
+    val end by rememberUpdatedState(onEnd)
+    return pointerInput(Unit) {
+        awaitEachGesture {
+            val down = awaitFirstDown()
+            pressedChange(true)
+            var panelOpen = false
+            var committed = false
+            try {
+                var finished = false
+                var up: PointerInputChange? = null
+                withTimeoutOrNull(longPressMs) {
+                    up = waitForUpOrCancellation()
+                    finished = true
+                }
+                if (finished) {
+                    // Released before the long press: a normal tap (null means it slid off the key).
+                    if (up != null) tap()
+                    return@awaitEachGesture
+                }
+                open()
+                panelOpen = true
+                while (true) {
+                    val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                    if (change.changedToUp()) {
+                        committed = true
+                        break
+                    }
+                    change.consume()
+                    move(change.position.x)
+                }
+            } finally {
+                if (panelOpen) end(committed)
+                pressedChange(false)
+            }
+        }
+    }
 }
 
 /**

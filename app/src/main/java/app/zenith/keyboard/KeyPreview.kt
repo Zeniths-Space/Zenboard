@@ -4,21 +4,26 @@ import android.view.WindowManager
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -37,9 +42,19 @@ import kotlin.math.roundToInt
 /** One press of a character key. A new instance per press, so a release only clears its own preview. */
 class KeyPress(val label: String, val bounds: Rect)
 
+/** Open long-press alternates row. [options] are already shift-resolved. */
+@Stable
+class AltPanel(val options: List<String>, val layout: AltLayout, val cellWidth: Float, val keyBounds: Rect, selected: Int) {
+    var selected by mutableIntStateOf(selected)
+}
+
 @Stable
 class PreviewState {
     var current by mutableStateOf<KeyPress?>(null)
+    var panel by mutableStateOf<AltPanel?>(null)
+
+    /** Keyboard width in px, for keeping the alternates row on screen. Set by layout, not state. */
+    var keyboardWidth = 0f
 }
 
 /** Room above the keyboard for top-row previews. */
@@ -78,7 +93,12 @@ fun KeyPreviewOverlay(preview: PreviewState, keyboardSize: IntSize) {
         val width = with(density) { keyboardSize.width.toDp() }
         val height = with(density) { keyboardSize.height.toDp() } + Headroom
         Box(Modifier.size(width, height)) {
-            preview.current?.let { press -> key(press) { Bubble(press, headroomPx, keyboardSize.width) } }
+            val panel = preview.panel
+            if (panel != null) {
+                key(panel) { AlternatesRow(panel, headroomPx) }
+            } else {
+                preview.current?.let { press -> key(press) { Bubble(press, headroomPx, keyboardSize.width) } }
+            }
         }
     }
 }
@@ -122,3 +142,55 @@ private fun Bubble(press: KeyPress, headroomPx: Int, maxWidthPx: Int) {
     }
 }
 
+/** Long-press alternates: tinted row above the key, selected option in solid secondary. */
+@Composable
+private fun AlternatesRow(panel: AltPanel, headroomPx: Int) {
+    val density = LocalDensity.current
+    val cs = MaterialTheme.colorScheme
+    val cellW: Dp
+    val cellH: Dp
+    val offset: IntOffset
+    with(density) {
+        cellW = panel.cellWidth.toDp()
+        cellH = panel.keyBounds.height.toDp() * 1.15f
+        val y = headroomPx + panel.keyBounds.top - cellH.toPx() - Gap.toPx()
+        offset = IntOffset(panel.layout.left.roundToInt(), y.roundToInt())
+    }
+    val pop = remember { Animatable(0.6f) }
+    LaunchedEffect(Unit) { pop.animateTo(1f, Motion.press()) }
+    // Grow out of the key's side of the row.
+    val originX = if (panel.layout.reversed) 1f else 0f
+    Row(
+        Modifier
+            .offset { offset }
+            .graphicsLayer {
+                scaleX = pop.value
+                scaleY = pop.value
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(originX, 1f)
+                alpha = ((pop.value - 0.6f) / 0.4f).coerceIn(0f, 1f)
+                shadowElevation = 10.dp.toPx()
+                shape = RoundedCornerShape(18.dp)
+                clip = true
+            }
+            .background(ZenithColors.indicator),
+    ) {
+        val order = if (panel.layout.reversed) panel.options.indices.reversed() else panel.options.indices
+        for (i in order) {
+            val selected = i == panel.selected
+            Box(
+                Modifier
+                    .size(cellW, cellH)
+                    .padding(3.dp)
+                    .background(if (selected) cs.secondary else Color.Transparent, RoundedCornerShape(14.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    panel.options[i],
+                    color = if (selected) cs.onSecondary else ZenithColors.onIndicator,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+    }
+}
