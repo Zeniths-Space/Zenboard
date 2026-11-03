@@ -16,6 +16,8 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 | `Theme.kt` | Theme: wallpaper colours with the AMOLED / tinted-page surface treatment, semibold type, motion tokens. |
 | `KeyPreview.kt` | Key-press preview bubble, drawn in one overlay window. |
 | `EmojiData.kt` / `EmojiPanel.kt` | Emoji list (asset), recents, and the tabbed emoji grid. |
+| `Dictionary.kt` | Word list (sorted asset, binary search), completions, typo candidates with typing-aware edit distance, suggestion ranking. |
+| `SuggestionStrip.kt` | The three-slot strip above the keys. |
 | `Shapes.kt` | Scallop badge shape, stadium, grouped-list corners. |
 | `KeyIcons.kt` | Vector icons (Material paths plus hand-drawn shift and globe). |
 
@@ -72,6 +74,14 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
 - **No navigation library.** The settings home lists the categories (Setup, Appearance, Typing,
   About), each with a one-line status. Each category is its own page. The activity switches pages
   with an `AnimatedContent` and `BackHandler`.
+- **Suggestions use composing text.** The word being typed is the editor's composing region
+  (underlined), so a suggestion replaces it in place. The first letter picks up any letters already
+  left of the cursor, so the whole word is composed. Typing inside a word stays plain. A cursor jump
+  out of the composing region drops it. The dictionary loads on the first field that allows
+  suggestions, off the main thread. It is one array sorted by lowercase word, with binary search
+  for lookups and prefix ranges and no hash map, to keep the IME's memory small. Fixes (edit
+  distance: apostrophe 0.2, doubled letter 0.4, swap 0.5, neighbouring key 0.6, other 1.0) and
+  completions (0.3 per letter still to type) are ranked on one score.
 - **Accent colour** is the scheme's secondary (Enter, caps lock, press tint, previews, selection).
 - **Row height** is min(54dp, 9% of screen height), so landscape keeps the app visible.
 - **No dependency injection framework and no navigation library.** They are not needed at this size.

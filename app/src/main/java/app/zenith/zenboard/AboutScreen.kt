@@ -103,6 +103,13 @@ fun AboutScreen(versionName: String, onBack: () -> Unit) {
                         },
                         {
                             GroupTile(
+                                badge = { ScallopBadge(KeyIcons.Words, ZenithColors.indicator, ZenithColors.onIndicator) },
+                                title = stringResource(R.string.about_word_list),
+                                subtitle = stringResource(R.string.about_word_list_sub),
+                            )
+                        },
+                        {
+                            GroupTile(
                                 badge = { ScallopBadge(KeyIcons.Done, ZenithColors.indicator, ZenithColors.onIndicator) },
                                 title = stringResource(R.string.about_icons),
                                 subtitle = stringResource(R.string.about_icons_sub),

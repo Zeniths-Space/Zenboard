@@ -49,6 +49,9 @@ object KeyIcons {
     )
     val Bubble = filled("M20,2H4c-1.1,0 -2,0.9 -2,2v18l4,-4h14c1.1,0 2,-0.9 2,-2V4c0,-1.1 -0.9,-2 -2,-2z")
 
+    /** Short text lines: word suggestions. */
+    val Words = filled("M4,6h16v2H4zM4,11h16v2H4zM4,16h10v2H4z")
+
     private const val ShiftArrow = "M12,3.5L3.5,12.5H8.5V19.5H15.5V12.5H20.5Z"
 
     /** Shift off: outlined arrow. */

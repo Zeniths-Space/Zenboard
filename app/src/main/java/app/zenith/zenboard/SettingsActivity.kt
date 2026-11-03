@@ -236,6 +236,18 @@ private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 )
             },
         )
+        SectionHeader(stringResource(R.string.settings_typing_words))
+        SegmentedGroup(
+            listOf {
+                SwitchTile(
+                    icon = KeyIcons.Words,
+                    title = stringResource(R.string.settings_suggestions),
+                    subtitle = stringResource(R.string.settings_suggestions_sub),
+                    checked = settings.suggestions,
+                    onCheckedChange = { scope.launch { SettingsStore.setSuggestions(context, it) } },
+                )
+            },
+        )
         SectionHeader(stringResource(R.string.setup_try_section))
         TryField()
     }

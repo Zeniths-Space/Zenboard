@@ -67,6 +67,22 @@ fun initialLayer(inputType: Int): Layer = when (inputType and android.text.Input
     else -> Layer.LETTERS
 }
 
+/** Word suggestions belong in ordinary text fields: not passwords, numbers, or fields that opt out. */
+fun suggestionsAllowed(inputType: Int): Boolean {
+    if (inputType and android.text.InputType.TYPE_MASK_CLASS != android.text.InputType.TYPE_CLASS_TEXT) return false
+    if (inputType and android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS != 0) return false
+    return when (inputType and android.text.InputType.TYPE_MASK_VARIATION) {
+        android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD,
+        android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+        android.text.InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD -> false
+        else -> true
+    }
+}
+
+/** Letters always continue a word; an apostrophe only inside one ("don't"). */
+fun isWordChar(text: String, composing: CharSequence): Boolean =
+    text.length == 1 && (text[0].isLetter() || (text[0] == '\'' && composing.isNotEmpty()))
+
 /** Editor action for the Enter key, or null when Enter should send a plain Enter key event. */
 fun enterAction(imeOptions: Int): Int? {
     if (imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION != 0) return null

@@ -21,6 +21,8 @@ it needs no other Zenith app.
 - Number and phone fields open on the digit layer.
 - Emoji panel: all Unicode emoji the device can draw, by category, with recently used first.
 - Hold space to change keyboard (Android's keyboard picker).
+- Word suggestions above the keys: completions and likely fixes, best in the middle. Tap one to
+  type it. Off in password fields.
 - Settings by category: Setup, Appearance (pure black, off by default), Typing (key-press
   popup, on by default) and About, each on its own page.
 - Material 3 Expressive look: wallpaper colours, AMOLED-black dark mode, spring key-press morph.
@@ -63,6 +65,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 `app/src/main/assets/emoji.txt` is generated from Unicode's `emoji-test.txt` (Emoji 18.0),
 © Unicode, Inc., used under the [Unicode License v3](https://www.unicode.org/license.txt).
+
+`app/src/main/assets/dict_en_US.txt` is generated from AOSP LatinIME's
+`dictionaries/en_US_wordlist.combined` (60,000 most frequent words, offensive-flagged entries
+removed), © The Android Open Source Project, [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 ## License
 

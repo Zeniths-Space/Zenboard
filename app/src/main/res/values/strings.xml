@@ -24,6 +24,9 @@
     <string name="settings_appearance_summary">Follows your wallpaper colours</string>
     <string name="settings_appearance_summary_black">Pure black in dark mode</string>
     <string name="settings_typing_keys">Keys</string>
+    <string name="settings_typing_words">Words</string>
+    <string name="settings_suggestions">Word suggestions</string>
+    <string name="settings_suggestions_sub">Show words above the keys as you type. Off in password fields.</string>
     <string name="settings_typing_summary_on">Key-press popup on</string>
     <string name="settings_typing_summary_off">Key-press popup off</string>
 
@@ -40,6 +43,8 @@
     <string name="about_section_credits">Credits</string>
     <string name="about_emoji_data">Emoji data</string>
     <string name="about_emoji_data_sub">Unicode® Emoji 18.0, © Unicode, Inc. Used under the Unicode License v3.</string>
+    <string name="about_word_list">English word list</string>
+    <string name="about_word_list_sub">From the Android Open Source Project (LatinIME), Apache License 2.0.</string>
     <string name="about_icons">Icons</string>
     <string name="about_icons_sub">Material Icons paths, Apache License 2.0.</string>
 

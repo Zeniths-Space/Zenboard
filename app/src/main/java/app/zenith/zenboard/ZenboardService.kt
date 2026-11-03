@@ -49,6 +49,15 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private var inputShown by mutableStateOf(false)
     private var settings by mutableStateOf(ZenboardSettings())
 
+    /** Loaded on the first text field that allows suggestions; never for number-only use. */
+    private var dictionary: Dictionary? = null
+    private var dictionaryLoading = false
+
+    /** The word being typed, shown underlined in the editor as composing text. */
+    private val composing = StringBuilder()
+    private var suggestions by mutableStateOf(Suggestions.NONE)
+    private var stripShown by mutableStateOf(false)
+
     override fun onCreate() {
         super.onCreate()
         savedStateController.performRestore(null)
@@ -100,6 +109,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         emoji = emoji,
                         recentEmoji = recentEmoji,
                         onEmoji = ::onEmoji,
+                        stripShown = stripShown,
+                        suggestions = suggestions,
+                        onPick = ::onPick,
                         onChangeKeyboard = ::showKeyboardPicker,
                         onKey = ::onKey,
                     )
@@ -114,11 +126,16 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         inputShown = true
         state = KeyboardState(layer = initialLayer(info.inputType)).withAutoCaps(capsAtCursor())
         enterAction = enterAction(info.imeOptions)
+        composing.clear()
+        suggestions = Suggestions.NONE
+        stripShown = settings.suggestions && suggestionsAllowed(info.inputType)
+        if (stripShown) ensureDictionary()
     }
 
     // The preview overlay window exists only while the keyboard is on screen.
     override fun onFinishInputView(finishingInput: Boolean) {
         inputShown = false
+        finishComposing()
         super.onFinishInputView(finishingInput)
     }
 
@@ -127,6 +144,12 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         candidatesStart: Int, candidatesEnd: Int,
     ) {
         super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+        // The cursor left the word we were composing (tap elsewhere, selection, app edit): let it go.
+        if (composing.isNotEmpty() && (newSelStart != newSelEnd || newSelEnd != candidatesEnd)) {
+            composing.clear()
+            currentInputConnection?.finishComposingText()
+            suggestions = Suggestions.NONE
+        }
         state = state.withAutoCaps(capsAtCursor())
     }
 
@@ -160,19 +183,89 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         val ic = currentInputConnection ?: return
         when (key) {
             is Key.Text -> {
-                ic.commitText(state.textFor(key), 1)
+                val text = state.textFor(key)
+                if (stripShown && isWordChar(text, composing) && startOrContinueWord(ic)) {
+                    composing.append(text)
+                    ic.setComposingText(composing, 1)
+                    refreshSuggestions()
+                } else {
+                    finishComposing()
+                    ic.commitText(text, 1)
+                }
                 state = state.afterText()
             }
-            Key.Space -> ic.commitText(" ", 1)
-            // A key event deletes the selection or a whole emoji, which deleteSurroundingText does not.
-            Key.Backspace -> sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)
-            Key.Enter -> enterAction?.let { ic.performEditorAction(it) }
-                ?: sendDownUpKeyEvents(KeyEvent.KEYCODE_ENTER)
+            Key.Space -> {
+                finishComposing()
+                ic.commitText(" ", 1)
+            }
+            Key.Backspace -> if (composing.isNotEmpty()) {
+                composing.deleteCharAt(composing.lastIndex)
+                ic.setComposingText(composing, 1)
+                refreshSuggestions()
+            } else {
+                // A key event deletes the selection or a whole emoji, which deleteSurroundingText does not.
+                sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)
+            }
+            Key.Enter -> {
+                finishComposing()
+                enterAction?.let { ic.performEditorAction(it) } ?: sendDownUpKeyEvents(KeyEvent.KEYCODE_ENTER)
+            }
             Key.Shift -> state = state.tapShift(SystemClock.uptimeMillis())
             Key.ToSymbols -> state = state.copy(layer = Layer.SYMBOLS)
             Key.ToLetters -> state = state.copy(layer = Layer.LETTERS)
             Key.Emoji -> openEmoji()
         }
+    }
+
+    private fun ensureDictionary() {
+        if (dictionary != null || dictionaryLoading) return
+        dictionaryLoading = true
+        lifecycleScope.launch { dictionary = Dictionary.load(this@ZenboardService) }
+    }
+
+    /**
+     * Before the first letter of a word: pick up letters already left of the cursor (so editing
+     * "hel|" continues "hel"), and refuse when the cursor is inside a word (plain typing there).
+     */
+    private fun startOrContinueWord(ic: android.view.inputmethod.InputConnection): Boolean {
+        if (composing.isNotEmpty()) return true
+        val after = ic.getTextAfterCursor(1, 0)
+        if (!after.isNullOrEmpty() && after[0].isLetter()) return false
+        val before = ic.getTextBeforeCursor(MAX_WORD, 0) ?: return true
+        val start = before.indexOfLast { !(it.isLetter() || it == '\'') } + 1
+        if (start < before.length) {
+            val word = before.substring(start)
+            ic.beginBatchEdit()
+            ic.deleteSurroundingText(word.length, 0)
+            ic.setComposingText(word, 1)
+            ic.endBatchEdit()
+            composing.append(word)
+        }
+        return true
+    }
+
+    /** Commit the word being typed as it is. */
+    private fun finishComposing() {
+        if (composing.isEmpty()) return
+        currentInputConnection?.finishComposingText()
+        composing.clear()
+        suggestions = Suggestions.NONE
+    }
+
+    private fun refreshSuggestions() {
+        val dict = dictionary
+        suggestions = if (dict == null || composing.isEmpty()) Suggestions.NONE else suggest(dict, composing.toString(), allowAutocorrect = false)
+    }
+
+    /** Tap on a suggestion: it replaces the word being typed, followed by a space. */
+    private fun onPick(word: String) {
+        val ic = currentInputConnection ?: return
+        ic.beginBatchEdit()
+        ic.commitText(word, 1)
+        ic.commitText(" ", 1)
+        ic.endBatchEdit()
+        composing.clear()
+        suggestions = Suggestions.NONE
     }
 
     /** Loaded once, on first use, so keyboards that never open emoji pay nothing. */
@@ -184,6 +277,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
 
     private fun onEmoji(value: String) {
         val ic = currentInputConnection ?: return
+        finishComposing()
         ic.commitText(value, 1)
         if (!isIncognito(currentInputEditorInfo)) {
             recentEmoji = pushRecent(recentEmoji, value)
@@ -197,6 +291,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     }
 
     private companion object {
+        /** Longest word picked up from before the cursor. */
+        const val MAX_WORD = 48
+
         const val CAPS_FLAGS = InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS or
             InputType.TYPE_TEXT_FLAG_CAP_WORDS or
             InputType.TYPE_TEXT_FLAG_CAP_SENTENCES

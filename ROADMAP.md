@@ -25,7 +25,7 @@
 - [ ] Emoji search
 
 ## 0.3 — Suggestions
-- [ ] On-device word suggestions (no suggestions in password fields)
+- [x] On-device word suggestions (no suggestions in password fields)
 - [ ] Autocorrection
 - [ ] Personal dictionary, stored locally
 

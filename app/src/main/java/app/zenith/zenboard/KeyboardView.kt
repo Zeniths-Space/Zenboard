@@ -88,6 +88,9 @@ fun KeyboardView(
     emoji: List<EmojiCategory>?,
     recentEmoji: List<String>,
     onEmoji: (String) -> Unit,
+    stripShown: Boolean,
+    suggestions: Suggestions,
+    onPick: (String) -> Unit,
     onChangeKeyboard: () -> Unit,
     onKey: (Key) -> Unit,
 ) {
@@ -107,6 +110,7 @@ fun KeyboardView(
             .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
+        if (stripShown) SuggestionStrip(suggestions, onPick)
         // Cap rows at 9% of screen height so landscape keeps most of the app visible.
         val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp)
         if (state.layer == Layer.EMOJI) {
