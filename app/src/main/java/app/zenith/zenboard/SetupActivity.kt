@@ -1,4 +1,4 @@
-package app.zenith.keyboard
+package app.zenith.zenboard
 
 import android.content.Intent
 import android.os.Bundle

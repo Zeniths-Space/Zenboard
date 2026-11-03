@@ -1,10 +1,10 @@
-# Zenith Keyboard
+# Zenboard
 
 A privacy-conscious, fully offline Android keyboard. Part of the
 Zenith's Space app ecosystem, but it is standalone:
 it needs no other Zenith app.
 
-- **Application ID:** `app.zenith.keyboard`
+- **Application ID:** `app.zenith.zenboard`
 - **Status:** early development (0.1.0). Not yet released.
 - **Permissions:** none. No internet access.
 
@@ -29,11 +29,11 @@ Planned work is in [ROADMAP.md](ROADMAP.md).
 ## Install and enable
 
 1. Install the APK (see Build below).
-2. Open **Zenith Keyboard** from the launcher.
-3. Tap **Open keyboard settings** and turn on Zenith Keyboard.
+2. Open **Zenboard** from the launcher.
+3. Tap **Open keyboard settings** and turn on Zenboard.
    Android shows a standard warning that any keyboard can see typed text.
    This app has no internet permission, so that text cannot leave the device.
-4. Tap **Choose keyboard** and pick Zenith Keyboard.
+4. Tap **Choose keyboard** and pick Zenboard.
 
 To switch back, hold the space bar (or use the keyboard icon in the navigation bar).
 Uninstalling the app also restores your previous keyboard.

@@ -1,4 +1,4 @@
-package app.zenith.keyboard
+package app.zenith.zenboard
 
 import android.content.res.Configuration
 import android.graphics.Rect
@@ -33,7 +33,7 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
  * The input method. Holds no typed text: each key goes straight to the editor's InputConnection.
  * Nothing is logged, stored, or sent anywhere.
  */
-class ZenithKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRegistryOwner {
+class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistryOwner {
 
     private val lifecycleRegistry = LifecycleRegistry(this)
     private val savedStateController = SavedStateRegistryController.create(this)
@@ -175,7 +175,7 @@ class ZenithKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRe
     private fun openEmoji() {
         state = state.copy(layer = Layer.EMOJI)
         if (recentEmoji.isEmpty()) recentEmoji = emojiRecents.load()
-        if (emoji == null) lifecycleScope.launch { emoji = loadEmoji(this@ZenithKeyboardService) }
+        if (emoji == null) lifecycleScope.launch { emoji = loadEmoji(this@ZenboardService) }
     }
 
     private fun onEmoji(value: String) {

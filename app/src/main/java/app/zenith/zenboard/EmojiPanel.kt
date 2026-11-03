@@ -1,4 +1,4 @@
-package app.zenith.keyboard
+package app.zenith.zenboard
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background

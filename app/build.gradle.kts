@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "app.zenith.keyboard"
+    namespace = "app.zenith.zenboard"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "app.zenith.keyboard"
+        applicationId = "app.zenith.zenboard"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

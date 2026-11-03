@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Zenith Keyboard</string>
+    <string name="app_name">Zenboard</string>
     <string name="subtype_en_us">English (US)</string>
 
     <string name="space_label">English</string>
@@ -9,7 +9,7 @@
 
     <string name="setup_tagline">Private. Offline. Yours.</string>
     <string name="setup_section">Set up</string>
-    <string name="setup_step_enable">Enable Zenith Keyboard</string>
+    <string name="setup_step_enable">Enable Zenboard</string>
     <string name="setup_step_enable_sub">Turn it on in system keyboard settings</string>
     <string name="setup_step_select">Select it as your keyboard</string>
     <string name="setup_step_select_sub">Switch from your current keyboard</string>

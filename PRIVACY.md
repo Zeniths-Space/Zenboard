@@ -1,6 +1,6 @@
 # Privacy
 
-Zenith Keyboard is built so that what you type stays on your device.
+Zenboard is built so that what you type stays on your device.
 
 - **No internet permission.** The app cannot open network connections.
 - **No telemetry, analytics, ads, or accounts.**

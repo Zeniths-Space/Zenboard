@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "keyboard"
+rootProject.name = "zenboard"
 include(":app")

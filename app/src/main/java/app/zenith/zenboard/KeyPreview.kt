@@ -1,4 +1,4 @@
-package app.zenith.keyboard
+package app.zenith.zenboard
 
 import android.view.WindowManager
 import androidx.compose.animation.core.Animatable

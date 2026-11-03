@@ -7,7 +7,7 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 | File | Role |
 |---|---|
 | `KeyboardModel.kt` | Pure logic: layouts, shift/caps state machine, Enter action, key widths. No framework calls, so it is unit-tested on the JVM. |
-| `ZenithKeyboardService.kt` | `InputMethodService`. Owns the keyboard state and turns key presses into `InputConnection` calls. |
+| `ZenboardService.kt` | `InputMethodService`. Owns the keyboard state and turns key presses into `InputConnection` calls. |
 | `KeyboardView.kt` | Compose UI for the keys. Stateless: it renders `KeyboardState` and reports `Key` presses. |
 | `SetupActivity.kt` | Launcher screen that guides enabling and selecting the keyboard. |
 | `Theme.kt` | Theme: wallpaper colours with the AMOLED / tinted-page surface treatment, semibold type, motion tokens. |
@@ -19,7 +19,7 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 ## Data flow
 
 ```
-touch -> KeyboardView -> onKey(Key) -> ZenithKeyboardService
+touch -> KeyboardView -> onKey(Key) -> ZenboardService
                                          |-> InputConnection (commitText / key events / editor action)
                                          '-> KeyboardState (Compose state) -> KeyboardView recomposes
 editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
