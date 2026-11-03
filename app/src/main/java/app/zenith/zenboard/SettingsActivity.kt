@@ -75,13 +75,15 @@ class SettingsActivity : ComponentActivity() {
                     label = "page",
                 ) { target ->
                     when (target) {
-                        Page.HOME -> HomeScreen(
-                            settings = current,
-                            enabled = enabled,
-                            selected = selected,
-                            versionName = versionName,
-                            onOpen = { page = it },
-                        )
+                        Page.HOME -> WithTryKeyboard {
+                            HomeScreen(
+                                settings = current,
+                                enabled = enabled,
+                                selected = selected,
+                                versionName = versionName,
+                                onOpen = { page = it },
+                            )
+                        }
                         Page.SETUP -> SetupScreen(
                             enabled = enabled,
                             selected = selected,
@@ -89,8 +91,8 @@ class SettingsActivity : ComponentActivity() {
                             onSelect = { getSystemService(InputMethodManager::class.java).showInputMethodPicker() },
                             onBack = { page = Page.HOME },
                         )
-                        Page.APPEARANCE -> AppearanceScreen(current, onBack = { page = Page.HOME })
-                        Page.TYPING -> TypingScreen(current, onBack = { page = Page.HOME })
+                        Page.APPEARANCE -> WithTryKeyboard { AppearanceScreen(current, onBack = { page = Page.HOME }) }
+                        Page.TYPING -> WithTryKeyboard { TypingScreen(current, onBack = { page = Page.HOME }) }
                         Page.ABOUT -> AboutScreen(versionName, onBack = { page = Page.HOME })
                     }
                 }
@@ -194,7 +196,7 @@ private fun HomeScreen(
                 },
             ),
         )
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(FabClearance))
     }
 }
 
@@ -215,8 +217,6 @@ private fun AppearanceScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 )
             },
         )
-        SectionHeader(stringResource(R.string.setup_try_section))
-        TryField()
     }
 }
 
@@ -291,7 +291,5 @@ private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 },
             ),
         )
-        SectionHeader(stringResource(R.string.setup_try_section))
-        TryField()
     }
 }

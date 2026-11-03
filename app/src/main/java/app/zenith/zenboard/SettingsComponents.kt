@@ -55,6 +55,13 @@ import androidx.compose.ui.unit.dp
 
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.FloatingActionButton
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
@@ -210,6 +217,79 @@ internal fun SliderTile(
     }
 }
 
+/** Bottom room on scrolling pages so the try-keyboard button never covers the last tile. */
+internal val FabClearance = 96.dp
+
+/**
+ * [content] with a keyboard button in the bottom-right corner. Tapping it opens a text field
+ * docked above the keyboard, focused, so the keyboard shows; close or back hides both.
+ */
+@Composable
+internal fun WithTryKeyboard(content: @Composable () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    var open by rememberSaveable { mutableStateOf(false) }
+    var text by rememberSaveable { mutableStateOf("") }
+    val focus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val close = {
+        keyboard?.hide()
+        open = false
+    }
+    BackHandler(enabled = open, onBack = close)
+    Box(Modifier.fillMaxSize()) {
+        content()
+        Box(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(16.dp),
+        ) {
+            if (!open) {
+                FloatingActionButton(
+                    onClick = { open = true },
+                    containerColor = cs.secondary,
+                    contentColor = cs.onSecondary,
+                ) {
+                    Icon(KeyIcons.Keyboard, contentDescription = stringResource(R.string.try_keyboard))
+                }
+            } else {
+                LaunchedEffect(Unit) {
+                    focus.requestFocus()
+                    keyboard?.show()
+                }
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                        .background(cs.surfaceContainerHighest, RoundedCornerShape(28.dp))
+                        .padding(start = 20.dp, end = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val placeholder = stringResource(R.string.setup_try_it)
+                    BasicTextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = cs.onSurface),
+                        cursorBrush = SolidColor(cs.secondary),
+                        modifier = Modifier.weight(1f).focusRequester(focus),
+                        decorationBox = { inner ->
+                            Box {
+                                if (text.isEmpty()) {
+                                    Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
+                                }
+                                inner()
+                            }
+                        },
+                    )
+                    IconButton(onClick = close) {
+                        Icon(KeyIcons.Close, contentDescription = stringResource(R.string.try_keyboard_close), tint = cs.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
+
 /** A category page: header with back button, then scrolling content. */
 @Composable
 internal fun CategoryPage(title: String, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
@@ -227,7 +307,7 @@ internal fun CategoryPage(title: String, onBack: () -> Unit, content: @Composabl
                 .padding(horizontal = 20.dp),
         ) {
             content()
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(FabClearance))
         }
     }
 }

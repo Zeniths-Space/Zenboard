@@ -68,6 +68,8 @@
     <string name="setup_choose_keyboard">Choose keyboard</string>
     <string name="setup_try_section">Try it</string>
     <string name="setup_try_it">Type something…</string>
+    <string name="try_keyboard">Try the keyboard</string>
+    <string name="try_keyboard_close">Close</string>
 
     <string name="key_shift">Shift</string>
     <string name="key_shift_on">Shift on</string>
