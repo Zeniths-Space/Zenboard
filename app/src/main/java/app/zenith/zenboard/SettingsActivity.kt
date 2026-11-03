@@ -12,6 +12,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -58,13 +60,16 @@ class SettingsActivity : ComponentActivity() {
             ZenithTheme(pureBlack = current.pureBlack) {
                 var page by rememberSaveable { mutableStateOf(Page.HOME) }
                 BackHandler(enabled = page != Page.HOME) { page = Page.HOME }
+                val slide = with(LocalDensity.current) { 30.dp.roundToPx() }
                 AnimatedContent(
                     targetState = page,
+                    // Surface behind both pages: otherwise the grey window background flashes between them.
+                    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
+                    // M3 shared axis X: both pages move together; old fades out fast, new fades in after it.
                     transitionSpec = {
-                        val forward = targetState != Page.HOME
-                        (fadeIn(Motion.effects(220, delay = 60)) +
-                            slideInHorizontally(Motion.spatial(380)) { w -> if (forward) w / 6 else -w / 6 })
-                            .togetherWith(fadeOut(Motion.effects(90)))
+                        val dir = if (targetState != Page.HOME) 1 else -1
+                        (slideInHorizontally(Motion.spatial(400)) { dir * slide } + fadeIn(Motion.effects(250, delay = 90)))
+                            .togetherWith(slideOutHorizontally(Motion.spatial(400)) { -dir * slide } + fadeOut(Motion.effects(90)))
                     },
                     label = "page",
                 ) { target ->
