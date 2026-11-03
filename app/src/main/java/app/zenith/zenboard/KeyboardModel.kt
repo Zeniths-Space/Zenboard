@@ -99,7 +99,7 @@ fun keyboardRows(layer: Layer): List<List<Key>> {
             bottom,
         )
         // The emoji grid fills the space of the upper rows; only the bottom row has keys.
-        Layer.EMOJI -> listOf(listOf(Key.ToLetters, Key.Space, Key.Backspace, Key.Enter))
+        Layer.EMOJI -> listOf(listOf(Key.ToLetters, Key.Backspace))
     }
 }
 

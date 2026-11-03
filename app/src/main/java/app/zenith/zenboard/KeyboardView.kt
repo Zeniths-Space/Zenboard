@@ -114,15 +114,18 @@ fun KeyboardView(
         keyboardRows(state.layer).forEach { row ->
             Row(Modifier.fillMaxWidth().height(rowHeight)) {
                 val pad = (ROW_UNITS - row.sumOf { keyWeight(it, row).toDouble() }.toFloat()) / 2
-                if (pad > 0f) Spacer(Modifier.weight(pad))
-                row.forEach { key ->
+                // Short rows are centred, except the emoji row: ABC at the left edge, delete at the right.
+                val spread = state.layer == Layer.EMOJI
+                if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
+                row.forEachIndexed { i, key ->
+                    if (spread && i == row.lastIndex && pad > 0f) Spacer(Modifier.weight(pad * 2))
                     // Identity by key, not slot: switching layers must not hand one key's press and
                     // colour animations to whichever key lands in the same position.
                     key(key) {
                         KeyButton(key, state, enterAction, preview, onKey, onChangeKeyboard, Modifier.weight(keyWeight(key, row)))
                     }
                 }
-                if (pad > 0f) Spacer(Modifier.weight(pad))
+                if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
             }
         }
     }

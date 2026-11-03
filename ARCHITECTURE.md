@@ -57,7 +57,8 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   downloadable-font fetch at app startup. Instead, `assets/emoji.txt` (16 KB) is generated from
   Unicode `emoji-test.txt`: fully-qualified emoji, skin-tone variants omitted. It is loaded off the
   main thread on first use, and `Paint.hasGlyph` drops emoji the device font cannot draw. The panel
-  takes the height of the three upper rows, so the keyboard does not resize.
+  takes the height of the three upper rows, so the keyboard does not resize. Its bottom row is
+  only ABC (left) and delete (right).
 - **Changing keyboard** is a long-press on space, which calls `showInputMethodPicker()`. The
   emoji key took the old globe key's place.
 - **Accent colour** is the scheme's secondary (Enter, caps lock, press tint, previews, selection).

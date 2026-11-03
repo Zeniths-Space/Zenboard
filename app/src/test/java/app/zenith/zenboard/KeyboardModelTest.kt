@@ -64,8 +64,11 @@ class KeyboardModelTest {
                 val width = row.sumOf { keyWeight(it, row).toDouble() }
                 assert(width <= ROW_UNITS + 1e-6) { "$layer row $row is $width units" }
             }
+            // A space bar stretches its row to the full width.
             val bottom = keyboardRows(layer).last()
-            assertEquals(ROW_UNITS.toDouble(), bottom.sumOf { keyWeight(it, bottom).toDouble() }, 1e-6)
+            if (Key.Space in bottom) {
+                assertEquals(ROW_UNITS.toDouble(), bottom.sumOf { keyWeight(it, bottom).toDouble() }, 1e-6)
+            }
         }
     }
 
@@ -118,10 +121,10 @@ class KeyboardModelTest {
     }
 
     @Test
-    fun `emoji key replaces the globe, and the emoji layer keeps only a bottom row`() {
+    fun `emoji key replaces the globe, and the emoji layer keeps only ABC and delete`() {
         assert(Key.Emoji in keyboardRows(Layer.LETTERS).last())
         assert(Key.Emoji in keyboardRows(Layer.SYMBOLS).last())
-        assertEquals(listOf(listOf(Key.ToLetters, Key.Space, Key.Backspace, Key.Enter)), keyboardRows(Layer.EMOJI))
+        assertEquals(listOf(listOf(Key.ToLetters, Key.Backspace)), keyboardRows(Layer.EMOJI))
     }
 
     @Test
