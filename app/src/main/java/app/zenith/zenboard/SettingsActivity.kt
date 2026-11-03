@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private enum class Page { HOME, SETUP, APPEARANCE, TYPING, ABOUT }
+private enum class Page { HOME, SETUP, APPEARANCE, TYPING, FEEDBACK, ABOUT }
 
 /** Launcher entry and the keyboard's settings activity: settings home, setup and about pages. */
 class SettingsActivity : ComponentActivity() {
@@ -93,6 +93,7 @@ class SettingsActivity : ComponentActivity() {
                         )
                         Page.APPEARANCE -> WithTryKeyboard { AppearanceScreen(current, onBack = { page = Page.HOME }) }
                         Page.TYPING -> WithTryKeyboard { TypingScreen(current, onBack = { page = Page.HOME }) }
+                        Page.FEEDBACK -> WithTryKeyboard { FeedbackScreen(current, onBack = { page = Page.HOME }) }
                         Page.ABOUT -> AboutScreen(versionName, onBack = { page = Page.HOME })
                     }
                 }
@@ -178,12 +179,26 @@ private fun HomeScreen(
                 },
                 {
                     GroupTile(
-                        badge = { ScallopBadge(KeyIcons.Bubble, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        badge = { ScallopBadge(KeyIcons.Words, ZenithColors.indicator, ZenithColors.onIndicator) },
                         title = stringResource(R.string.settings_section_typing),
                         subtitle = stringResource(
-                            if (settings.keyPopup) R.string.settings_typing_summary_on else R.string.settings_typing_summary_off,
+                            R.string.settings_typing_summary,
+                            onOff(settings.suggestions),
+                            onOff(settings.autocorrect),
                         ),
                         onClick = { onOpen(Page.TYPING) },
+                    )
+                },
+                {
+                    GroupTile(
+                        badge = { ScallopBadge(KeyIcons.Vibration, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        title = stringResource(R.string.settings_section_feedback),
+                        subtitle = stringResource(
+                            R.string.settings_feedback_summary,
+                            onOff(settings.haptics),
+                            onOff(settings.sound),
+                        ),
+                        onClick = { onOpen(Page.FEEDBACK) },
                     )
                 },
                 {
@@ -217,14 +232,6 @@ private fun AppearanceScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 )
             },
         )
-    }
-}
-
-@Composable
-private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    CategoryPage(stringResource(R.string.settings_section_typing), onBack) {
         SectionHeader(stringResource(R.string.settings_typing_keys))
         SegmentedGroup(
             listOf<@Composable () -> Unit>(
@@ -248,6 +255,19 @@ private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                         onCheckedChange = { scope.launch { SettingsStore.setKeyPopup(context, it) } },
                     )
                 },
+            ),
+        )
+    }
+}
+
+@Composable
+private fun FeedbackScreen(settings: ZenboardSettings, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    CategoryPage(stringResource(R.string.settings_section_feedback), onBack) {
+        Spacer(Modifier.height(8.dp))
+        SegmentedGroup(
+            listOf<@Composable () -> Unit>(
                 {
                     SwitchTile(
                         icon = KeyIcons.Vibration,
@@ -268,6 +288,14 @@ private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 },
             ),
         )
+    }
+}
+
+@Composable
+private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    CategoryPage(stringResource(R.string.settings_section_typing), onBack) {
         SectionHeader(stringResource(R.string.settings_typing_words))
         SegmentedGroup(
             listOf<@Composable () -> Unit>(
@@ -293,3 +321,6 @@ private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
         )
     }
 }
+
+@Composable
+private fun onOff(on: Boolean): String = stringResource(if (on) R.string.settings_state_on else R.string.settings_state_off)

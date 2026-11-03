@@ -25,8 +25,8 @@ it needs no other Zenith app.
   type it. Off in password fields.
 - Autocorrect on space or end punctuation, with the word it will type highlighted in the strip.
   Backspace right after undoes it and keeps your word. Off in email, URL and password fields.
-- Settings by category: Setup, Appearance (pure black, off by default), Typing (key height,
-  key-press popup, vibration and key sound) and About, each on its own page.
+- Settings by category, each on its own page: Setup; Appearance (pure black, key height,
+  key-press popup); Typing (word suggestions, autocorrect); Sound and vibration; About.
 - Material 3 Expressive look: wallpaper colours, AMOLED-black dark mode, spring key-press morph.
 - Key vibration (on by default) and key click sound (off by default), each also following the
   system setting.

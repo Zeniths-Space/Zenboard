@@ -9,7 +9,7 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 | `KeyboardModel.kt` | Pure logic: layouts, shift/caps state machine, Enter action, key widths. No framework calls, so it is unit-tested on the JVM. |
 | `ZenboardService.kt` | `InputMethodService`. Owns the keyboard state and turns key presses into `InputConnection` calls. |
 | `KeyboardView.kt` | Compose UI for the keys. Stateless: it renders `KeyboardState` and reports `Key` presses. |
-| `SettingsActivity.kt` | Launcher entry and the IME's settings activity: category home, Appearance and Typing pages, page switching. |
+| `SettingsActivity.kt` | Launcher entry and the IME's settings activity: category home, Appearance, Typing and Sound and vibration pages, page switching. |
 | `SetupScreen.kt` / `AboutScreen.kt` | Setup steps page; about page with version, privacy, license status and credits. |
 | `SettingsComponents.kt` | Shared grouped tiles, switch and slider tiles, page header, scallop badge, try-it field. |
 | `SettingsStore.kt` | DataStore-backed settings, observed live by the keyboard. |
