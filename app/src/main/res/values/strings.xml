@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">Zenith Keyboard</string>
+    <string name="subtype_en_us">English (US)</string>
+
+    <string name="space_label">English</string>
+
+    <string name="setup_tagline">Private. Offline. Yours.</string>
+    <string name="setup_section">Set up</string>
+    <string name="setup_step_enable">Enable Zenith Keyboard</string>
+    <string name="setup_step_enable_sub">Turn it on in system keyboard settings</string>
+    <string name="setup_step_select">Select it as your keyboard</string>
+    <string name="setup_step_select_sub">Switch from your current keyboard</string>
+    <string name="setup_step_done">Done</string>
+    <string name="setup_privacy_title">No internet permission</string>
+    <string name="setup_privacy_sub">Nothing you type can leave this device. No accounts, no analytics.</string>
+    <string name="setup_open_settings">Enable keyboard</string>
+    <string name="setup_choose_keyboard">Choose keyboard</string>
+    <string name="setup_try_section">Try it</string>
+    <string name="setup_try_it">Type something…</string>
+
+    <string name="key_shift">Shift</string>
+    <string name="key_shift_on">Shift on</string>
+    <string name="key_caps_lock">Caps lock on</string>
+    <string name="key_delete">Delete</string>
+    <string name="key_space">Space</string>
+    <string name="key_symbols">Symbols</string>
+    <string name="key_letters">Letters</string>
+    <string name="key_change_keyboard">Change keyboard</string>
+    <string name="key_enter">Enter</string>
+    <string name="key_search">Search</string>
+    <string name="key_go">Go</string>
+    <string name="key_send">Send</string>
+    <string name="key_next">Next</string>
+    <string name="key_previous">Previous</string>
+    <string name="key_done">Done</string>
+</resources>
