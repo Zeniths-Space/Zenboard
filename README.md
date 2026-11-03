@@ -56,6 +56,27 @@ Requirements: JDK 17 and the Android SDK with platform 37.
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
+### Signed release build
+
+Release builds are signed only when the Gradle property `zenboardSigning` points to a
+`keystore.properties` file kept outside this repository:
+
+```properties
+# ~/.gradle/gradle.properties
+zenboardSigning=/path/to/keystore.properties
+```
+
+```properties
+# keystore.properties
+storeFile=/path/to/zenboard-release.jks
+storePassword=...
+keyAlias=zenboard
+keyPassword=...
+```
+
+Then `./gradlew assembleRelease` writes `app/build/outputs/apk/release/app-release.apk`.
+Without the property the release APK is unsigned. Never commit keystores or passwords.
+
 ## Documentation
 
 - [ARCHITECTURE.md](ARCHITECTURE.md)

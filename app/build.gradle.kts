@@ -1,7 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+// Release signing: the path to a keystore.properties file (storeFile, storePassword, keyAlias,
+// keyPassword), given as the Gradle property zenboardSigning, e.g. in ~/.gradle/gradle.properties.
+// Keys never live in this repository. Without it, release builds are left unsigned.
+val signingProps = providers.gradleProperty("zenboardSigning").orNull
+    ?.let { file(it) }
+    ?.takeIf { it.exists() }
+    ?.let { f -> Properties().apply { f.inputStream().use { load(it) } } }
 
 android {
     namespace = "app.zenith.zenboard"
@@ -15,8 +25,20 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        if (signingProps != null) {
+            create("release") {
+                storeFile = file(signingProps.getProperty("storeFile"))
+                storePassword = signingProps.getProperty("storePassword")
+                keyAlias = signingProps.getProperty("keyAlias")
+                keyPassword = signingProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
