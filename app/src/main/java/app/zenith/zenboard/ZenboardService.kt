@@ -247,6 +247,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
             }
             Key.Shift -> state = state.tapShift(SystemClock.uptimeMillis())
             Key.ToSymbols -> state = state.copy(layer = Layer.SYMBOLS)
+            Key.ToMoreSymbols -> state = state.copy(layer = Layer.MORE_SYMBOLS)
             Key.ToLetters -> state = state.copy(layer = Layer.LETTERS)
             Key.Emoji -> openEmoji()
         }

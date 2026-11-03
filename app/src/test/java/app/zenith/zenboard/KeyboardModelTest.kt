@@ -114,10 +114,18 @@ class KeyboardModelTest {
     }
 
     @Test
-    fun `comma lives on the period long-press, not the bottom row`() {
-        val bottom = keyboardRows(Layer.LETTERS).last()
-        assert(Key.Text(",") !in bottom)
-        assertEquals(",", alternatesFor(Key.Text(".")).first())
+    fun `comma sits left of the emoji key on every typing layer`() {
+        for (layer in listOf(Layer.LETTERS, Layer.SYMBOLS, Layer.MORE_SYMBOLS)) {
+            val bottom = keyboardRows(layer).last()
+            assertEquals(bottom.indexOf(Key.Emoji) - 1, bottom.indexOf(Key.Text(",")))
+        }
+    }
+
+    @Test
+    fun `symbols pages link to each other`() {
+        assert(Key.ToMoreSymbols in keyboardRows(Layer.SYMBOLS).flatten())
+        assert(Key.ToSymbols in keyboardRows(Layer.MORE_SYMBOLS).flatten())
+        assertEquals(Key.ToLetters, keyboardRows(Layer.MORE_SYMBOLS).last().first())
     }
 
     @Test

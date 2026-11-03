@@ -80,6 +80,7 @@
     <string name="key_space">Space</string>
     <string name="key_symbols">Symbols</string>
     <string name="key_letters">Letters</string>
+    <string name="key_more_symbols">More symbols</string>
     <string name="key_emoji">Emoji</string>
     <string name="key_change_keyboard">Change keyboard</string>
     <string name="key_delete_word">Delete word</string>

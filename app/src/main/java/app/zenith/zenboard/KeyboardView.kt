@@ -338,7 +338,11 @@ private fun KeyButton(
                 }
             }
             else -> Text(
-                if (key == Key.ToSymbols) "?123" else "ABC",
+                when (key) {
+                    Key.ToSymbols -> "?123"
+                    Key.ToMoreSymbols -> "=\\<"
+                    else -> "ABC"
+                },
                 color = content,
                 style = MaterialTheme.typography.labelLarge,
             )
@@ -588,6 +592,7 @@ private fun keyDescription(key: Key, state: KeyboardState, enterAction: Int?): S
     Key.Backspace -> stringResource(R.string.key_delete)
     Key.Space -> stringResource(R.string.key_space)
     Key.ToSymbols -> stringResource(R.string.key_symbols)
+    Key.ToMoreSymbols -> stringResource(R.string.key_more_symbols)
     Key.ToLetters -> stringResource(R.string.key_letters)
     Key.Emoji -> stringResource(R.string.key_emoji)
     Key.Enter -> stringResource(

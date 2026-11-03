@@ -10,7 +10,7 @@
 ## 0.2 — Typing comfort
 - [x] Key-press preview popup
 - [x] Long-press for accented letters and alternate symbols
-- [ ] Second symbols page (`=\<` etc.)
+- [x] Second symbols page (`=\<` etc.)
 - [x] Swipe left on backspace to delete a word
 - [x] Space-bar cursor movement
 - [x] Settings: pure black, key-press popup
