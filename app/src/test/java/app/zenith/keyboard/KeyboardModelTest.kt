@@ -109,4 +109,11 @@ class KeyboardModelTest {
             alternatesFor(key).forEach { assertEquals("$key -> $it", 1, it.codePointCount(0, it.length)) }
         }
     }
+
+    @Test
+    fun `comma lives on the period long-press, not the bottom row`() {
+        val bottom = keyboardRows(Layer.LETTERS).last()
+        assert(Key.Text(",") !in bottom)
+        assertEquals(",", alternatesFor(Key.Text(".")).first())
+    }
 }

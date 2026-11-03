@@ -78,8 +78,8 @@ private fun row(chars: String): List<Key> = chars.map { Key.Text(it.toString()) 
 fun keyboardRows(layer: Layer): List<List<Key>> {
     val bottom = listOf(
         if (layer == Layer.LETTERS) Key.ToSymbols else Key.ToLetters,
-        Key.Text(","),
         Key.Space,
+        // No comma key: it is the first long-press option on the period, so space gets the width.
         Key.Text("."),
         Key.Enter,
     )
