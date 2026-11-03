@@ -1,5 +1,6 @@
 package app.zenith.zenboard
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.inputmethodservice.InputMethodService
@@ -124,6 +125,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         stripShown = stripShown,
                         suggestions = suggestions,
                         onPick = ::onPick,
+                        onToolbar = ::onToolbar,
                         onChangeKeyboard = ::showKeyboardPicker,
                         onDeleteWord = ::deleteWord,
                         onMoveCursor = ::moveCursor,
@@ -382,6 +384,26 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         cursor = (if (forward) cursor + delta else cursor - delta).coerceAtLeast(0)
         pendingMoves.addLast(cursor)
         ic.setSelection(cursor, cursor)
+    }
+
+    private fun onToolbar(action: ToolbarAction) {
+        val ic = currentInputConnection ?: return
+        lastCorrection = null
+        if (action == ToolbarAction.SETTINGS) {
+            requestHideSelf(0)
+            startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            return
+        }
+        finishComposing()
+        // The editor's own menu actions: they respect fields that block copying, such as passwords.
+        ic.performContextMenuAction(
+            when (action) {
+                ToolbarAction.SELECT_ALL -> android.R.id.selectAll
+                ToolbarAction.CUT -> android.R.id.cut
+                ToolbarAction.COPY -> android.R.id.copy
+                else -> android.R.id.paste
+            },
+        )
     }
 
     /** Loaded once, on first use, so keyboards that never open emoji pay nothing. */

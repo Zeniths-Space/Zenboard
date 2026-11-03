@@ -92,6 +92,7 @@ fun KeyboardView(
     stripShown: Boolean,
     suggestions: Suggestions,
     onPick: (String) -> Unit,
+    onToolbar: (ToolbarAction) -> Unit,
     onChangeKeyboard: () -> Unit,
     onDeleteWord: () -> Unit,
     onMoveCursor: (Int) -> Unit,
@@ -115,7 +116,10 @@ fun KeyboardView(
             .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        if (stripShown) SuggestionStrip(suggestions, onPick)
+        if (stripShown) {
+            // Words only while a word is being typed; otherwise the same space holds the toolbar.
+            if (suggestions.primary == null && suggestions.others.isEmpty()) Toolbar(onToolbar) else SuggestionStrip(suggestions, onPick)
+        }
         // Cap rows at 9% of screen height so landscape keeps most of the app visible.
         val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
         if (state.layer == Layer.EMOJI) {

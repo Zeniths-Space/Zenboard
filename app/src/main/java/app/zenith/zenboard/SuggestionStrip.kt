@@ -4,6 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +26,47 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, SETTINGS }
+
+/**
+ * Fills the strip while no word is being typed: text editing on the left, settings on the right.
+ * Same height as the word strip, so the keyboard does not jump when one replaces the other.
+ */
+@Composable
+fun Toolbar(onAction: (ToolbarAction) -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(42.dp)
+            .padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ToolButton(KeyIcons.SelectAll, R.string.toolbar_select_all) { onAction(ToolbarAction.SELECT_ALL) }
+        ToolButton(KeyIcons.Cut, R.string.toolbar_cut) { onAction(ToolbarAction.CUT) }
+        ToolButton(KeyIcons.Copy, R.string.toolbar_copy) { onAction(ToolbarAction.COPY) }
+        ToolButton(KeyIcons.Paste, R.string.toolbar_paste) { onAction(ToolbarAction.PASTE) }
+        Spacer(Modifier.weight(1f))
+        ToolButton(KeyIcons.Settings, R.string.toolbar_settings) { onAction(ToolbarAction.SETTINGS) }
+    }
+}
+
+@Composable
+private fun ToolButton(icon: ImageVector, label: Int, onClick: () -> Unit) {
+    val feedback = LocalKeyFeedback.current
+    Box(
+        Modifier
+            .size(width = 52.dp, height = 40.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(role = Role.Button) {
+                feedback.press()
+                onClick()
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, stringResource(label), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+    }
+}
 
 /** Three slots: alternative, best (centre, bold), alternative. An unknown typed word is shown in quotes. */
 @Composable
