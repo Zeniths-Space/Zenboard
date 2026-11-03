@@ -7,8 +7,40 @@
     <string name="emoji_recents_empty">Emoji you use will show up here</string>
     <string name="emoji_loading">Loading emoji…</string>
 
+    <string name="back">Back</string>
+
+    <string name="settings_section_setup">Setup</string>
+    <string name="settings_setup_title">Set up Zenboard</string>
+    <string name="settings_setup_ready">Enabled and selected</string>
+    <string name="settings_setup_not_enabled">Not enabled yet</string>
+    <string name="settings_setup_not_selected">Enabled, but not your current keyboard</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_pure_black">Pure black</string>
+    <string name="settings_pure_black_sub">Black background in dark mode. Saves power on OLED screens.</string>
+    <string name="settings_section_typing">Typing</string>
+    <string name="settings_key_popup">Key-press popup</string>
+    <string name="settings_key_popup_sub">Show a larger letter above the key you press</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_about_title">About Zenboard</string>
+
+    <string name="setup_title">Setup</string>
+
+    <string name="about_title">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_description">A private, offline keyboard. Part of the Zenith\'s Space app collection.</string>
+    <string name="about_section_app">App</string>
+    <string name="about_developer">Developer</string>
+    <string name="about_developer_name">Zenith\'s Space</string>
+    <string name="about_license">Open source</string>
+    <string name="about_license_sub">The license will be chosen before the first public release.</string>
+    <string name="about_section_credits">Credits</string>
+    <string name="about_emoji_data">Emoji data</string>
+    <string name="about_emoji_data_sub">Unicode® Emoji 18.0, © Unicode, Inc. Used under the Unicode License v3.</string>
+    <string name="about_icons">Icons</string>
+    <string name="about_icons_sub">Material Icons paths, Apache License 2.0.</string>
+
     <string name="setup_tagline">Private. Offline. Yours.</string>
-    <string name="setup_section">Set up</string>
+    <string name="setup_section">Steps</string>
     <string name="setup_step_enable">Enable Zenboard</string>
     <string name="setup_step_enable_sub">Turn it on in system keyboard settings</string>
     <string name="setup_step_select">Select it as your keyboard</string>

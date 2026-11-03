@@ -2,7 +2,9 @@ package app.zenith.zenboard
 
 import android.content.Context
 import android.os.Build
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -27,7 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 
 /*
  * Design language shared with the owner's Kontract app (M3 Expressive): wallpaper colours,
- * an AMOLED near-black surface ladder in dark mode, white cards on a tinted page in light mode,
+ * an optional AMOLED near-black surface ladder in dark mode, white cards on a tinted page in light mode,
  * slate ink, semibold type, springy motion.
  *
  * shortcut: plain MaterialTheme, because MaterialExpressiveTheme and MotionScheme.expressive() are
@@ -81,12 +83,19 @@ private fun ColorScheme.withDarkSurfaces(): ColorScheme {
     )
 }
 
-/** Wallpaper colours on Android 12+; the stock M3 baseline before that. */
-private fun schemeFor(context: Context, dark: Boolean): ColorScheme = when {
-    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && dark -> dynamicDarkColorScheme(context).withDarkSurfaces()
-    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> dynamicLightColorScheme(context).withLightSurfaces()
-    dark -> darkColorScheme().withDarkSurfaces()
-    else -> lightColorScheme().withLightSurfaces()
+/**
+ * Wallpaper colours on Android 12+; the stock M3 baseline before that.
+ * Dark mode keeps the scheme's own surfaces unless [pureBlack] asks for the AMOLED ladder.
+ */
+private fun schemeFor(context: Context, dark: Boolean, pureBlack: Boolean): ColorScheme {
+    val dynamic = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    return when {
+        dark -> {
+            val scheme = if (dynamic) dynamicDarkColorScheme(context) else darkColorScheme()
+            if (pureBlack) scheme.withDarkSurfaces() else scheme
+        }
+        else -> (if (dynamic) dynamicLightColorScheme(context) else lightColorScheme()).withLightSurfaces()
+    }
 }
 
 /** System font (the user's choice); only weights are emphasized. */
@@ -131,6 +140,15 @@ object ZenithColors {
 
 /** Motion tokens (same values as Kontract's Motion.kt). */
 object Motion {
+    private val Standard = CubicBezierEasing(0.2f, 0f, 0f, 1f)
+    private val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
+
+    /** Colour / opacity changes. */
+    fun <T> effects(duration: Int = 300, delay: Int = 0): FiniteAnimationSpec<T> = tween(duration, delay, Standard)
+
+    /** Things arriving on screen, such as a page sliding in. */
+    fun <T> spatial(duration: Int = 450): FiniteAnimationSpec<T> = tween(duration, easing = EmphasizedDecelerate)
+
     /** Key-press morph: quick enough for fast typing, with a little overshoot. */
     fun <T> press(): FiniteAnimationSpec<T> = spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium)
 
@@ -139,9 +157,13 @@ object Motion {
 }
 
 @Composable
-fun ZenithTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+fun ZenithTheme(
+    dark: Boolean = isSystemInDarkTheme(),
+    pureBlack: Boolean = false,
+    content: @Composable () -> Unit,
+) {
     val context = LocalContext.current
-    val scheme = remember(context, dark) { schemeFor(context, dark) }
+    val scheme = remember(context, dark, pureBlack) { schemeFor(context, dark, pureBlack) }
     CompositionLocalProvider(LocalDark provides dark) {
         MaterialTheme(colorScheme = scheme, typography = AppTypography) {
             // Screens draw on plain backgrounds, not Surfaces; without this, bare Icons default to black.

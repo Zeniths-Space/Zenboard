@@ -1,12 +1,5 @@
 package app.zenith.zenboard
 
-import android.content.Intent
-import android.os.Bundle
-import android.provider.Settings
-import android.view.inputmethod.InputMethodManager
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -22,21 +15,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -44,9 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,122 +46,15 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** Launcher entry: walks the user through enabling and selecting the keyboard. */
-class SetupActivity : ComponentActivity() {
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 
-    private var enabled by mutableStateOf(false)
-    private var selected by mutableStateOf(false)
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            ZenithTheme {
-                SetupScreen(
-                    enabled = enabled,
-                    selected = selected,
-                    onEnable = { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) },
-                    onSelect = { getSystemService(InputMethodManager::class.java).showInputMethodPicker() },
-                )
-            }
-        }
-    }
-
-    // Re-check on focus: covers returning from system settings and closing the IME picker.
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) refresh()
-    }
-
-    private fun refresh() {
-        val imm = getSystemService(InputMethodManager::class.java)
-        enabled = imm.enabledInputMethodList.any { it.packageName == packageName }
-        selected = Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
-            ?.startsWith("$packageName/") == true
-    }
-}
+/* Shared building blocks for the settings, setup and about pages (Kontract-style grouped tiles). */
 
 @Composable
-private fun SetupScreen(enabled: Boolean, selected: Boolean, onEnable: () -> Unit, onSelect: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(cs.surface)
-            .safeDrawingPadding(),
-    ) {
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-        ) {
-            Spacer(Modifier.height(40.dp))
-            ScallopBadge(KeyIcons.Keyboard, cs.secondary, cs.onSecondary, size = 88.dp)
-            Spacer(Modifier.height(24.dp))
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
-            Spacer(Modifier.height(4.dp))
-            Text(stringResource(R.string.setup_tagline), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant)
-
-            SectionHeader(stringResource(R.string.setup_section))
-            SegmentedGroup(
-                listOf(
-                    {
-                        StepTile(
-                            number = 1,
-                            title = stringResource(R.string.setup_step_enable),
-                            subtitle = stringResource(R.string.setup_step_enable_sub),
-                            done = enabled,
-                            onClick = onEnable,
-                        )
-                    },
-                    {
-                        StepTile(
-                            number = 2,
-                            title = stringResource(R.string.setup_step_select),
-                            subtitle = stringResource(R.string.setup_step_select_sub),
-                            done = selected,
-                            onClick = if (enabled) onSelect else null,
-                        )
-                    },
-                    {
-                        GroupTile(
-                            badge = { ScallopBadge(KeyIcons.Lock, cs.tertiaryContainer, cs.onTertiaryContainer) },
-                            title = stringResource(R.string.setup_privacy_title),
-                            subtitle = stringResource(R.string.setup_privacy_sub),
-                        )
-                    },
-                ),
-            )
-
-            SectionHeader(stringResource(R.string.setup_try_section))
-            TryField()
-            Spacer(Modifier.height(24.dp))
-        }
-
-        // Signature action: only the next pending step, as a full-width pill.
-        val action = when {
-            !enabled -> stringResource(R.string.setup_open_settings) to onEnable
-            !selected -> stringResource(R.string.setup_choose_keyboard) to onSelect
-            else -> null
-        }
-        if (action != null) {
-            Button(
-                onClick = action.second,
-                shape = StadiumShape,
-                colors = ButtonDefaults.buttonColors(containerColor = cs.secondary, contentColor = cs.onSecondary),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
-                    .height(56.dp),
-            ) { Text(action.first, style = MaterialTheme.typography.titleMedium) }
-        }
-    }
-}
-
-@Composable
-private fun SectionHeader(title: String) {
+internal fun SectionHeader(title: String) {
     Text(
         title,
         style = MaterialTheme.typography.titleSmall,
@@ -185,7 +65,7 @@ private fun SectionHeader(title: String) {
 
 /** Rounded segments stacked with small gaps (M3 Expressive grouped list). */
 @Composable
-private fun SegmentedGroup(segments: List<@Composable () -> Unit>) {
+internal fun SegmentedGroup(segments: List<@Composable () -> Unit>) {
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         segments.forEachIndexed { i, segment ->
             Surface(
@@ -198,7 +78,7 @@ private fun SegmentedGroup(segments: List<@Composable () -> Unit>) {
 }
 
 @Composable
-private fun StepTile(number: Int, title: String, subtitle: String, done: Boolean, onClick: (() -> Unit)?) {
+internal fun StepTile(number: Int, title: String, subtitle: String, done: Boolean, onClick: (() -> Unit)?) {
     val cs = MaterialTheme.colorScheme
     val doneLabel = stringResource(R.string.setup_step_done)
     GroupTile(
@@ -218,39 +98,94 @@ private fun StepTile(number: Int, title: String, subtitle: String, done: Boolean
 }
 
 @Composable
-private fun GroupTile(
-    badge: @Composable () -> Unit,
+internal fun GroupTile(
+    badge: (@Composable () -> Unit)?,
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
     subtitleColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     onClick: (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val cs = MaterialTheme.colorScheme
     Row(
         modifier
             .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
+            .then(if (onClick != null && trailing == null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        badge()
-        Spacer(Modifier.width(16.dp))
+        if (badge != null) {
+            badge()
+            Spacer(Modifier.width(16.dp))
+        }
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
             Spacer(Modifier.height(2.dp))
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = subtitleColor)
         }
-        if (onClick != null) {
-            Spacer(Modifier.width(8.dp))
-            Icon(KeyIcons.Next, contentDescription = null, tint = cs.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        when {
+            trailing != null -> {
+                Spacer(Modifier.width(12.dp))
+                trailing()
+            }
+            onClick != null -> {
+                Spacer(Modifier.width(8.dp))
+                Icon(KeyIcons.Next, contentDescription = null, tint = cs.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            }
         }
+    }
+}
+
+/** A tile whose whole row toggles a switch (one touch target, announced as a switch). */
+@Composable
+internal fun SwitchTile(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    val cs = MaterialTheme.colorScheme
+    GroupTile(
+        badge = { ScallopBadge(icon, ZenithColors.indicator, ZenithColors.onIndicator) },
+        title = title,
+        subtitle = subtitle,
+        modifier = Modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
+        trailing = {
+            Switch(
+                checked = checked,
+                onCheckedChange = null,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = cs.onSecondary,
+                    checkedTrackColor = cs.secondary,
+                    checkedBorderColor = cs.secondary,
+                ),
+            )
+        },
+    )
+}
+
+/** Sub-page header: back button and a large title. */
+@Composable
+internal fun PageTopBar(title: String, onBack: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp, end = 20.dp, top = 8.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onBack) {
+            Icon(KeyIcons.Previous, contentDescription = stringResource(R.string.back))
+        }
+        Spacer(Modifier.width(4.dp))
+        Text(title, style = MaterialTheme.typography.headlineSmall)
     }
 }
 
 /** Field tile: large rounded container with a scallop icon that turns solid on focus. */
 @Composable
-private fun TryField() {
+internal fun TryField() {
     val cs = MaterialTheme.colorScheme
     var text by rememberSaveable { mutableStateOf("") }
     val interaction = remember { MutableInteractionSource() }
@@ -296,7 +231,7 @@ private fun TryField() {
 
 /** Scalloped badge with an icon or a short label. */
 @Composable
-private fun ScallopBadge(
+internal fun ScallopBadge(
     icon: ImageVector?,
     container: Color,
     content: Color,

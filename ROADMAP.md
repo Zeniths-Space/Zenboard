@@ -3,7 +3,7 @@
 ## 0.1 — Usable base (current)
 - [x] QWERTY and symbols layers, shift and caps lock, auto-caps
 - [x] Backspace repeat, Enter editor actions, next-keyboard key
-- [x] Setup screen
+- [x] Settings home with separate Setup and About pages
 - [x] Real-device check on Galaxy S24 Ultra, Android 17 (2026-11-03): typing, shift and caps lock, auto-caps, held backspace, Next action, digit layer for phone fields, newline, landscape, next-keyboard key
 - [ ] TalkBack check
 
@@ -13,6 +13,7 @@
 - [ ] Second symbols page (`=\<` etc.)
 - [ ] Swipe left on backspace to delete a word
 - [ ] Space-bar cursor movement
+- [x] Settings: pure black, key-press popup
 - [ ] Settings: key height, haptics, sound
 
 ## 0.2 — also done

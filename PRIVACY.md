@@ -11,6 +11,7 @@ Zenboard is built so that what you type stays on your device.
   type in asks for incognito (`IME_FLAG_NO_PERSONALIZED_LEARNING`). Clearing the app's storage
   removes them.
 - **No logging** of typed content.
+- **Settings** (pure black, key-press popup) are stored in app-private storage on the device.
 - **Backups:** disabled (`allowBackup="false"`), so recent emoji never leave the device.
 
 Future features that store data on the device, such as a personal dictionary or

@@ -9,7 +9,10 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 | `KeyboardModel.kt` | Pure logic: layouts, shift/caps state machine, Enter action, key widths. No framework calls, so it is unit-tested on the JVM. |
 | `ZenboardService.kt` | `InputMethodService`. Owns the keyboard state and turns key presses into `InputConnection` calls. |
 | `KeyboardView.kt` | Compose UI for the keys. Stateless: it renders `KeyboardState` and reports `Key` presses. |
-| `SetupActivity.kt` | Launcher screen that guides enabling and selecting the keyboard. |
+| `SettingsActivity.kt` | Launcher entry and the IME's settings activity: settings home and page switching. |
+| `SetupScreen.kt` / `AboutScreen.kt` | Setup steps page; about page with version, privacy, license status and credits. |
+| `SettingsComponents.kt` | Shared grouped tiles, switch tile, page header, scallop badge, try-it field. |
+| `SettingsStore.kt` | DataStore-backed settings (pure black, key-press popup), observed live by the keyboard. |
 | `Theme.kt` | Theme: wallpaper colours with the AMOLED / tinted-page surface treatment, semibold type, motion tokens. |
 | `KeyPreview.kt` | Key-press preview bubble, drawn in one overlay window. |
 | `EmojiData.kt` / `EmojiPanel.kt` | Emoji list (asset), recents, and the tabbed emoji grid. |
@@ -61,12 +64,19 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   only ABC (left) and delete (right).
 - **Changing keyboard** is a long-press on space, which calls `showInputMethodPicker()`. The
   emoji key took the old globe key's place.
+- **Settings live in DataStore** (`datastore-preferences`, Apache-2.0, as the project brief specifies).
+  Both the settings screen and the IME collect the same `Flow`, so a toggle changes the open
+  keyboard at once. An unreadable store falls back to the defaults: pure black off, key-press popup on.
+- **Pure black is opt-in.** Dark mode uses the wallpaper scheme's own surfaces by default. Pure black
+  swaps in the near-black AMOLED ladder.
+- **No navigation library.** The settings activity switches between three pages (home, setup,
+  about) with an `AnimatedContent` and `BackHandler`.
 - **Accent colour** is the scheme's secondary (Enter, caps lock, press tint, previews, selection).
 - **Row height** is min(54dp, 9% of screen height), so landscape keeps the app visible.
 - **No dependency injection framework and no navigation library.** They are not needed at this size.
 - **Design language** matches the owner's Kontract app (M3 Expressive): near-black surface
   ladder in dark mode, white keys on a tinted page in light mode, slate ink, uniform 10dp key
-  corners (Enter included), scallop badges on the setup screen, and a spring press morph (key rounds
+  corners (Enter included), scallop badges on the settings pages, and a spring press morph (key rounds
   toward a pill and dips 5%). Light-mode function keys use `surfaceDim`, because the nested-card
   tone is nearly the page colour. The service sets light/dark nav-bar appearance on the IME
   window so the system's back and switch-keyboard buttons stay visible.

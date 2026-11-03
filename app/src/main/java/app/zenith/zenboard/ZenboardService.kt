@@ -47,11 +47,14 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private val emojiRecents by lazy { EmojiRecents(this) }
     private var barInsets by mutableStateOf(Rect())
     private var inputShown by mutableStateOf(false)
+    private var settings by mutableStateOf(ZenboardSettings())
 
     override fun onCreate() {
         super.onCreate()
         savedStateController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        // Live settings: toggles in the settings screen apply to the open keyboard immediately.
+        lifecycleScope.launch { SettingsStore.settings(this@ZenboardService).collect { settings = it } }
     }
 
     override fun onDestroy() {
@@ -80,7 +83,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         }
         return ComposeView(this).apply {
             setContent {
-                ZenithTheme {
+                ZenithTheme(pureBlack = settings.pureBlack) {
                     val bars = with(LocalDensity.current) {
                         PaddingValues(
                             start = barInsets.left.toDp(),
@@ -93,6 +96,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         enterAction = enterAction,
                         systemBars = bars,
                         showPreviews = inputShown,
+                        keyPopup = settings.keyPopup,
                         emoji = emoji,
                         recentEmoji = recentEmoji,
                         onEmoji = ::onEmoji,

@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.unit.dp
 
 /**
- * Icons as vector paths on a 24-unit grid. The arrows, backspace, search, send, check, keyboard, lock and emoji face are
+ * Icons as vector paths on a 24-unit grid. The arrows, backspace, search, send, check, keyboard, lock, emoji face, moon, info and speech bubble are
  * Material Icons paths (Apache-2.0); shift and globe are drawn here. Avoids the multi-megabyte
  * material-icons-extended artifact for a dozen glyphs.
  */
@@ -39,6 +39,15 @@ object KeyIcons {
             "c1.1,0 2,-0.9 2,-2V10c0,-1.1 -0.9,-2 -2,-2zM12,17c-1.1,0 -2,-0.9 -2,-2s0.9,-2 2,-2 2,0.9 2,2" +
             " -0.9,2 -2,2zM15.1,8H8.9V6c0,-1.71 1.39,-3.1 3.1,-3.1 1.71,0 3.1,1.39 3.1,3.1v2z",
     )
+
+    val DarkMode = filled(
+        "M12,3c-4.97,0 -9,4.03 -9,9s4.03,9 9,9 9,-4.03 9,-9c0,-0.46 -0.04,-0.92 -0.1,-1.36 " +
+            "-0.98,1.37 -2.58,2.26 -4.4,2.26 -2.98,0 -5.4,-2.42 -5.4,-5.4 0,-1.81 0.89,-3.42 2.26,-4.4C12.92,3.04 12.46,3 12,3z",
+    )
+    val Info = filled(
+        "M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2L11,7h2v2z",
+    )
+    val Bubble = filled("M20,2H4c-1.1,0 -2,0.9 -2,2v18l4,-4h14c1.1,0 2,-0.9 2,-2V4c0,-1.1 -0.9,-2 -2,-2z")
 
     private const val ShiftArrow = "M12,3.5L3.5,12.5H8.5V19.5H15.5V12.5H20.5Z"
 

@@ -84,6 +84,7 @@ fun KeyboardView(
     enterAction: Int?,
     systemBars: PaddingValues,
     showPreviews: Boolean,
+    keyPopup: Boolean,
     emoji: List<EmojiCategory>?,
     recentEmoji: List<String>,
     onEmoji: (String) -> Unit,
@@ -91,6 +92,7 @@ fun KeyboardView(
     onKey: (Key) -> Unit,
 ) {
     val preview = remember { PreviewState() }
+    preview.bubbles = keyPopup
     var size by remember { mutableStateOf(IntSize.Zero) }
     if (showPreviews && size != IntSize.Zero) KeyPreviewOverlay(preview, size)
     Column(
@@ -161,7 +163,7 @@ private fun KeyButton(
         val label = state.textFor(key)
         LaunchedEffect(pressed) {
             if (pressed) {
-                preview.current = KeyPress(label, bounds.rect)
+                if (preview.bubbles) preview.current = KeyPress(label, bounds.rect)
             } else if (preview.current?.bounds == bounds.rect) {
                 preview.current = null
             }

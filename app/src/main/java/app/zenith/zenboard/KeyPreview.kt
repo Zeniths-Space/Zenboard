@@ -53,6 +53,9 @@ class PreviewState {
     var current by mutableStateOf<KeyPress?>(null)
     var panel by mutableStateOf<AltPanel?>(null)
 
+    /** Key-press bubbles on or off (user setting). Read at press time, not state. */
+    var bubbles = true
+
     /** Keyboard width in px, for keeping the alternates row on screen. Set by layout, not state. */
     var keyboardWidth = 0f
 }
