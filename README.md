@@ -21,8 +21,8 @@ it needs no other Zenith app.
 - Number and phone fields open on the digit layer.
 - Emoji panel: all Unicode emoji the device can draw, by category, with recently used first.
 - Hold space to change keyboard (Android's keyboard picker).
-- Settings: pure black dark mode (off by default) and key-press popup (on by default), plus
-  separate Setup and About pages.
+- Settings by category: Setup, Appearance (pure black, off by default), Typing (key-press
+  popup, on by default) and About, each on its own page.
 - Material 3 Expressive look: wallpaper colours, AMOLED-black dark mode, spring key-press morph.
 - Haptic feedback that follows the system setting.
 

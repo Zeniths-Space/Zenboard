@@ -1,4 +1,9 @@
 package app.zenith.zenboard
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ColumnScope
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -164,6 +169,28 @@ internal fun SwitchTile(
             )
         },
     )
+}
+
+/** A category page: header with back button, then scrolling content. */
+@Composable
+internal fun CategoryPage(title: String, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .safeDrawingPadding(),
+    ) {
+        PageTopBar(title, onBack)
+        Column(
+            Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp),
+        ) {
+            content()
+            Spacer(Modifier.height(24.dp))
+        }
+    }
 }
 
 /** Sub-page header: back button and a large title. */

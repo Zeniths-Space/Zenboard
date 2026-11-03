@@ -9,7 +9,7 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 | `KeyboardModel.kt` | Pure logic: layouts, shift/caps state machine, Enter action, key widths. No framework calls, so it is unit-tested on the JVM. |
 | `ZenboardService.kt` | `InputMethodService`. Owns the keyboard state and turns key presses into `InputConnection` calls. |
 | `KeyboardView.kt` | Compose UI for the keys. Stateless: it renders `KeyboardState` and reports `Key` presses. |
-| `SettingsActivity.kt` | Launcher entry and the IME's settings activity: settings home and page switching. |
+| `SettingsActivity.kt` | Launcher entry and the IME's settings activity: category home, Appearance and Typing pages, page switching. |
 | `SetupScreen.kt` / `AboutScreen.kt` | Setup steps page; about page with version, privacy, license status and credits. |
 | `SettingsComponents.kt` | Shared grouped tiles, switch tile, page header, scallop badge, try-it field. |
 | `SettingsStore.kt` | DataStore-backed settings (pure black, key-press popup), observed live by the keyboard. |
@@ -69,8 +69,9 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   keyboard at once. An unreadable store falls back to the defaults: pure black off, key-press popup on.
 - **Pure black is opt-in.** Dark mode uses the wallpaper scheme's own surfaces by default. Pure black
   swaps in the near-black AMOLED ladder.
-- **No navigation library.** The settings activity switches between three pages (home, setup,
-  about) with an `AnimatedContent` and `BackHandler`.
+- **No navigation library.** The settings home lists the categories (Setup, Appearance, Typing,
+  About), each with a one-line status. Each category is its own page. The activity switches pages
+  with an `AnimatedContent` and `BackHandler`.
 - **Accent colour** is the scheme's secondary (Enter, caps lock, press tint, previews, selection).
 - **Row height** is min(54dp, 9% of screen height), so landscape keeps the app visible.
 - **No dependency injection framework and no navigation library.** They are not needed at this size.

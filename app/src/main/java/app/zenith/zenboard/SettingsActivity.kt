@@ -40,7 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
-private enum class Page { HOME, SETUP, ABOUT }
+private enum class Page { HOME, SETUP, APPEARANCE, TYPING, ABOUT }
 
 /** Launcher entry and the keyboard's settings activity: settings home, setup and about pages. */
 class SettingsActivity : ComponentActivity() {
@@ -74,8 +74,7 @@ class SettingsActivity : ComponentActivity() {
                             enabled = enabled,
                             selected = selected,
                             versionName = versionName,
-                            onOpenSetup = { page = Page.SETUP },
-                            onOpenAbout = { page = Page.ABOUT },
+                            onOpen = { page = it },
                         )
                         Page.SETUP -> SetupScreen(
                             enabled = enabled,
@@ -84,6 +83,8 @@ class SettingsActivity : ComponentActivity() {
                             onSelect = { getSystemService(InputMethodManager::class.java).showInputMethodPicker() },
                             onBack = { page = Page.HOME },
                         )
+                        Page.APPEARANCE -> AppearanceScreen(current, onBack = { page = Page.HOME })
+                        Page.TYPING -> TypingScreen(current, onBack = { page = Page.HOME })
                         Page.ABOUT -> AboutScreen(versionName, onBack = { page = Page.HOME })
                     }
                 }
@@ -105,18 +106,17 @@ class SettingsActivity : ComponentActivity() {
     }
 }
 
+/** Categories only; each opens its own page. */
 @Composable
 private fun HomeScreen(
     settings: ZenboardSettings,
     enabled: Boolean,
     selected: Boolean,
     versionName: String,
-    onOpenSetup: () -> Unit,
-    onOpenAbout: () -> Unit,
+    onOpen: (Page) -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val ready = enabled && selected
     Column(
         Modifier
             .fillMaxSize()
@@ -134,34 +134,70 @@ private fun HomeScreen(
                 Text(stringResource(R.string.setup_tagline), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
             }
         }
-
-        val ready = enabled && selected
-        SectionHeader(stringResource(R.string.settings_section_setup))
+        Spacer(Modifier.height(28.dp))
         SegmentedGroup(
-            listOf {
-                GroupTile(
-                    badge = {
-                        if (ready) {
-                            ScallopBadge(KeyIcons.Done, cs.secondary, cs.onSecondary)
-                        } else {
-                            ScallopBadge(KeyIcons.Keyboard, cs.errorContainer, cs.onErrorContainer)
-                        }
-                    },
-                    title = stringResource(R.string.settings_setup_title),
-                    subtitle = stringResource(
-                        when {
-                            ready -> R.string.settings_setup_ready
-                            !enabled -> R.string.settings_setup_not_enabled
-                            else -> R.string.settings_setup_not_selected
+            listOf(
+                {
+                    GroupTile(
+                        badge = {
+                            if (ready) {
+                                ScallopBadge(KeyIcons.Done, ZenithColors.indicator, ZenithColors.onIndicator)
+                            } else {
+                                ScallopBadge(KeyIcons.Keyboard, cs.errorContainer, cs.onErrorContainer)
+                            }
                         },
-                    ),
-                    subtitleColor = if (ready) cs.onSurfaceVariant else cs.error,
-                    onClick = onOpenSetup,
-                )
-            },
+                        title = stringResource(R.string.settings_section_setup),
+                        subtitle = stringResource(
+                            when {
+                                ready -> R.string.settings_setup_ready
+                                !enabled -> R.string.settings_setup_not_enabled
+                                else -> R.string.settings_setup_not_selected
+                            },
+                        ),
+                        subtitleColor = if (ready) cs.onSurfaceVariant else cs.error,
+                        onClick = { onOpen(Page.SETUP) },
+                    )
+                },
+                {
+                    GroupTile(
+                        badge = { ScallopBadge(KeyIcons.DarkMode, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        title = stringResource(R.string.settings_section_appearance),
+                        subtitle = stringResource(
+                            if (settings.pureBlack) R.string.settings_appearance_summary_black else R.string.settings_appearance_summary,
+                        ),
+                        onClick = { onOpen(Page.APPEARANCE) },
+                    )
+                },
+                {
+                    GroupTile(
+                        badge = { ScallopBadge(KeyIcons.Bubble, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        title = stringResource(R.string.settings_section_typing),
+                        subtitle = stringResource(
+                            if (settings.keyPopup) R.string.settings_typing_summary_on else R.string.settings_typing_summary_off,
+                        ),
+                        onClick = { onOpen(Page.TYPING) },
+                    )
+                },
+                {
+                    GroupTile(
+                        badge = { ScallopBadge(KeyIcons.Info, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        title = stringResource(R.string.settings_section_about),
+                        subtitle = stringResource(R.string.about_version, versionName),
+                        onClick = { onOpen(Page.ABOUT) },
+                    )
+                },
+            ),
         )
+        Spacer(Modifier.height(24.dp))
+    }
+}
 
-        SectionHeader(stringResource(R.string.settings_section_appearance))
+@Composable
+private fun AppearanceScreen(settings: ZenboardSettings, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    CategoryPage(stringResource(R.string.settings_section_appearance), onBack) {
+        SectionHeader(stringResource(R.string.settings_appearance_theme))
         SegmentedGroup(
             listOf {
                 SwitchTile(
@@ -173,8 +209,17 @@ private fun HomeScreen(
                 )
             },
         )
+        SectionHeader(stringResource(R.string.setup_try_section))
+        TryField()
+    }
+}
 
-        SectionHeader(stringResource(R.string.settings_section_typing))
+@Composable
+private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    CategoryPage(stringResource(R.string.settings_section_typing), onBack) {
+        SectionHeader(stringResource(R.string.settings_typing_keys))
         SegmentedGroup(
             listOf {
                 SwitchTile(
@@ -186,21 +231,7 @@ private fun HomeScreen(
                 )
             },
         )
-
-        SectionHeader(stringResource(R.string.settings_section_about))
-        SegmentedGroup(
-            listOf {
-                GroupTile(
-                    badge = { ScallopBadge(KeyIcons.Info, ZenithColors.indicator, ZenithColors.onIndicator) },
-                    title = stringResource(R.string.settings_about_title),
-                    subtitle = stringResource(R.string.about_version, versionName),
-                    onClick = onOpenAbout,
-                )
-            },
-        )
-
         SectionHeader(stringResource(R.string.setup_try_section))
         TryField()
-        Spacer(Modifier.height(24.dp))
     }
 }
