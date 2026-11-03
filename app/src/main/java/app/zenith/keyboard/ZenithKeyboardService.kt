@@ -41,6 +41,7 @@ class ZenithKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRe
     private var state by mutableStateOf(KeyboardState())
     private var enterAction by mutableStateOf<Int?>(null)
     private var barInsets by mutableStateOf(Rect())
+    private var inputShown by mutableStateOf(false)
 
     override fun onCreate() {
         super.onCreate()
@@ -86,6 +87,7 @@ class ZenithKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRe
                         state = state,
                         enterAction = enterAction,
                         systemBars = bars,
+                        showPreviews = inputShown,
                         onChangeKeyboard = ::showKeyboardPicker,
                         onKey = ::onKey,
                     )
@@ -97,8 +99,15 @@ class ZenithKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRe
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         updateNavBarAppearance()
+        inputShown = true
         state = KeyboardState(layer = initialLayer(info.inputType)).withAutoCaps(capsAtCursor())
         enterAction = enterAction(info.imeOptions)
+    }
+
+    // The preview overlay window exists only while the keyboard is on screen.
+    override fun onFinishInputView(finishingInput: Boolean) {
+        inputShown = false
+        super.onFinishInputView(finishingInput)
     }
 
     override fun onUpdateSelection(

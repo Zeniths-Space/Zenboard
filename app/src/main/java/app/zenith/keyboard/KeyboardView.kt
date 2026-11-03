@@ -43,6 +43,12 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -69,12 +75,17 @@ fun KeyboardView(
     state: KeyboardState,
     enterAction: Int?,
     systemBars: PaddingValues,
+    showPreviews: Boolean,
     onChangeKeyboard: () -> Unit,
     onKey: (Key) -> Unit,
 ) {
+    val preview = remember { PreviewState() }
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    if (showPreviews && size != IntSize.Zero) KeyPreviewOverlay(preview, size)
     Column(
         Modifier
             .fillMaxWidth()
+            .onSizeChanged { size = it }
             .background(MaterialTheme.colorScheme.surface)
             .padding(systemBars)
             .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
@@ -87,7 +98,7 @@ fun KeyboardView(
                 val pad = (ROW_UNITS - row.sumOf { keyWeight(it, row).toDouble() }.toFloat()) / 2
                 if (pad > 0f) Spacer(Modifier.weight(pad))
                 row.forEach { key ->
-                    KeyButton(key, state, enterAction, onKey, onChangeKeyboard, Modifier.weight(keyWeight(key, row)))
+                    KeyButton(key, state, enterAction, preview, onKey, onChangeKeyboard, Modifier.weight(keyWeight(key, row)))
                 }
                 if (pad > 0f) Spacer(Modifier.weight(pad))
             }
@@ -100,6 +111,7 @@ private fun KeyButton(
     key: Key,
     state: KeyboardState,
     enterAction: Int?,
+    preview: PreviewState,
     onKey: (Key) -> Unit,
     onChangeKeyboard: () -> Unit,
     modifier: Modifier,
@@ -116,6 +128,20 @@ private fun KeyButton(
     val (container, content) = keyColors(key, state, pressed)
     val fill by animateColorAsState(container, tween(90), label = "fill")
 
+    // Character keys show a preview bubble while pressed. Bounds are kept out of state: layout
+    // updates them without recomposing.
+    val bounds = remember { object { var rect = Rect.Zero } }
+    if (key is Key.Text) {
+        val label = state.textFor(key)
+        LaunchedEffect(pressed) {
+            if (pressed) {
+                preview.current = KeyPress(label, bounds.rect)
+            } else if (preview.current?.bounds == bounds.rect) {
+                preview.current = null
+            }
+        }
+    }
+
     val description = keyDescription(key, state, enterAction)
     val press = {
         view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
@@ -126,6 +152,7 @@ private fun KeyButton(
         modifier
             .fillMaxHeight()
             .padding(horizontal = 2.5.dp, vertical = 2.5.dp)
+            .onGloballyPositioned { bounds.rect = it.boundsInRoot() }
             .graphicsLayer {
                 val s = 1f - 0.05f * morph
                 scaleX = s
