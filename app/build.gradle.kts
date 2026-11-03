@@ -37,6 +37,10 @@ android {
     }
 
     buildTypes {
+        // Dev builds install beside the release (app.zenith.zenboard) instead of clashing with its signature.
+        debug {
+            applicationIdSuffix = ".dev"
+        }
         release {
             signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true

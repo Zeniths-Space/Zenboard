@@ -58,6 +58,10 @@ Requirements: JDK 17 and the Android SDK with platform 37.
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
+Debug builds use the application ID `app.zenith.zenboard.dev` and show as "Zenboard Dev", so
+they install beside the release (`app.zenith.zenboard`) without a signature clash. Enable it
+separately under Settings, then pick it from the keyboard switcher.
+
 ### Signed release build
 
 Release builds are signed only when the Gradle property `zenboardSigning` points to a
