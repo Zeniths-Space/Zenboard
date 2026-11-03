@@ -348,17 +348,18 @@ private fun KeyButton(
 
 private fun keyShape(morph: Float): Shape = RoundedCornerShape(lerp(KeyCorner, PressedCorner, morph))
 
-/** Letters are cards; function keys sit a tone deeper; Enter and caps lock carry the secondary accent. */
+/** Letters are cards; function keys sit a tone deeper; Enter carries the secondary accent, active shift only in its icon. */
 @Composable
 private fun keyColors(key: Key, state: KeyboardState, pressed: Boolean): Pair<Color, Color> {
     val cs = MaterialTheme.colorScheme
     val active = ZenithColors.indicator to ZenithColors.onIndicator
     return when (key) {
         Key.Enter -> cs.secondary to cs.onSecondary
-        Key.Shift -> when (state.shift) {
-            ShiftMode.LOCKED -> cs.secondary to cs.onSecondary
-            ShiftMode.ONCE -> active
-            ShiftMode.OFF -> if (pressed) active else ZenithColors.functionKey to cs.onSurfaceVariant
+        // Shift state shows in the icon and its colour only; the key background stays a function key.
+        Key.Shift -> when {
+            pressed -> active
+            state.shift == ShiftMode.OFF -> ZenithColors.functionKey to cs.onSurfaceVariant
+            else -> ZenithColors.functionKey to cs.secondary
         }
         is Key.Text, Key.Space -> if (pressed) active else cs.surfaceContainerHigh to cs.onSurface
         else -> if (pressed) active else ZenithColors.functionKey to cs.onSurfaceVariant
