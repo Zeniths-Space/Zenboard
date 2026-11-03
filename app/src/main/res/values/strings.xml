@@ -78,6 +78,7 @@
     <string name="key_letters">Letters</string>
     <string name="key_emoji">Emoji</string>
     <string name="key_change_keyboard">Change keyboard</string>
+    <string name="key_delete_word">Delete word</string>
     <string name="key_enter">Enter</string>
     <string name="key_search">Search</string>
     <string name="key_go">Go</string>

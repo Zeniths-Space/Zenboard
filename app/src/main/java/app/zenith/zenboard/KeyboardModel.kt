@@ -209,3 +209,30 @@ fun altIndexAt(x: Float, layout: AltLayout, cellWidth: Float, count: Int): Int {
     val cell = ((x - layout.left) / cellWidth).toInt().coerceIn(0, count - 1)
     return if (layout.reversed) count - 1 - cell else cell
 }
+
+/** Characters a word delete removes before the cursor: trailing spaces, then back to the previous space. */
+fun wordDeleteLength(before: CharSequence): Int {
+    var i = before.length
+    while (i > 0 && before[i - 1].isWhitespace()) i--
+    while (i > 0 && !before[i - 1].isWhitespace()) i--
+    // The text was cut off mid-emoji: keep the half whose other half we cannot see.
+    if (i == 0 && before.isNotEmpty() && before[0].isLowSurrogate()) i = 1
+    return before.length - i
+}
+
+/**
+ * Characters the cursor moves for [steps] characters through [text] (the text before the cursor
+ * when going back, after it when going forward), never splitting an emoji's surrogate pair.
+ */
+fun cursorDelta(text: CharSequence, steps: Int, forward: Boolean): Int {
+    var moved = 0
+    repeat(steps) {
+        if (moved == text.length) return moved
+        moved++
+        if (moved < text.length) {
+            val (a, b) = if (forward) text[moved - 1] to text[moved] else text[text.length - moved - 1] to text[text.length - moved]
+            if (a.isHighSurrogate() && b.isLowSurrogate()) moved++
+        }
+    }
+    return moved
+}

@@ -8,7 +8,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -63,12 +62,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
+import kotlin.math.abs
 
 private val KeyCorner = 10.dp
 
@@ -92,6 +93,8 @@ fun KeyboardView(
     suggestions: Suggestions,
     onPick: (String) -> Unit,
     onChangeKeyboard: () -> Unit,
+    onDeleteWord: () -> Unit,
+    onMoveCursor: (Int) -> Unit,
     keyHeight: Float,
     feedback: KeyFeedback,
     onKey: (Key) -> Unit,
@@ -130,7 +133,10 @@ fun KeyboardView(
                     // Identity by key, not slot: switching layers must not hand one key's press and
                     // colour animations to whichever key lands in the same position.
                     key(key) {
-                        KeyButton(key, state, enterAction, preview, onKey, onChangeKeyboard, Modifier.weight(keyWeight(key, row)))
+                        KeyButton(
+                            key, state, enterAction, preview, onKey, onChangeKeyboard, onDeleteWord, onMoveCursor,
+                            Modifier.weight(keyWeight(key, row)),
+                        )
                     }
                 }
                 if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
@@ -147,6 +153,8 @@ private fun KeyButton(
     preview: PreviewState,
     onKey: (Key) -> Unit,
     onChangeKeyboard: () -> Unit,
+    onDeleteWord: () -> Unit,
+    onMoveCursor: (Int) -> Unit,
     modifier: Modifier,
 ) {
     val feedback = LocalKeyFeedback.current
@@ -177,6 +185,12 @@ private fun KeyButton(
     }
 
     val description = keyDescription(key, state, enterAction)
+    val deleteWordLabel = stringResource(R.string.key_delete_word)
+    val changeKeyboardLabel = stringResource(R.string.key_change_keyboard)
+    val changeKeyboard = {
+        feedback.haptic(HapticFeedbackConstants.LONG_PRESS)
+        onChangeKeyboard()
+    }
     val press = {
         feedback.press(key)
         onKey(key)
@@ -230,10 +244,18 @@ private fun KeyButton(
             .then(
                 when {
                     key == Key.Backspace -> Modifier
-                        .repeatWhileHeld(onPressedChange = { heldPressed = it }, action = press)
+                        .backspaceGestures(
+                            onPressedChange = { heldPressed = it },
+                            onDelete = press,
+                            onDeleteWord = {
+                                feedback.haptic(HapticFeedbackConstants.CLOCK_TICK)
+                                onDeleteWord()
+                            },
+                        )
                         .semantics {
                             role = Role.Button
                             onClick { press(); true }
+                            customActions = listOf(CustomAccessibilityAction(deleteWordLabel) { onDeleteWord(); true })
                         }
                     alternates.isNotEmpty() -> Modifier
                         .longPressAlternates(
@@ -252,17 +274,23 @@ private fun KeyButton(
                                 CustomAccessibilityAction(alt) { onKey(Key.Text(alt)); true }
                             }
                         }
-                    // Hold space to change keyboard (the system input-method picker).
-                    key == Key.Space -> Modifier.combinedClickable(
-                        interactionSource = interaction,
-                        indication = null,
-                        onLongClickLabel = stringResource(R.string.key_change_keyboard),
-                        onLongClick = {
-                            feedback.haptic(HapticFeedbackConstants.LONG_PRESS)
-                            onChangeKeyboard()
-                        },
-                        onClick = press,
-                    )
+                    // Hold space to change keyboard (the system input-method picker); slide to move the cursor.
+                    key == Key.Space -> Modifier
+                        .spaceGestures(
+                            longPressMs = longPressMs,
+                            onPressedChange = { heldPressed = it },
+                            onTap = press,
+                            onLongPress = changeKeyboard,
+                            onMove = { steps ->
+                                feedback.haptic(HapticFeedbackConstants.CLOCK_TICK)
+                                onMoveCursor(steps)
+                            },
+                        )
+                        .semantics {
+                            role = Role.Button
+                            onClick { press(); true }
+                            onLongClick(changeKeyboardLabel) { changeKeyboard(); true }
+                        }
                     else -> Modifier.clickable(interactionSource = interaction, indication = null, onClick = press)
                 },
             )
@@ -412,29 +440,67 @@ private fun Modifier.longPressAlternates(
 }
 
 /**
- * Fires once on press, then repeats after a short hold, like a hardware key.
+ * Tap deletes on release. Holding repeats like a hardware key. Sliding left before the repeat starts
+ * deletes a word, and one more for each further [WORD_STEP] of slide.
  * rememberUpdatedState keeps the gesture alive when a keystroke recomposes the key mid-hold.
  */
 @Composable
-private fun Modifier.repeatWhileHeld(onPressedChange: (Boolean) -> Unit, action: () -> Unit): Modifier {
-    val current by rememberUpdatedState(action)
+private fun Modifier.backspaceGestures(
+    onPressedChange: (Boolean) -> Unit,
+    onDelete: () -> Unit,
+    onDeleteWord: () -> Unit,
+): Modifier {
+    val delete by rememberUpdatedState(onDelete)
+    val deleteWord by rememberUpdatedState(onDeleteWord)
     val pressedChange by rememberUpdatedState(onPressedChange)
     return pointerInput(Unit) {
         awaitEachGesture {
-            awaitFirstDown()
+            val down = awaitFirstDown()
             pressedChange(true)
             try {
-                current()
-                var delayMs = 400L
-                while (true) {
-                    var released = false
-                    withTimeoutOrNull(delayMs) {
-                        waitForUpOrCancellation()
-                        released = true
+                var swiping = false
+                // true: released (a tap); false: slid off or started a swipe; null: held until the repeat.
+                val tapped = withTimeoutOrNull(REPEAT_START_MS) {
+                    while (true) {
+                        val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: return@withTimeoutOrNull false
+                        if (change.changedToUp()) return@withTimeoutOrNull true
+                        if (down.position.x - change.position.x > viewConfiguration.touchSlop) {
+                            change.consume()
+                            swiping = true
+                            return@withTimeoutOrNull false
+                        }
                     }
-                    if (released) break
-                    current()
-                    delayMs = 50L
+                    @Suppress("UNREACHABLE_CODE") null
+                }
+                when {
+                    tapped == true -> delete()
+                    swiping -> {
+                        deleteWord()
+                        val step = WORD_STEP.toPx()
+                        var next = down.position.x - viewConfiguration.touchSlop - step
+                        while (true) {
+                            val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                            // The release position counts too, so the last stretch of slide is not lost.
+                            while (change.position.x <= next) {
+                                deleteWord()
+                                next -= step
+                            }
+                            if (change.changedToUp()) break
+                            change.consume()
+                        }
+                    }
+                    tapped == null -> {
+                        delete()
+                        while (true) {
+                            var released = false
+                            withTimeoutOrNull(REPEAT_MS) {
+                                waitForUpOrCancellation()
+                                released = true
+                            }
+                            if (released) break
+                            delete()
+                        }
+                    }
                 }
             } finally {
                 // Also runs when the keyboard hides mid-hold, so the key never stays "pressed".
@@ -443,6 +509,70 @@ private fun Modifier.repeatWhileHeld(onPressedChange: (Boolean) -> Unit, action:
         }
     }
 }
+
+/**
+ * Tap types a space. Holding still past [longPressMs] opens the keyboard picker. Sliding sideways
+ * moves the cursor one character per [CURSOR_STEP], left or right.
+ */
+@Composable
+private fun Modifier.spaceGestures(
+    longPressMs: Long,
+    onPressedChange: (Boolean) -> Unit,
+    onTap: () -> Unit,
+    onLongPress: () -> Unit,
+    onMove: (Int) -> Unit,
+): Modifier {
+    val pressedChange by rememberUpdatedState(onPressedChange)
+    val tap by rememberUpdatedState(onTap)
+    val longPress by rememberUpdatedState(onLongPress)
+    val move by rememberUpdatedState(onMove)
+    return pointerInput(Unit) {
+        awaitEachGesture {
+            val down = awaitFirstDown()
+            pressedChange(true)
+            try {
+                var dragging = false
+                val tapped = withTimeoutOrNull(longPressMs) {
+                    while (true) {
+                        val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: return@withTimeoutOrNull false
+                        if (change.changedToUp()) return@withTimeoutOrNull true
+                        if (abs(change.position.x - down.position.x) > viewConfiguration.touchSlop) {
+                            change.consume()
+                            dragging = true
+                            return@withTimeoutOrNull false
+                        }
+                    }
+                    @Suppress("UNREACHABLE_CODE") null
+                }
+                when {
+                    tapped == true -> tap()
+                    dragging -> {
+                        val step = CURSOR_STEP.toPx()
+                        var anchor = down.position.x
+                        while (true) {
+                            val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                            val steps = ((change.position.x - anchor) / step).toInt()
+                            if (steps != 0) {
+                                anchor += steps * step
+                                move(steps)
+                            }
+                            if (change.changedToUp()) break
+                            change.consume()
+                        }
+                    }
+                    tapped == null -> longPress()
+                }
+            } finally {
+                pressedChange(false)
+            }
+        }
+    }
+}
+
+private const val REPEAT_START_MS = 400L
+private const val REPEAT_MS = 50L
+private val WORD_STEP = 40.dp
+private val CURSOR_STEP = 10.dp
 
 @Composable
 private fun keyDescription(key: Key, state: KeyboardState, enterAction: Int?): String = when (key) {

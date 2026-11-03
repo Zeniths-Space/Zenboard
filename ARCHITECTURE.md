@@ -38,6 +38,13 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   `ComposeView` works outside an Activity.
 - **Backspace and Enter send key events**, not `deleteSurroundingText`. Key events
   delete a selection or a whole emoji, and they work in fields such as terminals.
+  A tap deletes on release, so a slide left can become a word delete instead without
+  first removing a character. Holding starts the repeat after 400 ms. Word delete
+  (one word per 40 dp of slide) uses `deleteSurroundingText` back to the previous space.
+- **Space-bar cursor movement uses `setSelection`**, not arrow-key events: at either end of
+  a field an arrow key moves focus to another view. The service keeps the cursor position
+  itself and ignores the late `onUpdateSelection` echoes of its own moves, so a fast slide
+  does not roll back.
 - **Auto-caps is event driven.** It is checked on `onUpdateSelection`, and the IPC
   call is skipped for fields with no capitalization flags. One-shot shift is
   cleared synchronously after a character, so fast typing never doubles a capital.

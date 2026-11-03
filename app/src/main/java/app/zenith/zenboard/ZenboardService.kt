@@ -64,6 +64,12 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private class Correction(val original: String, val corrected: String, val separator: String)
     private var lastCorrection: Correction? = null
 
+    /** The cursor (selection end), kept here so quick cursor moves need not wait for the editor. */
+    private var cursor = 0
+
+    /** Positions set by cursor moves whose onUpdateSelection has not arrived yet. */
+    private val pendingMoves = ArrayDeque<Int>()
+
     override fun onCreate() {
         super.onCreate()
         savedStateController.performRestore(null)
@@ -119,6 +125,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         suggestions = suggestions,
                         onPick = ::onPick,
                         onChangeKeyboard = ::showKeyboardPicker,
+                        onDeleteWord = ::deleteWord,
+                        onMoveCursor = ::moveCursor,
                         keyHeight = settings.keyHeight,
                         feedback = rememberKeyFeedback(settings.haptics, settings.sound),
                         onKey = ::onKey,
@@ -139,6 +147,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         stripShown = settings.suggestions && suggestionsAllowed(info.inputType)
         autocorrectOn = settings.autocorrect && autocorrectAllowed(info.inputType)
         lastCorrection = null
+        cursor = info.initialSelEnd.coerceAtLeast(0)
+        pendingMoves.clear()
         if (stripShown || autocorrectOn) ensureDictionary()
     }
 
@@ -154,6 +164,15 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         candidatesStart: Int, candidatesEnd: Int,
     ) {
         super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+        val echo = pendingMoves.indexOf(newSelEnd)
+        if (newSelStart == newSelEnd && echo >= 0) {
+            // Our own move arriving late: only the newest one is current.
+            repeat(echo + 1) { pendingMoves.removeFirst() }
+            if (pendingMoves.isEmpty()) cursor = newSelEnd
+        } else {
+            pendingMoves.clear()
+            cursor = newSelEnd
+        }
         // The cursor left the word we were composing (tap elsewhere, selection, app edit): let it go.
         if (composing.isNotEmpty() && (newSelStart != newSelEnd || newSelEnd != candidatesEnd)) {
             composing.clear()
@@ -324,6 +343,44 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         ic.endBatchEdit()
         composing.clear()
         suggestions = Suggestions.NONE
+    }
+
+    /** Backspace slid left: delete the word being typed, else the word before the cursor. */
+    private fun deleteWord() {
+        val ic = currentInputConnection ?: return
+        lastCorrection = null
+        when {
+            composing.isNotEmpty() -> {
+                ic.setComposingText("", 1)
+                composing.clear()
+                suggestions = Suggestions.NONE
+            }
+            // Selected text goes as one, the same as a plain backspace.
+            !ic.getSelectedText(0).isNullOrEmpty() -> sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)
+            else -> {
+                val n = wordDeleteLength(ic.getTextBeforeCursor(MAX_WORD, 0) ?: return)
+                if (n > 0) ic.deleteSurroundingText(n, 0)
+            }
+        }
+    }
+
+    /**
+     * Space bar slid sideways: move the cursor [steps] characters (negative is left). Uses
+     * setSelection rather than arrow-key events, which move focus out of the field at its ends.
+     */
+    private fun moveCursor(steps: Int) {
+        val ic = currentInputConnection ?: return
+        finishComposing()
+        lastCorrection = null
+        val n = kotlin.math.abs(steps)
+        val forward = steps > 0
+        // Twice the steps: room for emoji, which take two characters each.
+        val text = (if (forward) ic.getTextAfterCursor(n * 2, 0) else ic.getTextBeforeCursor(n * 2, 0)) ?: return
+        val delta = cursorDelta(text, n, forward)
+        if (delta == 0) return
+        cursor = (if (forward) cursor + delta else cursor - delta).coerceAtLeast(0)
+        pendingMoves.addLast(cursor)
+        ic.setSelection(cursor, cursor)
     }
 
     /** Loaded once, on first use, so keyboards that never open emoji pay nothing. */

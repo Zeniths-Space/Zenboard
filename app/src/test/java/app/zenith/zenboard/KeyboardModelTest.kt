@@ -163,4 +163,26 @@ class KeyboardModelTest {
         assert(endsWord("?"))
         assert(!endsWord("-"))
     }
+
+    @Test
+    fun `word delete removes the last word and the spaces after it`() {
+        assertEquals(3, wordDeleteLength("hello wor"))
+        assertEquals(6, wordDeleteLength("hello "))
+        assertEquals(6, wordDeleteLength("hi you.  "))
+        assertEquals(5, wordDeleteLength("a\nhello"))
+        assertEquals(0, wordDeleteLength(""))
+        assertEquals(3, wordDeleteLength("   "))
+        // Cut off after the first half of "😀": that half stays.
+        assertEquals(2, wordDeleteLength("\uDE00ab"))
+    }
+
+    @Test
+    fun `cursor moves whole emoji`() {
+        assertEquals(2, cursorDelta("abc", 2, forward = true))
+        assertEquals(3, cursorDelta("abc", 9, forward = true))
+        assertEquals(2, cursorDelta("😀a", 1, forward = true))
+        assertEquals(2, cursorDelta("a😀", 1, forward = false))
+        assertEquals(1, cursorDelta("😀a", 1, forward = false))
+        assertEquals(0, cursorDelta("", 3, forward = false))
+    }
 }

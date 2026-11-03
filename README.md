@@ -16,11 +16,11 @@ it needs no other Zenith app.
 - Key-press preview bubble for characters.
 - Long-press for accents, digits (top row) and extra symbols: slide to pick, release to type.
   Comma is the first long-press option on the period key.
-- Backspace repeats while held.
+- Backspace repeats while held. Slide left on it to delete a word, and further for more words.
 - The Enter key follows the field's action (Go, Search, Send, Next, Done) or inserts a new line.
 - Number and phone fields open on the digit layer.
 - Emoji panel: all Unicode emoji the device can draw, by category, with recently used first.
-- Hold space to change keyboard (Android's keyboard picker).
+- Hold space to change keyboard (Android's keyboard picker). Slide along space to move the cursor.
 - Word suggestions above the keys: completions and likely fixes, best in the middle. Tap one to
   type it. Off in password fields.
 - Autocorrect on space or end punctuation, with the word it will type highlighted in the strip.

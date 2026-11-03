@@ -11,8 +11,8 @@
 - [x] Key-press preview popup
 - [x] Long-press for accented letters and alternate symbols
 - [ ] Second symbols page (`=\<` etc.)
-- [ ] Swipe left on backspace to delete a word
-- [ ] Space-bar cursor movement
+- [x] Swipe left on backspace to delete a word
+- [x] Space-bar cursor movement
 - [x] Settings: pure black, key-press popup
 - [x] Settings: key height, haptics, sound
 
