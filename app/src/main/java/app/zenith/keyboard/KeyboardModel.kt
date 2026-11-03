@@ -4,7 +4,7 @@ import android.view.inputmethod.EditorInfo
 
 /** Pure keyboard logic. No Android framework calls, so it is unit-testable on the JVM. */
 
-enum class Layer { LETTERS, SYMBOLS }
+enum class Layer { LETTERS, SYMBOLS, EMOJI }
 
 enum class ShiftMode { OFF, ONCE, LOCKED }
 
@@ -16,6 +16,7 @@ sealed interface Key {
     data object Enter : Key
     data object ToSymbols : Key
     data object ToLetters : Key
+    data object Emoji : Key
 }
 
 const val DOUBLE_TAP_MS = 400L
@@ -78,6 +79,7 @@ private fun row(chars: String): List<Key> = chars.map { Key.Text(it.toString()) 
 fun keyboardRows(layer: Layer): List<List<Key>> {
     val bottom = listOf(
         if (layer == Layer.LETTERS) Key.ToSymbols else Key.ToLetters,
+        Key.Emoji,
         Key.Space,
         // No comma key: it is the first long-press option on the period, so space gets the width.
         Key.Text("."),
@@ -96,12 +98,14 @@ fun keyboardRows(layer: Layer): List<List<Key>> {
             row("%*\"':;!?") + Key.Backspace,
             bottom,
         )
+        // The emoji grid fills the space of the upper rows; only the bottom row has keys.
+        Layer.EMOJI -> listOf(listOf(Key.ToLetters, Key.Space, Key.Backspace, Key.Enter))
     }
 }
 
 /** Space absorbs whatever width the other bottom-row keys leave. */
 fun keyWeight(key: Key, row: List<Key>): Float = when (key) {
-    is Key.Text -> 1f
+    is Key.Text, Key.Emoji -> 1f
     Key.Shift, Key.Backspace, Key.Enter, Key.ToSymbols, Key.ToLetters -> 1.5f
     Key.Space -> ROW_UNITS - row.filter { it != Key.Space }.sumOf { keyWeight(it, row).toDouble() }.toFloat()
 }

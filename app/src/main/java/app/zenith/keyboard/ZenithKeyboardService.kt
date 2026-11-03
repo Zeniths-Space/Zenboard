@@ -12,6 +12,8 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +42,9 @@ class ZenithKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRe
 
     private var state by mutableStateOf(KeyboardState())
     private var enterAction by mutableStateOf<Int?>(null)
+    private var emoji by mutableStateOf<List<EmojiCategory>?>(null)
+    private var recentEmoji by mutableStateOf<List<String>>(emptyList())
+    private val emojiRecents by lazy { EmojiRecents(this) }
     private var barInsets by mutableStateOf(Rect())
     private var inputShown by mutableStateOf(false)
 
@@ -88,6 +93,9 @@ class ZenithKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRe
                         enterAction = enterAction,
                         systemBars = bars,
                         showPreviews = inputShown,
+                        emoji = emoji,
+                        recentEmoji = recentEmoji,
+                        onEmoji = ::onEmoji,
                         onChangeKeyboard = ::showKeyboardPicker,
                         onKey = ::onKey,
                     )
@@ -159,6 +167,23 @@ class ZenithKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRe
             Key.Shift -> state = state.tapShift(SystemClock.uptimeMillis())
             Key.ToSymbols -> state = state.copy(layer = Layer.SYMBOLS)
             Key.ToLetters -> state = state.copy(layer = Layer.LETTERS)
+            Key.Emoji -> openEmoji()
+        }
+    }
+
+    /** Loaded once, on first use, so keyboards that never open emoji pay nothing. */
+    private fun openEmoji() {
+        state = state.copy(layer = Layer.EMOJI)
+        if (recentEmoji.isEmpty()) recentEmoji = emojiRecents.load()
+        if (emoji == null) lifecycleScope.launch { emoji = loadEmoji(this@ZenithKeyboardService) }
+    }
+
+    private fun onEmoji(value: String) {
+        val ic = currentInputConnection ?: return
+        ic.commitText(value, 1)
+        if (!isIncognito(currentInputEditorInfo)) {
+            recentEmoji = pushRecent(recentEmoji, value)
+            emojiRecents.save(recentEmoji)
         }
     }
 

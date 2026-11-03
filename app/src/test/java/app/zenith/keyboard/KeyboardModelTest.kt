@@ -116,4 +116,24 @@ class KeyboardModelTest {
         assert(Key.Text(",") !in bottom)
         assertEquals(",", alternatesFor(Key.Text(".")).first())
     }
+
+    @Test
+    fun `emoji key replaces the globe, and the emoji layer keeps only a bottom row`() {
+        assert(Key.Emoji in keyboardRows(Layer.LETTERS).last())
+        assert(Key.Emoji in keyboardRows(Layer.SYMBOLS).last())
+        assertEquals(listOf(listOf(Key.ToLetters, Key.Space, Key.Backspace, Key.Enter)), keyboardRows(Layer.EMOJI))
+    }
+
+    @Test
+    fun `emoji asset format parses groups and skips comments`() {
+        val parsed = parseEmoji("# header\nSmileys\t😀 😃\n\nFlags\t🏁\n")
+        assertEquals(listOf("Smileys" to listOf("😀", "😃"), "Flags" to listOf("🏁")), parsed)
+    }
+
+    @Test
+    fun `recents put the newest first without duplicates and cap the list`() {
+        assertEquals(listOf("b", "a"), pushRecent(listOf("a"), "b"))
+        assertEquals(listOf("a", "b"), pushRecent(listOf("b", "a"), "a"))
+        assertEquals(3, pushRecent(listOf("a", "b", "c"), "d", max = 3).size)
+    }
 }

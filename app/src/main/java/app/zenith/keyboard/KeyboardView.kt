@@ -83,6 +83,9 @@ fun KeyboardView(
     enterAction: Int?,
     systemBars: PaddingValues,
     showPreviews: Boolean,
+    emoji: List<EmojiCategory>?,
+    recentEmoji: List<String>,
+    onEmoji: (String) -> Unit,
     onChangeKeyboard: () -> Unit,
     onKey: (Key) -> Unit,
 ) {
@@ -103,6 +106,10 @@ fun KeyboardView(
     ) {
         // Cap rows at 9% of screen height so landscape keeps most of the app visible.
         val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp)
+        if (state.layer == Layer.EMOJI) {
+            // Takes the place of the three upper rows, so the keyboard height does not jump.
+            EmojiPanel(emoji, recentEmoji, height = rowHeight * 3 + 4.dp, onEmoji = onEmoji)
+        }
         keyboardRows(state.layer).forEach { row ->
             Row(Modifier.fillMaxWidth().height(rowHeight)) {
                 val pad = (ROW_UNITS - row.sumOf { keyWeight(it, row).toDouble() }.toFloat()) / 2
@@ -321,6 +328,7 @@ private fun keyIcon(key: Key, state: KeyboardState, enterAction: Int?): ImageVec
         ShiftMode.LOCKED -> KeyIcons.CapsLock
     }
     Key.Backspace -> KeyIcons.Backspace
+    Key.Emoji -> KeyIcons.Emoji
     Key.Enter -> when (enterAction) {
         EditorInfo.IME_ACTION_GO, EditorInfo.IME_ACTION_NEXT -> KeyIcons.Next
         EditorInfo.IME_ACTION_SEARCH -> KeyIcons.Search
@@ -434,6 +442,7 @@ private fun keyDescription(key: Key, state: KeyboardState, enterAction: Int?): S
     Key.Space -> stringResource(R.string.key_space)
     Key.ToSymbols -> stringResource(R.string.key_symbols)
     Key.ToLetters -> stringResource(R.string.key_letters)
+    Key.Emoji -> stringResource(R.string.key_emoji)
     Key.Enter -> stringResource(
         when (enterAction) {
             EditorInfo.IME_ACTION_GO -> R.string.key_go
