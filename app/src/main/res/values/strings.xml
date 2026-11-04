@@ -68,6 +68,9 @@
     <string name="settings_look_card">Theme, key size, sound, vibration</string>
     <string name="settings_setup_pill_ready">Enabled and selected</string>
     <string name="settings_hero_ready">Ready to use · v%1$s</string>
+    <string name="settings_app_icon">App icon</string>
+    <string name="settings_launcher_icon">Show in app drawer</string>
+    <string name="settings_launcher_icon_sub">Off by default. When off, open these settings from the gear in the keyboard\'s toolbar or from your phone\'s keyboard settings.</string>
     <string name="settings_typing_caps_spacing">Capitals and spacing</string>
     <string name="settings_key_popup">Key-press popup</string>
     <string name="settings_key_popup_sub">Show a larger letter above the key you press</string>

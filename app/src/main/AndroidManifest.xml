@@ -12,15 +12,28 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Zenboard">
 
+        <!-- Exported: the system opens it from keyboard settings (method.xml settingsActivity). -->
         <activity
             android:name=".SettingsActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" />
+
+        <!--
+            The launcher icon, off until "Show in app drawer" turns it on. Off in the manifest on
+            purpose: Android 10+ puts an App info stand-in in the drawer for an app that requests
+            permissions and switches off a launcher icon its manifest enables, so the only way to
+            hide it completely is to start hidden. Settings open from the system keyboard settings.
+        -->
+        <activity-alias
+            android:name=".Launcher"
+            android:enabled="false"
+            android:exported="true"
+            android:targetActivity=".SettingsActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
 
         <!-- BIND_INPUT_METHOD: only the system can bind to this service. -->
         <service

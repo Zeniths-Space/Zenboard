@@ -392,6 +392,18 @@ private fun LookScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 },
             ),
         )
+        SectionHeader(stringResource(R.string.settings_app_icon))
+        var shown by remember { mutableStateOf(LauncherIcon.isShown(context)) }
+        SegmentedGroup(
+            listOf<@Composable () -> Unit>(
+                {
+                    SwitchTile(KeyIcons.Keyboard, stringResource(R.string.settings_launcher_icon), stringResource(R.string.settings_launcher_icon_sub), shown) {
+                        LauncherIcon.setShown(context, it)
+                        shown = it
+                    }
+                },
+            ),
+        )
         SectionHeader(stringResource(R.string.settings_section_feedback))
         SegmentedGroup(
             listOf<@Composable () -> Unit>(

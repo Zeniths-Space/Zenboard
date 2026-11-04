@@ -1,6 +1,8 @@
 package app.zenith.zenboard
 
+import android.content.ComponentName
 import android.content.Context
+import android.content.pm.PackageManager
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -164,5 +166,26 @@ object SettingsStore {
 
     suspend fun setClipRetention(context: Context, value: ClipRetention) {
         context.applicationContext.settingsStore.edit { it[CLIP_RETENTION] = value.name }
+    }
+}
+
+/**
+ * The launcher icon: the `.Launcher` activity-alias, off in the manifest and switched on and off
+ * through PackageManager. Android keeps this state itself, so it is not stored with the settings.
+ */
+object LauncherIcon {
+    private fun component(context: Context) = ComponentName(context, "app.zenith.zenboard.Launcher")
+
+    fun isShown(context: Context): Boolean =
+        context.packageManager.getComponentEnabledSetting(component(context)) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+
+    fun setShown(context: Context, shown: Boolean) {
+        context.packageManager.setComponentEnabledSetting(
+            component(context),
+            // Off goes back to the manifest default (off), so no App info stand-in appears.
+            if (shown) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DEFAULT,
+            // The settings screen is open while this changes: do not kill the app.
+            PackageManager.DONT_KILL_APP,
+        )
     }
 }
