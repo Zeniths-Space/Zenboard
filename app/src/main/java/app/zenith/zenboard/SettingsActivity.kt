@@ -135,8 +135,8 @@ class SettingsActivity : ComponentActivity() {
 }
 
 /**
- * Settings home: a hero card (icon, name, setup status; tap for setup), then each category as its
- * own rounded pill, and About set apart below.
+ * Settings home: a hero card (icon, name, setup status; tap for About), then each category as its
+ * own rounded pill, and Setup set apart below.
  */
 @Composable
 private fun HomeScreen(
@@ -157,7 +157,7 @@ private fun HomeScreen(
             .padding(horizontal = 16.dp),
     ) {
         Spacer(Modifier.height(24.dp))
-        Hero(ready, enabled, versionName, onClick = { onOpen(Page.SETUP) })
+        Hero(ready, enabled, versionName, onClick = { onOpen(Page.ABOUT) })
         Spacer(Modifier.height(24.dp))
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             CategoryPill(
@@ -195,12 +195,18 @@ private fun HomeScreen(
         }
         Spacer(Modifier.height(20.dp))
         CategoryPill(
-            KeyIcons.Info,
-            stringResource(R.string.settings_section_about),
-            stringResource(R.string.about_version, versionName),
-            cs.surfaceContainerHighest,
-            cs.onSurfaceVariant,
-        ) { onOpen(Page.ABOUT) }
+            if (ready) KeyIcons.Done else KeyIcons.Keyboard,
+            stringResource(R.string.setup_title),
+            stringResource(
+                when {
+                    ready -> R.string.settings_setup_pill_ready
+                    enabled -> R.string.settings_setup_not_selected
+                    else -> R.string.settings_setup_not_enabled
+                },
+            ),
+            if (ready) cs.surfaceContainerHighest else cs.errorContainer,
+            if (ready) cs.onSurfaceVariant else cs.onErrorContainer,
+        ) { onOpen(Page.SETUP) }
         Spacer(Modifier.height(FabClearance))
     }
 }
