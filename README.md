@@ -45,7 +45,8 @@ it needs no other Zenith app.
   in every field, with word suggestions on or off. While a word is being typed and suggestions
   are on, the same row shows the suggestions instead.
 - Toolbar buttons are your choice: Look & feel > Toolbar switches each one (clipboard, select all,
-  cut, copy, paste, one-handed) on or off. Settings always stays at the end.
+  cut, copy, paste, one-handed) on or off. Settings always stays at the end. "Show toolbar"
+  there hides the whole row.
 - Clipboard history: the clock button in the toolbar opens recent copies. Tap one to paste,
   long-press to pin or delete. Clearing the whole history is in Clipboard settings. Just after a copy, the
   toolbar offers it as a one-tap paste for 5 minutes. Copied passwords are never kept.

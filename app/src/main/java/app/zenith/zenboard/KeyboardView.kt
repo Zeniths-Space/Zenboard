@@ -131,6 +131,7 @@ fun KeyboardView(
     keyHeight: Float,
     oneHanded: OneHanded,
     onOneHanded: (OneHanded) -> Unit,
+    toolbarShown: Boolean,
     toolbarButtons: List<ToolbarAction>,
     feedback: KeyFeedback,
     onKey: (Key) -> Unit,
@@ -181,8 +182,11 @@ fun KeyboardView(
                 EmojiSearchBar(emojiQuery, emojiIndex, recentEmoji, emojiTones, onCloseEmojiSearch, onEmoji)
             } else if (stripShown && (suggestions.primary != null || suggestions.others.isNotEmpty())) {
                 SuggestionStrip(suggestions, onPick)
+            } else if (!toolbarShown) {
+                // No toolbar: with suggestions on, the empty strip keeps its row so the keys do not jump as words appear.
+                if (stripShown) SuggestionStrip(suggestions, onPick)
             } else {
-                // Always there, suggestions on or off: editing, clipboard and settings are one tap away.
+                // Shown with suggestions on or off: editing, clipboard and settings are one tap away.
                 Toolbar(
                     onToolbar,
                     freshClip,

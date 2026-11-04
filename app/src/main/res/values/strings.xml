@@ -72,6 +72,9 @@
     <string name="settings_setup_pill_ready">Enabled and selected</string>
     <string name="settings_hero_ready">Ready to use · v%1$s</string>
     <string name="settings_toolbar">Toolbar</string>
+    <string name="settings_toolbar_shown">Show toolbar</string>
+    <string name="settings_toolbar_shown_sub">The row of buttons above the keys. When off, clipboard history, the copied-text paste and one-handed mode have no button; open settings from Zenboard\'s App info page.</string>
+    <string name="settings_toolbar_buttons">Toolbar buttons</string>
     <string name="settings_toolbar_note">Settings always stays at the end of the toolbar.</string>
     <string name="settings_app_icon">App icon</string>
     <string name="settings_launcher_icon">Show in app drawer</string>
