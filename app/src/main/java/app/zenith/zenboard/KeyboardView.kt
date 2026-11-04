@@ -183,7 +183,9 @@ fun KeyboardView(
             } else if (stripShown && (suggestions.primary != null || suggestions.others.isNotEmpty())) {
                 SuggestionStrip(suggestions, onPick)
             } else if (!toolbarShown) {
-                // No toolbar: with suggestions on, the empty strip keeps its row so the keys do not jump as words appear.
+                // No toolbar: with suggestions on, the empty strip keeps its row. A row that came and
+                // went with each word would resize the keyboard while typing, and fast taps land on
+                // the wrong keys during the resize (tested: "hello there now" came out garbled).
                 if (stripShown) SuggestionStrip(suggestions, onPick)
             } else {
                 // Shown with suggestions on or off: editing, clipboard and settings are one tap away.
@@ -317,10 +319,13 @@ private fun KeyButton(
     val bounds = remember { object { var rect = Rect.Zero; var inner: LayoutCoordinates? = null } }
     if (key is Key.Text) {
         val label = state.textFor(key)
+        // This key's own bubble, matched by identity: the key can move while held (the suggestion
+        // row appearing above shifts it), so comparing positions would leave the bubble stuck.
+        val shown = remember { object { var press: KeyPress? = null } }
         LaunchedEffect(pressed) {
             if (pressed) {
-                if (preview.bubbles) preview.current = KeyPress(label, bounds.rect)
-            } else if (preview.current?.bounds == bounds.rect) {
+                if (preview.bubbles) preview.current = KeyPress(label, bounds.rect).also { shown.press = it }
+            } else if (preview.current != null && preview.current === shown.press) {
                 preview.current = null
             }
         }
