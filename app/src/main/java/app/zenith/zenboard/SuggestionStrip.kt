@@ -30,8 +30,9 @@ import androidx.compose.ui.unit.sp
 enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, CLIPBOARD, SETTINGS }
 
 /**
- * Fills the strip while no word is being typed: text editing and clipboard on the left, settings on
- * the right. Same height as the word strip, so the keyboard does not jump when one replaces the other.
+ * Fills the strip while no word is being typed: clipboard, editing actions and settings, spread
+ * evenly over the row. Same height as the word strip, so the keyboard does not jump when one
+ * replaces the other.
  * Just after a copy, [freshClip] alone fills the row, as a one-tap paste sized to its text.
  */
 @Composable
@@ -48,13 +49,14 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { FreshClip(freshClip, onPasteFresh, Modifier) }
             return@Row
         }
-        ToolButton(KeyIcons.History, R.string.toolbar_clipboard) { onAction(ToolbarAction.CLIPBOARD) }
-        ToolButton(KeyIcons.SelectAll, R.string.toolbar_select_all) { onAction(ToolbarAction.SELECT_ALL) }
-        ToolButton(KeyIcons.Cut, R.string.toolbar_cut) { onAction(ToolbarAction.CUT) }
-        ToolButton(KeyIcons.Copy, R.string.toolbar_copy) { onAction(ToolbarAction.COPY) }
-        ToolButton(KeyIcons.Paste, R.string.toolbar_paste) { onAction(ToolbarAction.PASTE) }
-        Spacer(Modifier.weight(1f))
-        ToolButton(KeyIcons.Settings, R.string.toolbar_settings) { onAction(ToolbarAction.SETTINGS) }
+        // Each button gets an equal share of the row, so the touch targets fill it with no dead gap.
+        val slot = Modifier.weight(1f)
+        ToolButton(KeyIcons.Clipboard, R.string.toolbar_clipboard, slot) { onAction(ToolbarAction.CLIPBOARD) }
+        ToolButton(KeyIcons.SelectAll, R.string.toolbar_select_all, slot) { onAction(ToolbarAction.SELECT_ALL) }
+        ToolButton(KeyIcons.Cut, R.string.toolbar_cut, slot) { onAction(ToolbarAction.CUT) }
+        ToolButton(KeyIcons.Copy, R.string.toolbar_copy, slot) { onAction(ToolbarAction.COPY) }
+        ToolButton(KeyIcons.Paste, R.string.toolbar_paste, slot) { onAction(ToolbarAction.PASTE) }
+        ToolButton(KeyIcons.Settings, R.string.toolbar_settings, slot) { onAction(ToolbarAction.SETTINGS) }
     }
 }
 
@@ -89,11 +91,12 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
 }
 
 @Composable
-private fun ToolButton(icon: ImageVector, label: Int, onClick: () -> Unit) {
+private fun ToolButton(icon: ImageVector, label: Int, modifier: Modifier, onClick: () -> Unit) {
     val feedback = LocalKeyFeedback.current
     Box(
-        Modifier
-            .size(width = 52.dp, height = 40.dp)
+        modifier
+            .height(40.dp)
+            .padding(horizontal = 2.dp)
             .clip(RoundedCornerShape(20.dp))
             .clickable(role = Role.Button) {
                 feedback.press()
@@ -101,7 +104,7 @@ private fun ToolButton(icon: ImageVector, label: Int, onClick: () -> Unit) {
             },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, stringResource(label), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        Icon(icon, stringResource(label), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
     }
 }
 

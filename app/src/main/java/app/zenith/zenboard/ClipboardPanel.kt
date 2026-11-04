@@ -60,7 +60,7 @@ fun ClipboardPanel(
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth().height(height)) {
         Row(Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(KeyIcons.History, contentDescription = null, tint = cs.onSurfaceVariant, modifier = Modifier.size(18.dp))
+            Icon(KeyIcons.Clipboard, contentDescription = null, tint = cs.onSurfaceVariant, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.clipboard_title), color = cs.onSurfaceVariant, style = MaterialTheme.typography.labelLarge)
         }

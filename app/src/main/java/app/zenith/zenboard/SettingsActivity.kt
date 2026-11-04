@@ -223,7 +223,7 @@ private fun HomeScreen(
                 },
                 {
                     GroupTile(
-                        badge = { ScallopBadge(KeyIcons.History, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        badge = { ScallopBadge(KeyIcons.Clipboard, ZenithColors.indicator, ZenithColors.onIndicator) },
                         title = stringResource(R.string.settings_section_clipboard),
                         subtitle = if (settings.clipHistory) {
                             stringResource(R.string.settings_clipboard_summary_on, stringResource(retentionLabel(settings.clipRetention)).lowercase())
@@ -459,7 +459,7 @@ private fun ClipboardScreen(settings: ZenboardSettings, onBack: () -> Unit) {
             listOf<@Composable () -> Unit>(
                 {
                     SwitchTile(
-                        icon = KeyIcons.History,
+                        icon = KeyIcons.Clipboard,
                         title = stringResource(R.string.settings_clip_history),
                         subtitle = stringResource(R.string.settings_clip_history_sub),
                         checked = settings.clipHistory,
