@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
@@ -45,6 +44,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -343,7 +343,7 @@ internal fun CategoryPage(
     }
 }
 
-/** A settings home category: its own rounded pill with a coloured icon circle, name, summary and arrow. */
+/** A settings home category: its own rounded pill with a coloured icon shape, name, summary and arrow. */
 @Composable
 internal fun CategoryPill(
     icon: ImageVector,
@@ -351,12 +351,13 @@ internal fun CategoryPill(
     summary: String,
     iconContainer: Color,
     iconContent: Color,
+    iconShape: Shape,
     onClick: () -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
     Surface(onClick = onClick, shape = RoundedCornerShape(36.dp), color = cs.surfaceContainerHigh, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(48.dp).background(iconContainer, CircleShape), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(48.dp).background(iconContainer, iconShape), contentAlignment = Alignment.Center) {
                 Icon(icon, contentDescription = null, tint = iconContent, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.width(16.dp))

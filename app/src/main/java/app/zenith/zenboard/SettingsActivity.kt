@@ -165,6 +165,7 @@ private fun HomeScreen(
             Box(Modifier.fillMaxWidth().heightIn(min = screen * 0.38f), contentAlignment = Alignment.Center) {
                 Hero(ready, enabled, versionName, onClick = { onOpen(Page.ABOUT) })
             }
+            // Each category's icon sits in its own shape, so the rows read apart at a glance.
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 CategoryPill(
                     KeyIcons.Words,
@@ -172,6 +173,7 @@ private fun HomeScreen(
                     stringResource(R.string.settings_typing_card),
                     cs.primaryContainer,
                     cs.onPrimaryContainer,
+                    CookieShape,
                 ) { onOpen(Page.TYPING) }
                 CategoryPill(
                     KeyIcons.Keyboard,
@@ -179,6 +181,7 @@ private fun HomeScreen(
                     stringResource(R.string.settings_keys_card),
                     cs.tertiaryContainer,
                     cs.onTertiaryContainer,
+                    CloverShape,
                 ) { onOpen(Page.KEYS) }
                 CategoryPill(
                     KeyIcons.Clipboard,
@@ -190,6 +193,7 @@ private fun HomeScreen(
                     },
                     cs.secondaryContainer,
                     cs.onSecondaryContainer,
+                    SquircleShape,
                 ) { onOpen(Page.CLIPBOARD) }
                 CategoryPill(
                     KeyIcons.DarkMode,
@@ -197,8 +201,8 @@ private fun HomeScreen(
                     stringResource(R.string.settings_look_card),
                     cs.inversePrimary,
                     cs.onSurface,
+                    ScallopShape,
                 ) { onOpen(Page.LOOK) }
-                Spacer(Modifier.height(12.dp))
                 CategoryPill(
                     if (ready) KeyIcons.Done else KeyIcons.Keyboard,
                     stringResource(R.string.setup_title),
@@ -211,6 +215,7 @@ private fun HomeScreen(
                     ),
                     if (ready) cs.surfaceContainerHighest else cs.errorContainer,
                     if (ready) cs.onSurfaceVariant else cs.onErrorContainer,
+                    SoftPentagonShape,
                 ) { onOpen(Page.SETUP) }
                 Spacer(Modifier.height(FabClearance))
             }
