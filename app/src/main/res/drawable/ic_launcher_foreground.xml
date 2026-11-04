@@ -1,26 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A "Z" built from keyboard parts: two keycap bars joined by a diagonal stroke. -->
+<!-- A keyboard: a light deck with its keys cut out, the space bar lit in the accent blue. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Diagonal of the Z. -->
-    <path
-        android:pathData="M67,43L41,65"
-        android:strokeWidth="9"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeLineCap="round" />
-    <!-- Top bar: a key row, with three key dots punched out (even-odd). -->
+    <!-- Keyboard deck with its keys cut out (even-odd): two rows of keys, then a space-bar row. -->
     <path
         android:fillColor="#FFDCE3F5"
         android:fillType="evenOdd"
-        android:pathData="M38,33h32a5,5 0,0 1,5 5v1a5,5 0,0 1,-5 5h-32a5,5 0,0 1,-5 -5v-1a5,5 0,0 1,5 -5z
-            M45,38.5m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0
-            M54,38.5m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0
-            M63,38.5m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
-    <!-- Bottom bar: the space bar. -->
+        android:pathData="M36,35h36a9,9 0 0 1 9,9v20a9,9 0 0 1 -9,9h-36a9,9 0 0 1 -9,-9v-20a9,9 0 0 1 9,-9zM33.5,39.5h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM42.96,39.5h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM52.42,39.5h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM61.88,39.5h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM71.34,39.5h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM38.23,48.96h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM47.69,48.96h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM57.15,48.96h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM66.61,48.96h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM33.5,58.42h3.16a2,2 0 0 1 2,2v6.08a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-6.08a2,2 0 0 1 2,-2zM42.96,58.42h22.08a2,2 0 0 1 2,2v6.08a2,2 0 0 1 -2,2h-22.08a2,2 0 0 1 -2,-2v-6.08a2,2 0 0 1 2,-2zM71.34,58.42h3.16a2,2 0 0 1 2,2v6.08a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-6.08a2,2 0 0 1 2,-2z" />
+    <!-- The space bar, filled in the accent colour. -->
     <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M38,64h32a5,5 0,0 1,5 5v1a5,5 0,0 1,-5 5h-32a5,5 0,0 1,-5 -5v-1a5,5 0,0 1,5 -5z" />
+        android:fillColor="#FF8FB4FF"
+        android:pathData="M42.96,58.42h22.08a2,2 0 0 1 2,2v6.08a2,2 0 0 1 -2,2h-22.08a2,2 0 0 1 -2,-2v-6.08a2,2 0 0 1 2,-2z" />
 </vector>

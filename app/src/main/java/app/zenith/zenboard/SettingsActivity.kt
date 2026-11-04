@@ -42,6 +42,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.Image
@@ -236,8 +237,9 @@ private fun Hero(ready: Boolean, enabled: Boolean, versionName: String, onClick:
     ) {
         // The launcher icon's own layers, so the hero always matches the icon.
         Box(Modifier.size(96.dp).clip(RoundedCornerShape(30.dp))) {
-            Image(painterResource(R.drawable.ic_launcher_background), contentDescription = null, modifier = Modifier.fillMaxSize())
-            Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.fillMaxSize())
+            // Launchers show the middle 72 of the 108dp layers; scale the same way so it matches the home screen.
+            Image(painterResource(R.drawable.ic_launcher_background), contentDescription = null, modifier = Modifier.fillMaxSize().scale(1.5f))
+            Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.fillMaxSize().scale(1.5f))
         }
         Spacer(Modifier.height(16.dp))
         Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, color = cs.onSurface)

@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -33,8 +34,9 @@ fun AboutScreen(versionName: String, onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
         // The launcher icon's own layers, so the page always matches the icon.
         Box(Modifier.size(96.dp).clip(RoundedCornerShape(28.dp))) {
-            Image(painterResource(R.drawable.ic_launcher_background), contentDescription = null, modifier = Modifier.fillMaxSize())
-            Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.fillMaxSize())
+            // Launchers show the middle 72 of the 108dp layers; scale the same way so it matches the home screen.
+            Image(painterResource(R.drawable.ic_launcher_background), contentDescription = null, modifier = Modifier.fillMaxSize().scale(1.5f))
+            Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.fillMaxSize().scale(1.5f))
         }
         Spacer(Modifier.height(16.dp))
         Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
