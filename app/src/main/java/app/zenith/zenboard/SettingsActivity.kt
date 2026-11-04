@@ -361,6 +361,15 @@ private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                         onCheckedChange = { scope.launch { SettingsStore.setAutocorrect(context, it) } },
                     )
                 },
+                {
+                    SwitchTile(
+                        icon = KeyIcons.ShiftOn,
+                        title = stringResource(R.string.settings_auto_caps),
+                        subtitle = stringResource(R.string.settings_auto_caps_sub),
+                        checked = settings.autoCaps,
+                        onCheckedChange = { scope.launch { SettingsStore.setAutoCaps(context, it) } },
+                    )
+                },
             ),
         )
     }

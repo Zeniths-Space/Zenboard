@@ -13,7 +13,8 @@ it needs no other Zenith app.
 - QWERTY letters, a symbols/digits page and a second symbols page (`=\<`).
 - A comma key left of the emoji key.
 - Shift: tap for one capital, double-tap for caps lock.
-- Auto-capitalization that follows the text field's settings.
+- Auto-capitalization: a capital at the start of a field, after a new line and after . ! or ?
+  followed by a space, in any app. Off in password, email and URL fields; switch in Typing settings.
 - Key-press preview bubble for characters.
 - Long-press for accents, digits (top row) and extra symbols: slide to pick, release to type.
 - Glide typing: slide across the letters to type a word. Other matches show in the suggestion

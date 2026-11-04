@@ -61,6 +61,38 @@ fun KeyboardState.withAutoCaps(capsOn: Boolean): KeyboardState = when {
     else -> copy(shift = ShiftMode.OFF, lastShiftTap = null)
 }
 
+/**
+ * True where the next letter starts a sentence: an empty field, a new line, or `.` `!` `?` followed
+ * by a space ("e.g" stays lowercase). Closing quotes or brackets after the mark still count.
+ */
+fun sentenceStart(before: CharSequence): Boolean {
+    var i = before.length - 1
+    var spaced = false
+    while (i >= 0 && before[i].isWhitespace()) {
+        if (before[i] == '\n') return true
+        spaced = true
+        i--
+    }
+    if (i < 0) return true
+    if (!spaced) return false
+    while (i >= 0 && before[i] in "\"')]”’") i--
+    return i >= 0 && before[i] in ".!?"
+}
+
+/** Auto-capitalization only where text is prose: not passwords, email addresses or URLs. */
+fun autoCapsAllowed(inputType: Int): Boolean {
+    if (inputType and android.text.InputType.TYPE_MASK_CLASS != android.text.InputType.TYPE_CLASS_TEXT) return false
+    return when (inputType and android.text.InputType.TYPE_MASK_VARIATION) {
+        android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD,
+        android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+        android.text.InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,
+        android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+        android.text.InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS,
+        android.text.InputType.TYPE_TEXT_VARIATION_URI -> false
+        else -> true
+    }
+}
+
 /** Number, phone and date fields open on the symbols layer, which has the digit row. */
 fun initialLayer(inputType: Int): Layer = when (inputType and android.text.InputType.TYPE_MASK_CLASS) {
     android.text.InputType.TYPE_CLASS_NUMBER,

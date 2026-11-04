@@ -97,6 +97,8 @@
     <string name="settings_space_switch_sub">Hold the space bar for 1.5 seconds to pick another keyboard</string>
     <string name="settings_space_label">Space bar label</string>
     <string name="settings_space_label_sub">Show the language name on the space bar</string>
+    <string name="settings_auto_caps">Auto-capitalization</string>
+    <string name="settings_auto_caps_sub">Capital letter at the start and after a full stop, question or exclamation mark. Off in password, email and URL fields.</string>
     <string name="settings_typing_summary">Suggestions %1$s, autocorrect %2$s</string>
     <string name="settings_section_feedback">Sound and vibration</string>
     <string name="settings_feedback_summary">Vibration %1$s, sound %2$s</string>

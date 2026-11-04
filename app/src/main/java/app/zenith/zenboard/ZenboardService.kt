@@ -273,11 +273,19 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         }
     }
 
+    /**
+     * Shift for the next letter. With auto-capitalization on, sentences start with a capital in any
+     * prose field, whether or not the app asks; a field that asks for every word or all capitals
+     * gets that through Android's own caps mode.
+     */
     private fun capsAtCursor(): Boolean {
+        if (!settings.autoCaps) return false
         val inputType = currentInputEditorInfo?.inputType ?: return false
-        // Skip the IPC round trip when the field never auto-capitalizes.
-        if (inputType and CAPS_FLAGS == 0) return false
-        return (currentInputConnection?.getCursorCapsMode(inputType) ?: 0) != 0
+        if (!autoCapsAllowed(inputType)) return false
+        val ic = currentInputConnection ?: return false
+        if (inputType and WORD_CAPS_FLAGS != 0) return ic.getCursorCapsMode(inputType) != 0
+        val before = ic.getTextBeforeCursor(CAPS_LOOKBACK, 0) ?: return false
+        return sentenceStart(before)
     }
 
     private fun onKey(key: Key) {
@@ -642,8 +650,10 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         /** Longest word picked up from before the cursor. */
         const val MAX_WORD = 48
 
-        const val CAPS_FLAGS = InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS or
-            InputType.TYPE_TEXT_FLAG_CAP_WORDS or
-            InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        /** Fields asking for more than sentence capitals. */
+        const val WORD_CAPS_FLAGS = InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+
+        /** Enough text before the cursor to see past trailing spaces to the last mark. */
+        const val CAPS_LOOKBACK = 64
     }
 }

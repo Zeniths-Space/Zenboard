@@ -234,4 +234,28 @@ class KeyboardModelTest {
         // Picking the plain base goes back to no tone.
         assertEquals("👍", picked.withChoice("👍").shown("👍"))
     }
+
+    @Test
+    fun `sentences start at the field start, new lines and after end marks with a space`() {
+        assertEquals(true, sentenceStart(""))
+        assertEquals(true, sentenceStart("   "))
+        assertEquals(true, sentenceStart("Hello.\n"))
+        assertEquals(true, sentenceStart("Done. "))
+        assertEquals(true, sentenceStart("Really?  "))
+        assertEquals(true, sentenceStart("He said \"yes.\" "))
+        assertEquals(false, sentenceStart("Done."))
+        assertEquals(false, sentenceStart("e.g"))
+        assertEquals(false, sentenceStart("hello "))
+        assertEquals(false, sentenceStart("one, "))
+    }
+
+    @Test
+    fun `no auto caps in passwords, emails or URLs`() {
+        val text = InputType.TYPE_CLASS_TEXT
+        assertEquals(true, autoCapsAllowed(text))
+        assertEquals(false, autoCapsAllowed(text or InputType.TYPE_TEXT_VARIATION_PASSWORD))
+        assertEquals(false, autoCapsAllowed(text or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS))
+        assertEquals(false, autoCapsAllowed(text or InputType.TYPE_TEXT_VARIATION_URI))
+        assertEquals(false, autoCapsAllowed(InputType.TYPE_CLASS_NUMBER))
+    }
 }
