@@ -16,9 +16,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +39,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -45,8 +47,9 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 
 /**
- * Clipboard history in the space of the upper key rows. Pinned clips first. Tap pastes; long-press
- * offers pin or delete. Clearing the whole history is in the settings screen.
+ * Clipboard history in the space of the upper key rows: a two-column staggered grid, pinned clips
+ * first, each card as tall as its text (up to four lines). Tap pastes; long-press offers pin or
+ * delete. Clearing the whole history is in the settings screen.
  */
 @Composable
 fun ClipboardPanel(
@@ -58,47 +61,64 @@ fun ClipboardPanel(
     onDelete: (Clip) -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxWidth().height(height)) {
-        Row(Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(KeyIcons.Clipboard, contentDescription = null, tint = cs.onSurfaceVariant, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.clipboard_title), color = cs.onSurfaceVariant, style = MaterialTheme.typography.labelLarge)
-        }
+    Box(Modifier.fillMaxWidth().height(height)) {
         if (clips.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(horizontal = 24.dp), contentAlignment = Alignment.Center) {
+            Column(
+                Modifier.fillMaxSize().padding(horizontal = 32.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(KeyIcons.Clipboard, contentDescription = null, tint = cs.onSurfaceVariant.copy(alpha = 0.6f), modifier = Modifier.size(36.dp))
+                Spacer(Modifier.height(12.dp))
                 Text(
                     stringResource(if (historyOn) R.string.clipboard_empty else R.string.clipboard_off),
                     color = cs.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
                 )
             }
         } else {
-            LazyVerticalGrid(
-                GridCells.Fixed(2),
-                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 2.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            // Read once per composition: ages refresh whenever the panel is shown, with no timer.
+            val now = System.currentTimeMillis()
+            LazyVerticalStaggeredGrid(
+                StaggeredGridCells.Fixed(2),
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
+                verticalItemSpacing = 6.dp,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                items(clips, key = { it.text }) { clip -> ClipCard(clip, onPaste, onPin, onDelete) }
+                items(clips, key = { it.text }) { clip -> ClipCard(clip, now, onPaste, onPin, onDelete) }
             }
         }
     }
 }
 
+/** Short age of a clip: "now", then minutes, hours, days. */
+@Composable
+private fun clipAge(now: Long, time: Long): String {
+    val minutes = ((now - time) / 60_000L).coerceAtLeast(0)
+    return when {
+        minutes < 1 -> stringResource(R.string.clipboard_age_now)
+        minutes < 60 -> stringResource(R.string.clipboard_age_minutes, minutes)
+        minutes < 24 * 60 -> stringResource(R.string.clipboard_age_hours, minutes / 60)
+        else -> stringResource(R.string.clipboard_age_days, minutes / (24 * 60))
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ClipCard(clip: Clip, onPaste: (String) -> Unit, onPin: (Clip) -> Unit, onDelete: (Clip) -> Unit) {
+private fun ClipCard(clip: Clip, now: Long, onPaste: (String) -> Unit, onPin: (Clip) -> Unit, onDelete: (Clip) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val feedback = LocalKeyFeedback.current
     var menu by remember { mutableStateOf(false) }
     val pinLabel = stringResource(if (clip.pinned) R.string.clipboard_unpin else R.string.clipboard_pin)
     val deleteLabel = stringResource(R.string.clipboard_delete)
+    val (container, content) = if (clip.pinned) cs.secondaryContainer to cs.onSecondaryContainer else cs.surfaceContainerHigh to cs.onSurface
     Box(
         Modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(cs.surfaceContainerHigh)
+            .clip(RoundedCornerShape(16.dp))
+            .background(container)
             .combinedClickable(
                 onClick = {
                     feedback.press()
@@ -115,19 +135,25 @@ private fun ClipCard(clip: Clip, onPaste: (String) -> Unit, onPin: (Clip) -> Uni
                     CustomAccessibilityAction(deleteLabel) { onDelete(clip); true },
                 )
             }
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 8.dp),
     ) {
-        Text(
-            // Line breaks would waste the three lines on blank space.
-            clip.text.replace(Regex("\\s+"), " ").trim(),
-            color = cs.onSurface,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(end = if (clip.pinned) 16.dp else 0.dp),
-        )
-        if (clip.pinned) {
-            Icon(KeyIcons.Pin, contentDescription = null, tint = cs.secondary, modifier = Modifier.size(14.dp).align(Alignment.TopEnd))
+        Column {
+            Text(
+                // Keep line breaks, but not runs of blank lines or edge spaces.
+                clip.text.trim().replace(Regex("\\n\\s*\\n+"), "\n"),
+                color = content,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(clipAge(now, clip.time), color = content.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall)
+                if (clip.pinned) {
+                    Spacer(Modifier.weight(1f))
+                    Icon(KeyIcons.Pin, contentDescription = null, tint = content.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
+                }
+            }
         }
         if (menu) {
             Popup(popupPositionProvider = AboveAnchor, onDismissRequest = { menu = false }, properties = PopupProperties(clippingEnabled = false)) {

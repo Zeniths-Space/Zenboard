@@ -473,7 +473,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         val ic = currentInputConnection ?: return
         lastCorrection = null
         if (action == ToolbarAction.CLIPBOARD) {
-            openClipboard()
+            if (state.layer == Layer.CLIPBOARD) state = state.copy(layer = Layer.LETTERS) else openClipboard()
             return
         }
         if (action == ToolbarAction.SETTINGS) {

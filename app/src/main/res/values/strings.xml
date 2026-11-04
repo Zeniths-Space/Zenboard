@@ -6,7 +6,10 @@
     <string name="emoji_recents">Recently used</string>
     <string name="emoji_recents_empty">Emoji you use will show up here</string>
     <string name="emoji_loading">Loading emoji…</string>
-    <string name="clipboard_title">Clipboard</string>
+    <string name="clipboard_age_now">now</string>
+    <string name="clipboard_age_minutes">%dm</string>
+    <string name="clipboard_age_hours">%dh</string>
+    <string name="clipboard_age_days">%dd</string>
     <string name="clipboard_empty">Text you copy shows up here</string>
     <string name="clipboard_off">Clipboard history is off. Turn it on in Zenboard settings, Clipboard.</string>
     <string name="clipboard_pin">Pin</string>

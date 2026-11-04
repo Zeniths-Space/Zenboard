@@ -10,6 +10,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,7 +39,7 @@ enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, CLIPBOARD, SETTINGS }
  * Just after a copy, [freshClip] alone fills the row, as a one-tap paste sized to its text.
  */
 @Composable
-fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh: () -> Unit) {
+fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh: () -> Unit, clipboardOpen: Boolean) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -51,7 +54,8 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
         }
         // Each button gets an equal share of the row, so the touch targets fill it with no dead gap.
         val slot = Modifier.weight(1f)
-        ToolButton(KeyIcons.Clipboard, R.string.toolbar_clipboard, slot) { onAction(ToolbarAction.CLIPBOARD) }
+        // Lit while the clipboard is open; a second tap closes it.
+        ToolButton(KeyIcons.Clipboard, R.string.toolbar_clipboard, slot, selected = clipboardOpen) { onAction(ToolbarAction.CLIPBOARD) }
         ToolButton(KeyIcons.SelectAll, R.string.toolbar_select_all, slot) { onAction(ToolbarAction.SELECT_ALL) }
         ToolButton(KeyIcons.Cut, R.string.toolbar_cut, slot) { onAction(ToolbarAction.CUT) }
         ToolButton(KeyIcons.Copy, R.string.toolbar_copy, slot) { onAction(ToolbarAction.COPY) }
@@ -91,20 +95,27 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
 }
 
 @Composable
-private fun ToolButton(icon: ImageVector, label: Int, modifier: Modifier, onClick: () -> Unit) {
+private fun ToolButton(icon: ImageVector, label: Int, modifier: Modifier, selected: Boolean = false, onClick: () -> Unit) {
     val feedback = LocalKeyFeedback.current
     Box(
         modifier
             .height(40.dp)
             .padding(horizontal = 2.dp)
             .clip(RoundedCornerShape(20.dp))
+            .background(if (selected) ZenithColors.indicator else Color.Transparent)
+            .semantics { this.selected = selected }
             .clickable(role = Role.Button) {
                 feedback.press()
                 onClick()
             },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, stringResource(label), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
+        Icon(
+            icon,
+            stringResource(label),
+            tint = if (selected) ZenithColors.onIndicator else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(22.dp),
+        )
     }
 }
 

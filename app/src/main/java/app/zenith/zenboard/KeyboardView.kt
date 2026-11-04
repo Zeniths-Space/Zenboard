@@ -170,7 +170,7 @@ fun KeyboardView(
             SuggestionStrip(suggestions, onPick)
         } else {
             // Always there, suggestions on or off: editing, clipboard and settings are one tap away.
-            Toolbar(onToolbar, freshClip, onPasteFresh = { freshClip?.let(onPasteClip) })
+            Toolbar(onToolbar, freshClip, onPasteFresh = { freshClip?.let(onPasteClip) }, clipboardOpen = state.layer == Layer.CLIPBOARD)
         }
         // Cap rows at 9% of screen height so landscape keeps most of the app visible.
         val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
