@@ -1,6 +1,7 @@
 package app.zenith.zenboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -65,7 +67,7 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
     }
 }
 
-/** The text just copied, in a tertiary pill: tap to paste it. */
+/** The text just copied, in a glassy outlined pill: tap to paste it. */
 @Composable
 private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
     val feedback = LocalKeyFeedback.current
@@ -78,7 +80,18 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
             .widthIn(max = 200.dp)
             .height(34.dp)
             .clip(RoundedCornerShape(17.dp))
-            .background(cs.tertiary.copy(alpha = 0.4f))
+            // A dark glassy pill: faint primary-to-tertiary tint inside, a thin light rim that
+            // shifts colour along its length.
+            .background(
+                Brush.horizontalGradient(listOf(cs.primary.copy(alpha = 0.16f), cs.tertiary.copy(alpha = 0.12f))),
+            )
+            .border(
+                1.dp,
+                Brush.horizontalGradient(
+                    listOf(cs.primary.copy(alpha = 0.55f), cs.onSurface.copy(alpha = 0.35f), cs.tertiary.copy(alpha = 0.55f)),
+                ),
+                RoundedCornerShape(17.dp),
+            )
             .clickable(role = Role.Button, onClickLabel = label) {
                 feedback.press()
                 onPaste()
@@ -88,7 +101,7 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
     ) {
         Text(
             text.replace(Regex("\\s+"), " ").trim(),
-            // The pill is see-through, so the text follows the surface behind it, not the tertiary colour.
+            // The pill is see-through, so the text follows the surface behind it.
             color = cs.onSurface,
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
