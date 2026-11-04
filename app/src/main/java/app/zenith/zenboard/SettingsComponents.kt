@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
@@ -342,42 +343,29 @@ internal fun CategoryPage(
     }
 }
 
-/** A large, coloured category card for the settings home grid. */
+/** A settings home category: its own rounded pill with a coloured icon circle, name, summary and arrow. */
 @Composable
-internal fun CategoryCard(
+internal fun CategoryPill(
     icon: ImageVector,
     title: String,
     summary: String,
-    container: Color,
-    content: Color,
+    iconContainer: Color,
+    iconContent: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    Surface(onClick = onClick, shape = RoundedCornerShape(28.dp), color = container, modifier = modifier.height(160.dp)) {
-        Column(Modifier.padding(18.dp)) {
-            Box(Modifier.size(48.dp).background(content.copy(alpha = 0.12f), ScallopShape), contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(24.dp))
-            }
-            Spacer(Modifier.weight(1f))
-            Text(title, style = MaterialTheme.typography.titleLarge, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(2.dp))
-            Text(summary, style = MaterialTheme.typography.bodySmall, color = content.copy(alpha = 0.75f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-        }
-    }
-}
-
-/** A short card for the home page's bottom row (setup, about): icon, title, one line. */
-@Composable
-internal fun SmallCard(icon: ImageVector, title: String, summary: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
-    Surface(onClick = onClick, shape = RoundedCornerShape(24.dp), color = cs.surfaceContainerHigh, modifier = modifier) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = cs.onSurfaceVariant, modifier = Modifier.size(22.dp))
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(title, style = MaterialTheme.typography.titleSmall, color = cs.onSurface, maxLines = 1)
+    Surface(onClick = onClick, shape = RoundedCornerShape(36.dp), color = cs.surfaceContainerHigh, modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(48.dp).background(iconContainer, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(icon, contentDescription = null, tint = iconContent, modifier = Modifier.size(22.dp))
+            }
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
                 Text(summary, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
+            Spacer(Modifier.width(8.dp))
+            Icon(KeyIcons.Next, contentDescription = null, tint = cs.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
     }
 }

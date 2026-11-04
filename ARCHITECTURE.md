@@ -122,8 +122,8 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   volume and is muted when the phone is on silent or vibrate.
 - **Pure black is opt-in.** Dark mode uses the wallpaper scheme's own surfaces by default. Pure black
   swaps in the near-black AMOLED ladder.
-- **No navigation library.** The settings home is a grid of four category cards (Typing,
-  Gestures, Clipboard, Look & feel) with Setup and About below. Each category is its own page,
+- **No navigation library.** The settings home is a hero card (setup status) and four category
+  pills (Typing, Gestures, Clipboard, Look & feel), with About below. Each category is its own page,
   with its title in an M3 top app bar beside the back button (`CategoryPage`). The activity switches pages
   with an `AnimatedContent` and `BackHandler`.
 - **Suggestions use composing text.** The word being typed is the editor's composing region

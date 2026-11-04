@@ -56,7 +56,6 @@
 
     <string name="back">Back</string>
 
-    <string name="settings_section_setup">Setup</string>
     <string name="settings_setup_not_enabled">Not enabled yet</string>
     <string name="settings_setup_not_selected">Enabled, but not your current keyboard</string>
     <string name="settings_pure_black">Pure black</string>
@@ -67,10 +66,8 @@
     <string name="settings_typing_card">Suggestions, autocorrect, capitals, spacing</string>
     <string name="settings_keys_card">Glide typing, backspace, space bar</string>
     <string name="settings_look_card">Theme, key size, sound, vibration</string>
+    <string name="settings_hero_ready">Ready to use · v%1$s</string>
     <string name="settings_typing_caps_spacing">Capitals and spacing</string>
-    <string name="settings_setup_banner">Finish setting up Zenboard</string>
-    <string name="settings_setup_ready_short">Ready to use</string>
-    <string name="settings_setup_needed_short">Needs attention</string>
     <string name="settings_key_popup">Key-press popup</string>
     <string name="settings_key_popup_sub">Show a larger letter above the key you press</string>
     <string name="settings_section_about">About</string>
@@ -124,7 +121,6 @@
     <string name="about_icons">Icons</string>
     <string name="about_icons_sub">Material Icons paths, Apache License 2.0.</string>
 
-    <string name="setup_tagline">Private. Offline. Yours.</string>
     <string name="setup_section">Steps</string>
     <string name="setup_step_enable">Enable Zenboard</string>
     <string name="setup_step_enable_sub">Turn it on in system keyboard settings</string>

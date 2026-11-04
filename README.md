@@ -48,10 +48,10 @@ it needs no other Zenith app.
   Retention (1 hour, 1 day, until removed) in Clipboard settings.
 - Autocorrect on space or end punctuation, with the word it will type highlighted in the strip.
   Backspace right after undoes it and keeps your word. Off in email, URL and password fields.
-- Settings home: four category cards, each opening its own page. Typing (suggestions,
-  autocorrect, capitals, spacing); Gestures (glide typing, backspace, space bar); Clipboard;
-  Look & feel (theme, key height, key-press popup, sound, vibration). Setup and About sit below;
-  a setup banner shows only while the keyboard is not enabled or selected.
+- Settings home: a hero card with the setup status (tap it for setup), then four categories as
+  rounded pills, each opening its own page. Typing (suggestions, autocorrect, capitals, spacing);
+  Gestures (glide typing, backspace, space bar); Clipboard; Look & feel (theme, key height,
+  key-press popup, sound, vibration). About sits below.
 - Material 3 Expressive look: wallpaper colours, AMOLED-black dark mode, spring key-press morph.
 - Key vibration (on by default) and key click sound (off by default), each also following the
   system setting.
