@@ -24,70 +24,57 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SetupScreen(enabled: Boolean, selected: Boolean, onEnable: () -> Unit, onSelect: () -> Unit, onBack: () -> Unit) {
     val cs = MaterialTheme.colorScheme
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(cs.surface)
-            .safeDrawingPadding(),
-    ) {
-        PageTopBar(stringResource(R.string.setup_title), onBack)
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-        ) {
-            SectionHeader(stringResource(R.string.setup_section))
-            SegmentedGroup(
-                listOf(
-                    {
-                        StepTile(
-                            number = 1,
-                            title = stringResource(R.string.setup_step_enable),
-                            subtitle = stringResource(R.string.setup_step_enable_sub),
-                            done = enabled,
-                            onClick = onEnable,
-                        )
-                    },
-                    {
-                        StepTile(
-                            number = 2,
-                            title = stringResource(R.string.setup_step_select),
-                            subtitle = stringResource(R.string.setup_step_select_sub),
-                            done = selected,
-                            onClick = if (enabled) onSelect else null,
-                        )
-                    },
-                    {
-                        GroupTile(
-                            badge = { ScallopBadge(KeyIcons.Lock, cs.tertiaryContainer, cs.onTertiaryContainer) },
-                            title = stringResource(R.string.setup_privacy_title),
-                            subtitle = stringResource(R.string.setup_privacy_sub),
-                        )
-                    },
-                ),
-            )
+    CategoryPage(stringResource(R.string.setup_title), onBack) {
+        SectionHeader(stringResource(R.string.setup_section))
+        SegmentedGroup(
+            listOf(
+                {
+                    StepTile(
+                        number = 1,
+                        title = stringResource(R.string.setup_step_enable),
+                        subtitle = stringResource(R.string.setup_step_enable_sub),
+                        done = enabled,
+                        onClick = onEnable,
+                    )
+                },
+                {
+                    StepTile(
+                        number = 2,
+                        title = stringResource(R.string.setup_step_select),
+                        subtitle = stringResource(R.string.setup_step_select_sub),
+                        done = selected,
+                        onClick = if (enabled) onSelect else null,
+                    )
+                },
+                {
+                    GroupTile(
+                        badge = { ScallopBadge(KeyIcons.Lock, cs.tertiaryContainer, cs.onTertiaryContainer) },
+                        title = stringResource(R.string.setup_privacy_title),
+                        subtitle = stringResource(R.string.setup_privacy_sub),
+                    )
+                },
+            ),
+        )
 
-            Spacer(Modifier.height(24.dp))
-        }
+        Spacer(Modifier.height(24.dp))
+    }
 
-        // Signature action: only the next pending step, as a full-width pill.
-        val action = when {
-            !enabled -> stringResource(R.string.setup_open_settings) to onEnable
-            !selected -> stringResource(R.string.setup_choose_keyboard) to onSelect
-            else -> null
-        }
-        if (action != null) {
-            Button(
-                onClick = action.second,
-                shape = StadiumShape,
-                colors = ButtonDefaults.buttonColors(containerColor = cs.secondary, contentColor = cs.onSecondary),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
-                    .height(56.dp),
-            ) { Text(action.first, style = MaterialTheme.typography.titleMedium) }
-        }
+    // Signature action: only the next pending step, as a full-width pill.
+    val action = when {
+        !enabled -> stringResource(R.string.setup_open_settings) to onEnable
+        !selected -> stringResource(R.string.setup_choose_keyboard) to onSelect
+        else -> null
+    }
+    if (action != null) {
+        Button(
+            onClick = action.second,
+            shape = StadiumShape,
+            colors = ButtonDefaults.buttonColors(containerColor = cs.secondary, contentColor = cs.onSecondary),
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .height(56.dp),
+        ) { Text(action.first, style = MaterialTheme.typography.titleMedium) }
     }
 }

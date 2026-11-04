@@ -29,96 +29,82 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AboutScreen(versionName: String, onBack: () -> Unit) {
     val cs = MaterialTheme.colorScheme
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(cs.surface)
-            .safeDrawingPadding(),
-    ) {
-        PageTopBar(stringResource(R.string.about_title), onBack)
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Spacer(Modifier.height(16.dp))
-            // The launcher icon's own layers, so the page always matches the icon.
-            Box(Modifier.size(96.dp).clip(RoundedCornerShape(28.dp))) {
-                Image(painterResource(R.drawable.ic_launcher_background), contentDescription = null, modifier = Modifier.fillMaxSize())
-                Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.fillMaxSize())
-            }
-            Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
-            Text(
-                stringResource(R.string.about_version, versionName),
-                style = MaterialTheme.typography.bodyMedium,
-                color = cs.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(R.string.about_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = cs.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
+    CategoryPage(stringResource(R.string.about_title), onBack, horizontalAlignment = Alignment.CenterHorizontally) {
+        Spacer(Modifier.height(16.dp))
+        // The launcher icon's own layers, so the page always matches the icon.
+        Box(Modifier.size(96.dp).clip(RoundedCornerShape(28.dp))) {
+            Image(painterResource(R.drawable.ic_launcher_background), contentDescription = null, modifier = Modifier.fillMaxSize())
+            Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.fillMaxSize())
+        }
+        Spacer(Modifier.height(16.dp))
+        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
+        Text(
+            stringResource(R.string.about_version, versionName),
+            style = MaterialTheme.typography.bodyMedium,
+            color = cs.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            stringResource(R.string.about_description),
+            style = MaterialTheme.typography.bodyMedium,
+            color = cs.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
 
-            Column(Modifier.fillMaxWidth()) {
-                SectionHeader(stringResource(R.string.about_section_app))
-                SegmentedGroup(
-                    listOf(
-                        {
-                            GroupTile(
-                                badge = { ScallopBadge(KeyIcons.Keyboard, ZenithColors.indicator, ZenithColors.onIndicator) },
-                                title = stringResource(R.string.about_developer),
-                                subtitle = stringResource(R.string.about_developer_name),
-                            )
-                        },
-                        {
-                            GroupTile(
-                                badge = { ScallopBadge(KeyIcons.Lock, cs.tertiaryContainer, cs.onTertiaryContainer) },
-                                title = stringResource(R.string.setup_privacy_title),
-                                subtitle = stringResource(R.string.setup_privacy_sub),
-                            )
-                        },
-                        {
-                            GroupTile(
-                                badge = { ScallopBadge(KeyIcons.Info, ZenithColors.indicator, ZenithColors.onIndicator) },
-                                title = stringResource(R.string.about_license),
-                                subtitle = stringResource(R.string.about_license_sub),
-                            )
-                        },
-                    ),
-                )
-                SectionHeader(stringResource(R.string.about_section_credits))
-                SegmentedGroup(
-                    listOf(
-                        {
-                            GroupTile(
-                                badge = { ScallopBadge(KeyIcons.Emoji, ZenithColors.indicator, ZenithColors.onIndicator) },
-                                title = stringResource(R.string.about_emoji_data),
-                                subtitle = stringResource(R.string.about_emoji_data_sub),
-                            )
-                        },
-                        {
-                            GroupTile(
-                                badge = { ScallopBadge(KeyIcons.Words, ZenithColors.indicator, ZenithColors.onIndicator) },
-                                title = stringResource(R.string.about_word_list),
-                                subtitle = stringResource(R.string.about_word_list_sub),
-                            )
-                        },
-                        {
-                            GroupTile(
-                                badge = { ScallopBadge(KeyIcons.Done, ZenithColors.indicator, ZenithColors.onIndicator) },
-                                title = stringResource(R.string.about_icons),
-                                subtitle = stringResource(R.string.about_icons_sub),
-                            )
-                        },
-                    ),
-                )
-                Spacer(Modifier.height(24.dp))
-            }
+        Column(Modifier.fillMaxWidth()) {
+            SectionHeader(stringResource(R.string.about_section_app))
+            SegmentedGroup(
+                listOf(
+                    {
+                        GroupTile(
+                            badge = { ScallopBadge(KeyIcons.Keyboard, ZenithColors.indicator, ZenithColors.onIndicator) },
+                            title = stringResource(R.string.about_developer),
+                            subtitle = stringResource(R.string.about_developer_name),
+                        )
+                    },
+                    {
+                        GroupTile(
+                            badge = { ScallopBadge(KeyIcons.Lock, cs.tertiaryContainer, cs.onTertiaryContainer) },
+                            title = stringResource(R.string.setup_privacy_title),
+                            subtitle = stringResource(R.string.setup_privacy_sub),
+                        )
+                    },
+                    {
+                        GroupTile(
+                            badge = { ScallopBadge(KeyIcons.Info, ZenithColors.indicator, ZenithColors.onIndicator) },
+                            title = stringResource(R.string.about_license),
+                            subtitle = stringResource(R.string.about_license_sub),
+                        )
+                    },
+                ),
+            )
+            SectionHeader(stringResource(R.string.about_section_credits))
+            SegmentedGroup(
+                listOf(
+                    {
+                        GroupTile(
+                            badge = { ScallopBadge(KeyIcons.Emoji, ZenithColors.indicator, ZenithColors.onIndicator) },
+                            title = stringResource(R.string.about_emoji_data),
+                            subtitle = stringResource(R.string.about_emoji_data_sub),
+                        )
+                    },
+                    {
+                        GroupTile(
+                            badge = { ScallopBadge(KeyIcons.Words, ZenithColors.indicator, ZenithColors.onIndicator) },
+                            title = stringResource(R.string.about_word_list),
+                            subtitle = stringResource(R.string.about_word_list_sub),
+                        )
+                    },
+                    {
+                        GroupTile(
+                            badge = { ScallopBadge(KeyIcons.Done, ZenithColors.indicator, ZenithColors.onIndicator) },
+                            title = stringResource(R.string.about_icons),
+                            subtitle = stringResource(R.string.about_icons_sub),
+                        )
+                    },
+                ),
+            )
+            Spacer(Modifier.height(24.dp))
         }
     }
 }

@@ -57,19 +57,24 @@
     <string name="back">Back</string>
 
     <string name="settings_section_setup">Setup</string>
-    <string name="settings_setup_ready">Enabled and selected</string>
     <string name="settings_setup_not_enabled">Not enabled yet</string>
     <string name="settings_setup_not_selected">Enabled, but not your current keyboard</string>
-    <string name="settings_section_appearance">Appearance</string>
     <string name="settings_pure_black">Pure black</string>
     <string name="settings_pure_black_sub">Black background in dark mode. Saves power on OLED screens.</string>
     <string name="settings_section_typing">Typing</string>
+    <string name="settings_section_keys">Gestures</string>
+    <string name="settings_section_look">Look &amp; feel</string>
+    <string name="settings_typing_card">Suggestions, autocorrect, capitals, spacing</string>
+    <string name="settings_keys_card">Glide typing, backspace, space bar</string>
+    <string name="settings_look_card">Theme, key size, sound, vibration</string>
+    <string name="settings_typing_caps_spacing">Capitals and spacing</string>
+    <string name="settings_setup_banner">Finish setting up Zenboard</string>
+    <string name="settings_setup_ready_short">Ready to use</string>
+    <string name="settings_setup_needed_short">Needs attention</string>
     <string name="settings_key_popup">Key-press popup</string>
     <string name="settings_key_popup_sub">Show a larger letter above the key you press</string>
     <string name="settings_section_about">About</string>
     <string name="settings_appearance_theme">Theme</string>
-    <string name="settings_appearance_summary">Follows your wallpaper colours</string>
-    <string name="settings_appearance_summary_black">Pure black in dark mode</string>
     <string name="settings_typing_keys">Keys</string>
     <string name="settings_typing_words">Words</string>
     <string name="settings_key_height">Key height</string>
@@ -82,9 +87,7 @@
     <string name="settings_autocorrect">Autocorrect</string>
     <string name="settings_autocorrect_sub">Fix typos when you press space. Backspace right after undoes it.</string>
     <string name="settings_section_space_bar">Space bar</string>
-    <string name="settings_space_bar_summary">Slide %1$s, hold to switch %2$s, label %3$s</string>
-    <string name="settings_section_gestures">Gestures</string>
-    <string name="settings_gestures_summary">Glide typing %1$s, backspace slide %2$s, double tap %3$s</string>
+    <string name="settings_gestures_keys">Glide and backspace</string>
     <string name="settings_backspace_double_tap">Double tap backspace to delete a word</string>
     <string name="settings_backspace_double_tap_sub">A quick second tap deletes the whole word. Quick taps to delete single letters will then delete words.</string>
     <string name="settings_glide">Glide typing</string>
@@ -101,11 +104,7 @@
     <string name="settings_auto_caps_sub">Capital letter at the start and after a full stop, question or exclamation mark. Off in password, email and URL fields.</string>
     <string name="settings_auto_space">Space after full stop</string>
     <string name="settings_auto_space_sub">Add a space when you type a full stop after a word. A number or punctuation right after takes it back, so 3.14 and e.g. still work.</string>
-    <string name="settings_typing_summary">Suggestions %1$s, autocorrect %2$s</string>
     <string name="settings_section_feedback">Sound and vibration</string>
-    <string name="settings_feedback_summary">Vibration %1$s, sound %2$s</string>
-    <string name="settings_state_on">on</string>
-    <string name="settings_state_off">off</string>
 
     <string name="setup_title">Setup</string>
 

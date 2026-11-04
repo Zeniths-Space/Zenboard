@@ -9,7 +9,7 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 | `KeyboardModel.kt` | Pure logic: layouts, shift/caps state machine, Enter action, key widths. No framework calls, so it is unit-tested on the JVM. |
 | `ZenboardService.kt` | `InputMethodService`. Owns the keyboard state and turns key presses into `InputConnection` calls. |
 | `KeyboardView.kt` | Compose UI for the keys. Stateless: it renders `KeyboardState` and reports `Key` presses. |
-| `SettingsActivity.kt` | Launcher entry and the IME's settings activity: category home, Appearance, Typing and Sound and vibration pages, page switching. |
+| `SettingsActivity.kt` | Launcher entry and the IME's settings activity: the card-grid home, the Typing, Gestures, Clipboard and Look & feel pages, page switching. |
 | `SetupScreen.kt` / `AboutScreen.kt` | Setup steps page; about page with version, privacy, license status and credits. |
 | `SettingsComponents.kt` | Shared grouped tiles, switch and slider tiles, page header, scallop badge, try-it field. |
 | `SettingsStore.kt` | DataStore-backed settings, observed live by the keyboard. |
@@ -106,7 +106,7 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   timer. The panel reuses the emoji layout: it replaces the three upper rows, with ABC and delete
   in the short bottom row. Clearing lives in the settings screen: it rewrites the file and, through
   the in-process `ClipClears` flow, empties a running keyboard's memory too.
-- **Changing keyboard** is a 1.5-second hold on space, off by default (Space bar settings), which calls
+- **Changing keyboard** is a 1.5-second hold on space, off by default (Gestures settings), which calls
   `showInputMethodPicker()`. Off, the hold has no timeout, so it still ends as a tap or a slide. The
   emoji key took the old globe key's place.
 - **Settings live in DataStore** (`datastore-preferences`, Apache-2.0, as the project brief specifies).
@@ -122,8 +122,9 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   volume and is muted when the phone is on silent or vibrate.
 - **Pure black is opt-in.** Dark mode uses the wallpaper scheme's own surfaces by default. Pure black
   swaps in the near-black AMOLED ladder.
-- **No navigation library.** The settings home lists the categories (Setup, Appearance, Typing,
-  About), each with a one-line status. Each category is its own page. The activity switches pages
+- **No navigation library.** The settings home is a grid of four category cards (Typing,
+  Gestures, Clipboard, Look & feel) with Setup and About below. Each category is its own page,
+  with an M3 large top app bar that collapses as it scrolls (`CategoryPage`). The activity switches pages
   with an `AnimatedContent` and `BackHandler`.
 - **Suggestions use composing text.** The word being typed is the editor's composing region
   (underlined), so a suggestion replaces it in place. The first letter picks up any letters already

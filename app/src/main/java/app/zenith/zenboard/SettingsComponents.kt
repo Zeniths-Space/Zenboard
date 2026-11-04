@@ -1,4 +1,11 @@
 package app.zenith.zenboard
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -286,21 +293,48 @@ internal fun WithTryKeyboard(content: @Composable () -> Unit) {
     }
 }
 
-/** A category page: header with back button, then scrolling content. */
+/**
+ * A settings page: a large title that collapses into a small bar as the page scrolls (M3 large
+ * top app bar), an optional back button, then the scrolling [content].
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun CategoryPage(title: String, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .safeDrawingPadding(),
-    ) {
-        PageTopBar(title, onBack)
+internal fun CategoryPage(
+    title: String,
+    onBack: (() -> Unit)?,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val cs = MaterialTheme.colorScheme
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    Scaffold(
+        modifier = Modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection),
+        containerColor = cs.surface,
+        topBar = {
+            LargeTopAppBar(
+                title = { Text(title) },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(KeyIcons.Previous, contentDescription = stringResource(R.string.back))
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = cs.surface,
+                    scrolledContainerColor = cs.surfaceContainer,
+                ),
+                scrollBehavior = scroll,
+            )
+        },
+    ) { padding ->
         Column(
             Modifier
-                .weight(1f)
+                .fillMaxSize()
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = horizontalAlignment,
         ) {
             content()
             Spacer(Modifier.height(FabClearance))
@@ -308,20 +342,43 @@ internal fun CategoryPage(title: String, onBack: () -> Unit, content: @Composabl
     }
 }
 
-/** Sub-page header: back button and a large title. */
+/** A large, coloured category card for the settings home grid. */
 @Composable
-internal fun PageTopBar(title: String, onBack: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(start = 8.dp, end = 20.dp, top = 8.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(KeyIcons.Previous, contentDescription = stringResource(R.string.back))
+internal fun CategoryCard(
+    icon: ImageVector,
+    title: String,
+    summary: String,
+    container: Color,
+    content: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(onClick = onClick, shape = RoundedCornerShape(28.dp), color = container, modifier = modifier.height(160.dp)) {
+        Column(Modifier.padding(18.dp)) {
+            Box(Modifier.size(48.dp).background(content.copy(alpha = 0.12f), ScallopShape), contentAlignment = Alignment.Center) {
+                Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(24.dp))
+            }
+            Spacer(Modifier.weight(1f))
+            Text(title, style = MaterialTheme.typography.titleLarge, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(2.dp))
+            Text(summary, style = MaterialTheme.typography.bodySmall, color = content.copy(alpha = 0.75f), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        Spacer(Modifier.width(4.dp))
-        Text(title, style = MaterialTheme.typography.headlineSmall)
+    }
+}
+
+/** A short card for the home page's bottom row (setup, about): icon, title, one line. */
+@Composable
+internal fun SmallCard(icon: ImageVector, title: String, summary: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    Surface(onClick = onClick, shape = RoundedCornerShape(24.dp), color = cs.surfaceContainerHigh, modifier = modifier) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = cs.onSurfaceVariant, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(title, style = MaterialTheme.typography.titleSmall, color = cs.onSurface, maxLines = 1)
+                Text(summary, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
     }
 }
 

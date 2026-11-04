@@ -34,9 +34,9 @@ it needs no other Zenith app.
 - Recents can be cleared: "Clear all" (tap twice) between ABC and delete on the recents tab, or long-press one recent
   emoji and tap ✕ to remove just that one.
 - Hold space for 1.5 seconds to change keyboard (Android's keyboard picker), once turned on in
-  Space bar settings. Slide along space to move the cursor
+  Gestures settings. Slide along space to move the cursor
   (can be turned off there).
-- The space bar label can be hidden (Space bar settings).
+- The space bar label can be hidden (Gestures settings).
 - Word suggestions above the keys: completions and likely fixes, best in the middle. Tap one to
   type it. Off in password fields.
 - A toolbar row above the keys (select all, cut, copy, paste, and a settings shortcut), shown
@@ -48,8 +48,10 @@ it needs no other Zenith app.
   Retention (1 hour, 1 day, until removed) in Clipboard settings.
 - Autocorrect on space or end punctuation, with the word it will type highlighted in the strip.
   Backspace right after undoes it and keeps your word. Off in email, URL and password fields.
-- Settings by category, each on its own page: Setup; Appearance (pure black, key height,
-  key-press popup); Typing (word suggestions, autocorrect); Sound and vibration; About.
+- Settings home: four category cards, each opening its own page. Typing (suggestions,
+  autocorrect, capitals, spacing); Gestures (glide typing, backspace, space bar); Clipboard;
+  Look & feel (theme, key height, key-press popup, sound, vibration). Setup and About sit below;
+  a setup banner shows only while the keyboard is not enabled or selected.
 - Material 3 Expressive look: wallpaper colours, AMOLED-black dark mode, spring key-press morph.
 - Key vibration (on by default) and key click sound (off by default), each also following the
   system setting.
@@ -66,7 +68,7 @@ Planned work is in [ROADMAP.md](ROADMAP.md).
 4. Tap **Choose keyboard** and pick Zenboard.
 
 To switch back, use the keyboard icon in the navigation bar, or turn on "Hold space to switch
-keyboard" in Space bar settings and hold the space bar for 1.5 seconds.
+keyboard" in Gestures settings and hold the space bar for 1.5 seconds.
 Uninstalling the app also restores your previous keyboard.
 
 ## Build
