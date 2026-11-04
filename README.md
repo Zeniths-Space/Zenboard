@@ -36,8 +36,9 @@ it needs no other Zenith app.
 - The space bar label can be hidden (Space bar settings).
 - Word suggestions above the keys: completions and likely fixes, best in the middle. Tap one to
   type it. Off in password fields.
-- When no word is being typed, the suggestion strip holds a toolbar: select all, cut, copy,
-  paste, and a settings shortcut.
+- A toolbar row above the keys (select all, cut, copy, paste, and a settings shortcut), shown
+  in every field, with word suggestions on or off. While a word is being typed and suggestions
+  are on, the same row shows the suggestions instead.
 - Autocorrect on space or end punctuation, with the word it will type highlighted in the strip.
   Backspace right after undoes it and keeps your word. Off in email, URL and password fields.
 - Settings by category, each on its own page: Setup; Appearance (pure black, key height,

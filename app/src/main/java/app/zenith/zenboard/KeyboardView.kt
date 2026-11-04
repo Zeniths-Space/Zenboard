@@ -160,9 +160,11 @@ fun KeyboardView(
     ) {
         if (emojiQuery != null) {
             EmojiSearchBar(emojiQuery, emojiIndex, recentEmoji, emojiTones, onCloseEmojiSearch, onEmoji)
-        } else if (stripShown) {
-            // Words only while a word is being typed; otherwise the same space holds the toolbar.
-            if (suggestions.primary == null && suggestions.others.isEmpty()) Toolbar(onToolbar) else SuggestionStrip(suggestions, onPick)
+        } else if (stripShown && (suggestions.primary != null || suggestions.others.isNotEmpty())) {
+            SuggestionStrip(suggestions, onPick)
+        } else {
+            // Always there, suggestions on or off: editing, clipboard and settings are one tap away.
+            Toolbar(onToolbar)
         }
         // Cap rows at 9% of screen height so landscape keeps most of the app visible.
         val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
