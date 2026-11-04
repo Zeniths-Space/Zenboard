@@ -218,4 +218,20 @@ class KeyboardModelTest {
         assertEquals(listOf("😍"), searchEmoji(index, "smiling heart love"))
         assertEquals(listOf("❤️", "😍"), searchEmoji(index, "love"))
     }
+
+    @Test
+    fun `skin tones remember the last pick per emoji`() {
+        val tones = EmojiTones(parseEmojiTones("# header\n👍\t👍🏻 👍🏼 👍🏽 👍🏾 👍🏿\n"))
+        assertEquals(listOf("👍", "👍🏻", "👍🏼", "👍🏽", "👍🏾", "👍🏿"), tones.options("👍🏽"))
+        assertEquals(emptyList<String>(), tones.options("😀"))
+        assertEquals("👍", tones.shown("👍"))
+
+        val picked = tones.withChoice("👍🏾")
+        assertEquals("👍🏾", picked.shown("👍"))
+        // Typing the same pick, or an emoji without tones, changes nothing.
+        assert(picked.withChoice("👍🏾") === picked)
+        assert(picked.withChoice("😀") === picked)
+        // Picking the plain base goes back to no tone.
+        assertEquals("👍", picked.withChoice("👍").shown("👍"))
+    }
 }

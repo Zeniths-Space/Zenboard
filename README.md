@@ -22,6 +22,7 @@ it needs no other Zenith app.
 - Emoji panel: all Unicode emoji the device can draw, by category, with recently used first.
 - Emoji search: tap the magnifier in the emoji panel and type on the letter keys. Matches emoji
   names and keywords, offline.
+- Skin tones: long-press an emoji such as 👍 to pick a tone. The pick is remembered for that emoji.
 - Hold space to change keyboard (Android's keyboard picker). Slide along space to move the cursor.
 - Word suggestions above the keys: completions and likely fixes, best in the middle. Tap one to
   type it. Off in password fields.
@@ -99,7 +100,8 @@ Without the property the release APK is unsigned. Never commit keystores or pass
 © Unicode, Inc., used under the [Unicode License v3](https://www.unicode.org/license.txt).
 `app/src/main/assets/emoji_keywords.txt` (search names and keywords) is generated from the same
 file and the English CLDR annotations (`annotations/en.xml`, `annotationsDerived/en.xml`), under
-the same license.
+the same license. `app/src/main/assets/emoji_tones.txt` (skin-tone variants) is generated from
+`emoji-test.txt` as well.
 
 `app/src/main/assets/dict_en_US.txt` is generated from AOSP LatinIME's
 `dictionaries/en_US_wordlist.combined` (60,000 most frequent words, offensive-flagged entries

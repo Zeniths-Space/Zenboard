@@ -9,6 +9,12 @@
     <string name="emoji_search">Search emoji</string>
     <string name="emoji_search_close">Close emoji search</string>
     <string name="emoji_no_results">No emoji found</string>
+    <string name="emoji_tone_none">No skin tone</string>
+    <string name="emoji_tone_light">Light skin tone</string>
+    <string name="emoji_tone_medium_light">Medium-light skin tone</string>
+    <string name="emoji_tone_medium">Medium skin tone</string>
+    <string name="emoji_tone_medium_dark">Medium-dark skin tone</string>
+    <string name="emoji_tone_dark">Dark skin tone</string>
 
     <string name="back">Back</string>
 

@@ -83,12 +83,50 @@ fun searchEmoji(index: List<EmojiInfo>, query: String, max: Int = 60): List<Stri
     }.sortedBy { it.first }.take(max).map { it.second }
 }
 
+/** Skin-tone variants per base emoji (light to dark), and the variant last picked for each base. */
+class EmojiTones(val variants: Map<String, List<String>>, val chosen: Map<String, String> = emptyMap()) {
+    private val bases: Map<String, String> = variants.flatMap { (base, tones) -> tones.map { it to base } }.toMap()
+
+    /** The base of a toned emoji; any other emoji is its own base. */
+    fun baseOf(emoji: String) = bases[emoji] ?: emoji
+
+    /** What a cell shows and types for [emoji]: the tone picked for it, if any. */
+    fun shown(emoji: String) = chosen[emoji] ?: emoji
+
+    /** The base, then its five tones; empty when [emoji] has no tones. */
+    fun options(emoji: String): List<String> {
+        val base = baseOf(emoji)
+        return variants[base]?.let { listOf(base) + it }.orEmpty()
+    }
+
+    /** [emoji] was typed: it becomes the remembered pick for its base. Same instance when nothing changes. */
+    fun withChoice(emoji: String): EmojiTones {
+        val base = baseOf(emoji)
+        if (base !in variants || shown(base) == emoji) return this
+        return EmojiTones(variants, chosen + (base to emoji))
+    }
+
+    companion object {
+        val NONE = EmojiTones(emptyMap())
+    }
+}
+
+/** Parses assets/emoji_tones.txt: "#" comment lines, then "base<TAB>tone tone tone tone tone" lines. */
+fun parseEmojiTones(text: String): Map<String, List<String>> = parseEmoji(text).toMap()
+
+/** Tone variants the device font can draw; loaded with the emoji list. */
+suspend fun loadEmojiTones(context: Context): Map<String, List<String>> = withContext(Dispatchers.Default) {
+    val paint = Paint()
+    val text = context.assets.open("emoji_tones.txt").bufferedReader().use { it.readText() }
+    parseEmojiTones(text).mapValues { (_, tones) -> tones.filter(paint::hasGlyph) }.filterValues { it.isNotEmpty() }
+}
+
 /** Most recent first, no duplicates, capped. */
 fun pushRecent(recents: List<String>, emoji: String, max: Int = 32): List<String> =
     (listOf(emoji) + recents.filter { it != emoji }).take(max)
 
 /**
- * Recently used emoji, stored only on this device (app-private SharedPreferences, backups disabled).
+ * Recently used emoji and picked skin tones, stored only on this device (app-private SharedPreferences, backups disabled).
  * Nothing is recorded in password fields or when the app asks for no personalized learning (incognito).
  */
 class EmojiRecents(context: Context) {
@@ -98,8 +136,17 @@ class EmojiRecents(context: Context) {
 
     fun save(recents: List<String>) = prefs.edit().putString(KEY, recents.joinToString("\n")).apply()
 
+    /** Picked skin tones: base emoji to the variant last typed. */
+    fun loadTones(): Map<String, String> = prefs.getString(TONES, null)?.split('\n')
+        ?.mapNotNull { line -> line.split('\t').takeIf { it.size == 2 }?.let { it[0] to it[1] } }
+        ?.toMap().orEmpty()
+
+    fun saveTones(chosen: Map<String, String>) =
+        prefs.edit().putString(TONES, chosen.entries.joinToString("\n") { "${it.key}\t${it.value}" }).apply()
+
     private companion object {
         const val KEY = "recent"
+        const val TONES = "tones"
     }
 }
 

@@ -1,5 +1,19 @@
 package app.zenith.zenboard
 
+import android.view.HapticFeedbackConstants
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -44,7 +58,14 @@ import androidx.compose.ui.unit.sp
 
 /** Search, then category tabs (recents first), over a scrolling grid. Same height as the letter rows it replaces. */
 @Composable
-fun EmojiPanel(categories: List<EmojiCategory>?, recents: List<String>, height: Dp, onSearch: () -> Unit, onEmoji: (String) -> Unit) {
+fun EmojiPanel(
+    categories: List<EmojiCategory>?,
+    recents: List<String>,
+    tones: EmojiTones,
+    height: Dp,
+    onSearch: () -> Unit,
+    onEmoji: (String) -> Unit,
+) {
     val cs = MaterialTheme.colorScheme
     val feedback = LocalKeyFeedback.current
     // Tab 0 is recents; open on the first category until something has been used.
@@ -101,17 +122,7 @@ fun EmojiPanel(categories: List<EmojiCategory>?, recents: List<String>, height: 
             key(tab) {
                 LazyVerticalGrid(GridCells.Adaptive(44.dp), Modifier.weight(1f).fillMaxWidth()) {
                     items(items) { emoji ->
-                        Box(
-                            Modifier
-                                .aspectRatio(1f)
-                                .padding(1.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable {
-                                    feedback.press()
-                                    onEmoji(emoji)
-                                },
-                            contentAlignment = Alignment.Center,
-                        ) { Text(emoji, fontSize = 26.sp) }
+                        EmojiCell(emoji, tones, Modifier.aspectRatio(1f), onEmoji)
                     }
                 }
             }
@@ -128,6 +139,7 @@ fun EmojiSearchBar(
     query: String,
     index: List<EmojiInfo>?,
     recents: List<String>,
+    tones: EmojiTones,
     onClose: () -> Unit,
     onEmoji: (String) -> Unit,
 ) {
@@ -173,21 +185,106 @@ fun EmojiSearchBar(
                 items.isEmpty() && query.isNotBlank() -> Text(stringResource(R.string.emoji_no_results), color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
                 else -> LazyRow(Modifier.fillMaxSize()) {
                     items(items) { emoji ->
-                        Box(
-                            Modifier
-                                .fillMaxHeight()
-                                .width(48.dp)
-                                .padding(1.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable {
-                                    feedback.press()
-                                    onEmoji(emoji)
-                                },
-                            contentAlignment = Alignment.Center,
-                        ) { Text(emoji, fontSize = 26.sp) }
+                        EmojiCell(emoji, tones, Modifier.fillMaxHeight().width(48.dp), onEmoji)
                     }
                 }
             }
         }
+    }
+}
+
+/**
+ * One emoji, shown in its picked skin tone. Tap types it; long-press opens the tone row above it
+ * when the emoji has tones. Screen readers get each tone as an action.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun EmojiCell(emoji: String, tones: EmojiTones, modifier: Modifier, onEmoji: (String) -> Unit) {
+    val feedback = LocalKeyFeedback.current
+    val shown = tones.shown(emoji)
+    val options = tones.options(shown)
+    var picking by remember { mutableStateOf(false) }
+    val toneLabels = TONE_LABELS.map { stringResource(it) }
+    Box(
+        modifier
+            .padding(1.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .combinedClickable(
+                onClick = {
+                    feedback.press()
+                    onEmoji(shown)
+                },
+                onLongClick = if (options.isEmpty()) null else {
+                    {
+                        feedback.haptic(HapticFeedbackConstants.LONG_PRESS)
+                        picking = true
+                    }
+                },
+            )
+            .semantics {
+                if (options.isNotEmpty()) {
+                    customActions = options.mapIndexed { i, option ->
+                        CustomAccessibilityAction(toneLabels[i]) { onEmoji(option); true }
+                    }
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(shown, fontSize = 26.sp)
+        if (picking) {
+            Popup(
+                popupPositionProvider = AboveAnchor,
+                onDismissRequest = { picking = false },
+                // Not clipped: the row may rise above the keyboard window.
+                properties = PopupProperties(clippingEnabled = false),
+            ) {
+                Row(
+                    Modifier
+                        .shadow(6.dp, RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                        .padding(4.dp),
+                ) {
+                    options.forEachIndexed { i, option ->
+                        Box(
+                            Modifier
+                                .size(46.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (option == shown) ZenithColors.indicator else Color.Transparent)
+                                .clickable {
+                                    feedback.press()
+                                    picking = false
+                                    onEmoji(option)
+                                }
+                                .semantics { contentDescription = toneLabels[i] },
+                            contentAlignment = Alignment.Center,
+                        ) { Text(option, fontSize = 26.sp) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** No tone first, then light to dark: the order of [EmojiTones.options]. */
+private val TONE_LABELS = listOf(
+    R.string.emoji_tone_none,
+    R.string.emoji_tone_light,
+    R.string.emoji_tone_medium_light,
+    R.string.emoji_tone_medium,
+    R.string.emoji_tone_medium_dark,
+    R.string.emoji_tone_dark,
+)
+
+/** Centred above the anchor, kept inside the window horizontally. */
+private object AboveAnchor : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize,
+    ): IntOffset {
+        val x = anchorBounds.center.x - popupContentSize.width / 2
+        return IntOffset(x.coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0)), anchorBounds.top - popupContentSize.height)
     }
 }

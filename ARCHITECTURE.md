@@ -77,6 +77,11 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   and keys edit the query held in `ZenboardService` instead of the editor; nothing typed there
   reaches the app. Matching (`searchEmoji`) is a pure word-prefix scan, unit-tested: about 1,900
   entries, fast enough per keystroke without an index.
+- **Skin tones** come from `assets/emoji_tones.txt` (28 KB: base emoji and its five single-tone
+  variants), loaded with the emoji list. Long-press opens the tone row in a Compose `Popup` above
+  the cell, unclipped so it can rise over the keyboard top. The last pick per emoji is kept in the
+  same private preferences as recents, under the same incognito rule. Two-tone combinations (such
+  as a handshake with two different tones) are not offered.
 - **Changing keyboard** is a long-press on space, which calls `showInputMethodPicker()`. The
   emoji key took the old globe key's place.
 - **Settings live in DataStore** (`datastore-preferences`, Apache-2.0, as the project brief specifies).

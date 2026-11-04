@@ -21,7 +21,7 @@
 - [x] Hold space to change keyboard
 
 ## Later (emoji)
-- [ ] Skin-tone picker (long-press an emoji)
+- [x] Skin-tone picker (long-press an emoji)
 - [x] Emoji search
 
 ## 0.3 — Suggestions

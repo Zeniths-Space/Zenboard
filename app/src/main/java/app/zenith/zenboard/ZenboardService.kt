@@ -45,6 +45,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private var enterAction by mutableStateOf<Int?>(null)
     private var emoji by mutableStateOf<List<EmojiCategory>?>(null)
     private var recentEmoji by mutableStateOf<List<String>>(emptyList())
+    private var emojiTones by mutableStateOf(EmojiTones.NONE)
     private val emojiRecents by lazy { EmojiRecents(this) }
     /** Non-null while searching emoji: letter keys type into this query instead of the editor. */
     private var emojiQuery by mutableStateOf<String?>(null)
@@ -124,6 +125,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         keyPopup = settings.keyPopup,
                         emoji = emoji,
                         recentEmoji = recentEmoji,
+                        emojiTones = emojiTones,
                         onEmoji = ::onEmoji,
                         emojiQuery = emojiQuery,
                         emojiIndex = emojiIndex,
@@ -425,7 +427,12 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         emojiQuery = null
         state = state.copy(layer = Layer.EMOJI)
         if (recentEmoji.isEmpty()) recentEmoji = emojiRecents.load()
-        if (emoji == null) lifecycleScope.launch { emoji = loadEmoji(this@ZenboardService) }
+        if (emoji == null) {
+            lifecycleScope.launch {
+                emojiTones = EmojiTones(loadEmojiTones(this@ZenboardService), emojiRecents.loadTones())
+                emoji = loadEmoji(this@ZenboardService)
+            }
+        }
     }
 
     /** Emoji search: the letter keys come back and type into the query. The index loads on first use. */
@@ -460,6 +467,11 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         if (!isIncognito(currentInputEditorInfo)) {
             recentEmoji = pushRecent(recentEmoji, value)
             emojiRecents.save(recentEmoji)
+            val tones = emojiTones.withChoice(value)
+            if (tones !== emojiTones) {
+                emojiTones = tones
+                emojiRecents.saveTones(tones.chosen)
+            }
         }
     }
 
