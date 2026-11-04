@@ -4,7 +4,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -294,8 +294,8 @@ internal fun WithTryKeyboard(content: @Composable () -> Unit) {
 }
 
 /**
- * A settings page: a large title that collapses into a small bar as the page scrolls (M3 large
- * top app bar), an optional back button, then the scrolling [content].
+ * A settings page: the title in the top bar beside an optional back button (M3 small top app bar,
+ * tinted once the page scrolls under it), then the scrolling [content].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -306,13 +306,13 @@ internal fun CategoryPage(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
-    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scroll = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     Scaffold(
         modifier = Modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection),
         containerColor = cs.surface,
         topBar = {
-            LargeTopAppBar(
-                title = { Text(title) },
+            TopAppBar(
+                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
@@ -320,7 +320,7 @@ internal fun CategoryPage(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.largeTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = cs.surface,
                     scrolledContainerColor = cs.surfaceContainer,
                 ),
