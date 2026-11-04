@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -134,21 +135,30 @@ fun KeyboardView(
         }
         // Cap rows at 9% of screen height so landscape keeps most of the app visible.
         val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
+        // Emoji layer: a shorter bottom row (ABC, delete) gives the grid more room.
+        val emojiRowHeight = rowHeight * 0.7f
+        // Tab 0 (recents) each time the panel opens; it lives here so the bottom row can show "Clear all".
+        var emojiTab by remember(state.layer == Layer.EMOJI) { mutableIntStateOf(0) }
         if (state.layer == Layer.EMOJI) {
             // Takes the place of the three upper rows, so the keyboard height does not jump.
             EmojiPanel(
-                emoji, recentEmoji, emojiTones, height = rowHeight * 3 + 4.dp, onSearch = onEmojiSearch,
-                onRemoveRecent = onRemoveRecentEmoji, onClearRecents = onClearRecentEmoji, onEmoji = onEmoji,
+                emoji, recentEmoji, emojiTones, emojiTab, { emojiTab = it },
+                height = rowHeight * 4 - emojiRowHeight + 4.dp, onSearch = onEmojiSearch,
+                onRemoveRecent = onRemoveRecentEmoji, onEmoji = onEmoji,
             )
         }
         keyboardRows(state.layer).forEach { row ->
-            Row(Modifier.fillMaxWidth().height(rowHeight)) {
+            Row(Modifier.fillMaxWidth().height(if (state.layer == Layer.EMOJI) emojiRowHeight else rowHeight)) {
                 val pad = (ROW_UNITS - row.sumOf { keyWeight(it, row).toDouble() }.toFloat()) / 2
                 // Short rows are centred, except the emoji row: ABC at the left edge, delete at the right.
                 val spread = state.layer == Layer.EMOJI
                 if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
                 row.forEachIndexed { i, key ->
-                    if (spread && i == row.lastIndex && pad > 0f) Spacer(Modifier.weight(pad * 2))
+                    if (spread && i == row.lastIndex && pad > 0f) {
+                        Box(Modifier.weight(pad * 2).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                            if (emojiTab == 0 && emoji != null && recentEmoji.isNotEmpty()) ClearRecents(onClearRecentEmoji)
+                        }
+                    }
                     // Identity by key, not slot: switching layers must not hand one key's press and
                     // colour animations to whichever key lands in the same position.
                     key(key) {

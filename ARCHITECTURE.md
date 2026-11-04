@@ -71,7 +71,8 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   Unicode `emoji-test.txt`: fully-qualified emoji, skin-tone variants omitted. It is loaded off the
   main thread on first use, and `Paint.hasGlyph` drops emoji the device font cannot draw. The panel
   takes the height of the three upper rows, so the keyboard does not resize. Its bottom row is
-  only ABC (left) and delete (right).
+  only ABC (left) and delete (right), 70% of a normal row high, so the grid gets the rest; the
+  gap between them holds "Clear all" on the recents tab. The panel always opens on recents.
 - **Emoji search** reads `assets/emoji_keywords.txt` (90 KB: Unicode name and English CLDR
   keywords per emoji), loaded on the first search only. While searching, the letter rows return
   and keys edit the query held in `ZenboardService` instead of the editor; nothing typed there

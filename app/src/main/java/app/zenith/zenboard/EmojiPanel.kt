@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,7 +39,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -63,16 +61,16 @@ fun EmojiPanel(
     categories: List<EmojiCategory>?,
     recents: List<String>,
     tones: EmojiTones,
+    /** 0 is recents, then the categories in order. */
+    tab: Int,
+    onTab: (Int) -> Unit,
     height: Dp,
     onSearch: () -> Unit,
     onRemoveRecent: (String) -> Unit,
-    onClearRecents: () -> Unit,
     onEmoji: (String) -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
     val feedback = LocalKeyFeedback.current
-    // Tab 0 is recents; open on the first category until something has been used.
-    var tab by remember { mutableIntStateOf(if (recents.isEmpty()) 1 else 0) }
     val recentsLabel = stringResource(R.string.emoji_recents)
     Column(Modifier.fillMaxWidth().height(height)) {
         if (categories == null) {
@@ -106,7 +104,7 @@ fun EmojiPanel(
                         .padding(2.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(if (selected) ZenithColors.indicator else Color.Transparent)
-                        .clickable(role = Role.Tab) { tab = i }
+                        .clickable(role = Role.Tab) { onTab(i) }
                         .semantics {
                             contentDescription = name
                             this.selected = selected
@@ -124,9 +122,6 @@ fun EmojiPanel(
             // key(tab): each category starts at its top.
             key(tab) {
                 LazyVerticalGrid(GridCells.Adaptive(44.dp), Modifier.weight(1f).fillMaxWidth()) {
-                    if (tab == 0) {
-                        item(span = { GridItemSpan(maxLineSpan) }) { ClearRecents(onClearRecents) }
-                    }
                     items(items) { emoji ->
                         // Recents: long-press also offers removing that one emoji.
                         EmojiCell(emoji, tones, Modifier.aspectRatio(1f), onEmoji, onRemove = if (tab == 0) { { onRemoveRecent(emoji) } } else null)
@@ -137,26 +132,24 @@ fun EmojiPanel(
     }
 }
 
-/** "Clear all" above the recents. Two taps, so one stray touch does not wipe them. */
+/** "Clear all", between ABC and delete on the recents tab. Two taps, so one stray touch does not wipe them. */
 @Composable
-private fun ClearRecents(onClear: () -> Unit) {
+fun ClearRecents(onClear: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val feedback = LocalKeyFeedback.current
     var armed by remember { mutableStateOf(false) }
-    Box(Modifier.fillMaxWidth().height(32.dp), contentAlignment = Alignment.CenterEnd) {
-        Text(
-            stringResource(if (armed) R.string.emoji_clear_recents_confirm else R.string.emoji_clear_recents),
-            color = if (armed) cs.error else cs.primary,
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .clickable(role = Role.Button) {
-                    feedback.press()
-                    if (armed) onClear() else armed = true
-                }
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-        )
-    }
+    Text(
+        stringResource(if (armed) R.string.emoji_clear_recents_confirm else R.string.emoji_clear_recents),
+        color = if (armed) cs.error else cs.primary,
+        style = MaterialTheme.typography.labelLarge,
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(role = Role.Button) {
+                feedback.press()
+                if (armed) onClear() else armed = true
+            }
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+    )
 }
 
 /**
