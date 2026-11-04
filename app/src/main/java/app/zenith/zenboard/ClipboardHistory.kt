@@ -26,7 +26,7 @@ const val MAX_CLIPS = 30
 const val MAX_CLIP_CHARS = 5_000
 
 /** A clip this recent is offered as a one-tap paste in the toolbar. */
-const val FRESH_CLIP_MS = 60_000L
+const val FRESH_CLIP_MS = 5 * 60_000L
 
 /**
  * [text] copied at [now]: newest first, an existing copy moves to the top (keeping its pin),

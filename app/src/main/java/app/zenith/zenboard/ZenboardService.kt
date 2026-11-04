@@ -16,6 +16,8 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,9 +59,11 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     /** Clipboard history, newest first; pinned clips stay. Loaded once at start. */
     private var clips by mutableStateOf<List<Clip>>(emptyList())
     private val clipStore by lazy { ClipStore(this) }
-    /** Text copied in the last [FRESH_CLIP_MS], offered as a one-tap paste in the toolbar until a key is pressed. */
+    /** Text copied in the last [FRESH_CLIP_MS], offered as a one-tap paste in the toolbar until pasted. */
     private var freshClip by mutableStateOf<String?>(null)
     private var freshClipTime = 0L
+    /** One timer per copy that takes the chip down when it is no longer fresh. */
+    private var freshClipExpiry: Job? = null
     private val clipboard by lazy { getSystemService(ClipboardManager::class.java) }
     private val clipListener = ClipboardManager.OnPrimaryClipChangedListener { onClipChanged() }
     private var barInsets by mutableStateOf(Rect())
@@ -279,8 +283,6 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private fun onKey(key: Key) {
         val ic = currentInputConnection ?: return
         if (emojiQuery != null && searchKey(key)) return
-        // Typing means the copied text is not wanted now: the editing buttons come back.
-        if (freshClip != null) freshClip = null
         val wasGlided = glided
         glided = false
         // Undo only applies to the very next key.
@@ -596,6 +598,11 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         if (inputShown && isIncognito(currentInputEditorInfo)) return
         freshClip = text
         freshClipTime = System.currentTimeMillis()
+        freshClipExpiry?.cancel()
+        freshClipExpiry = lifecycleScope.launch {
+            delay(FRESH_CLIP_MS)
+            freshClip = null
+        }
         if (settings.clipHistory) updateClips(addClip(clips, text, freshClipTime))
     }
 

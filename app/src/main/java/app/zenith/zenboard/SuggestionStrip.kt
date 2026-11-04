@@ -58,7 +58,7 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
     }
 }
 
-/** The text just copied, as a pill: tap to paste it. */
+/** The text just copied, plain text on the toolbar: tap to paste it. */
 @Composable
 private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
     val feedback = LocalKeyFeedback.current
@@ -69,7 +69,6 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
             .padding(horizontal = 4.dp)
             .height(34.dp)
             .clip(RoundedCornerShape(17.dp))
-            .background(cs.secondaryContainer)
             .clickable(role = Role.Button, onClickLabel = label) {
                 feedback.press()
                 onPaste()
@@ -77,11 +76,9 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(KeyIcons.Paste, contentDescription = null, tint = cs.onSecondaryContainer, modifier = Modifier.size(16.dp))
-        Spacer(Modifier.width(6.dp))
         Text(
             text.replace(Regex("\\s+"), " ").trim(),
-            color = cs.onSecondaryContainer,
+            color = cs.onSurface,
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
