@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private enum class Page { HOME, SETUP, APPEARANCE, TYPING, SPACE_BAR, FEEDBACK, ABOUT }
+private enum class Page { HOME, SETUP, APPEARANCE, TYPING, SPACE_BAR, GESTURES, FEEDBACK, ABOUT }
 
 /** Launcher entry and the keyboard's settings activity: settings home, setup and about pages. */
 class SettingsActivity : ComponentActivity() {
@@ -94,6 +94,7 @@ class SettingsActivity : ComponentActivity() {
                         Page.APPEARANCE -> WithTryKeyboard { AppearanceScreen(current, onBack = { page = Page.HOME }) }
                         Page.TYPING -> WithTryKeyboard { TypingScreen(current, onBack = { page = Page.HOME }) }
                         Page.SPACE_BAR -> WithTryKeyboard { SpaceBarScreen(current, onBack = { page = Page.HOME }) }
+                        Page.GESTURES -> WithTryKeyboard { GesturesScreen(current, onBack = { page = Page.HOME }) }
                         Page.FEEDBACK -> WithTryKeyboard { FeedbackScreen(current, onBack = { page = Page.HOME }) }
                         Page.ABOUT -> AboutScreen(versionName, onBack = { page = Page.HOME })
                     }
@@ -201,6 +202,14 @@ private fun HomeScreen(
                             onOff(settings.spaceLabel),
                         ),
                         onClick = { onOpen(Page.SPACE_BAR) },
+                    )
+                },
+                {
+                    GroupTile(
+                        badge = { ScallopBadge(KeyIcons.Backspace, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        title = stringResource(R.string.settings_section_gestures),
+                        subtitle = stringResource(R.string.settings_gestures_summary, onOff(settings.backspaceSlide)),
+                        onClick = { onOpen(Page.GESTURES) },
                     )
                 },
                 {
@@ -368,6 +377,27 @@ private fun SpaceBarScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                         subtitle = stringResource(R.string.settings_space_label_sub),
                         checked = settings.spaceLabel,
                         onCheckedChange = { scope.launch { SettingsStore.setSpaceLabel(context, it) } },
+                    )
+                },
+            ),
+        )
+    }
+}
+
+@Composable
+private fun GesturesScreen(settings: ZenboardSettings, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    CategoryPage(stringResource(R.string.settings_section_gestures), onBack) {
+        SegmentedGroup(
+            listOf<@Composable () -> Unit>(
+                {
+                    SwitchTile(
+                        icon = KeyIcons.Backspace,
+                        title = stringResource(R.string.settings_backspace_slide),
+                        subtitle = stringResource(R.string.settings_backspace_slide_sub),
+                        checked = settings.backspaceSlide,
+                        onCheckedChange = { scope.launch { SettingsStore.setBackspaceSlide(context, it) } },
                     )
                 },
             ),

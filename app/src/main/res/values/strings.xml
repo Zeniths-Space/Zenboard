@@ -48,6 +48,10 @@
     <string name="settings_autocorrect_sub">Fix typos when you press space. Backspace right after undoes it.</string>
     <string name="settings_section_space_bar">Space bar</string>
     <string name="settings_space_bar_summary">Slide %1$s, hold to switch %2$s, label %3$s</string>
+    <string name="settings_section_gestures">Gestures</string>
+    <string name="settings_gestures_summary">Backspace slide %1$s</string>
+    <string name="settings_backspace_slide">Slide backspace to delete words</string>
+    <string name="settings_backspace_slide_sub">Slide left from backspace to delete a word, and one more for each further step</string>
     <string name="settings_space_slide">Slide to move cursor</string>
     <string name="settings_space_slide_sub">Slide along the space bar to move the cursor left or right</string>
     <string name="settings_space_switch">Hold space to switch keyboard</string>

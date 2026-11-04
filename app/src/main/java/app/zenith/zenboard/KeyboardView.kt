@@ -92,6 +92,7 @@ fun KeyboardView(
     spaceSwitch: Boolean,
     spaceLabel: Boolean,
     spaceSlide: Boolean,
+    backspaceSlide: Boolean,
     emoji: List<EmojiCategory>?,
     recentEmoji: List<String>,
     emojiTones: EmojiTones,
@@ -167,7 +168,7 @@ fun KeyboardView(
                     key(key) {
                         KeyButton(
                             key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                            onMoveCursor.takeIf { spaceSlide }, spaceLabel, Modifier.weight(keyWeight(key, row)),
+                            backspaceSlide, onMoveCursor.takeIf { spaceSlide }, spaceLabel, Modifier.weight(keyWeight(key, row)),
                         )
                     }
                 }
@@ -187,6 +188,8 @@ private fun KeyButton(
     /** Null when hold-space switching is off. */
     onChangeKeyboard: (() -> Unit)?,
     onDeleteWord: () -> Unit,
+    /** Slide left on backspace to delete words. */
+    backspaceSlide: Boolean,
     /** Null when sliding along space to move the cursor is off. */
     onMoveCursor: ((Int) -> Unit)?,
     spaceLabel: Boolean,
@@ -272,6 +275,7 @@ private fun KeyButton(
                 when {
                     key == Key.Backspace -> Modifier
                         .backspaceGestures(
+                            slide = backspaceSlide,
                             onPressedChange = { heldPressed = it },
                             onDelete = press,
                             onDeleteWord = {
@@ -492,12 +496,13 @@ private suspend fun AwaitPointerEventScope.awaitRelease(id: PointerId): PointerI
 }
 
 /**
- * Tap deletes on release. Holding repeats like a hardware key. Sliding left before the repeat starts
- * deletes a word, and one more for each further [WORD_STEP] of slide.
+ * Tap deletes on release. Holding repeats like a hardware key. With [slide], sliding left before the
+ * repeat starts deletes a word, and one more for each further [WORD_STEP] of slide.
  * rememberUpdatedState keeps the gesture alive when a keystroke recomposes the key mid-hold.
  */
 @Composable
 private fun Modifier.backspaceGestures(
+    slide: Boolean,
     onPressedChange: (Boolean) -> Unit,
     onDelete: () -> Unit,
     onDeleteWord: () -> Unit,
@@ -505,7 +510,8 @@ private fun Modifier.backspaceGestures(
     val delete by rememberUpdatedState(onDelete)
     val deleteWord by rememberUpdatedState(onDeleteWord)
     val pressedChange by rememberUpdatedState(onPressedChange)
-    return pointerInput(Unit) {
+    // Keyed on the setting: it can change while the keyboard is up.
+    return pointerInput(slide) {
         awaitEachGesture {
             val down = awaitFirstDown()
             pressedChange(true)
@@ -516,7 +522,7 @@ private fun Modifier.backspaceGestures(
                     while (true) {
                         val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: return@withTimeoutOrNull false
                         if (change.changedToUp()) return@withTimeoutOrNull true
-                        if (down.position.x - change.position.x > viewConfiguration.touchSlop) {
+                        if (slide && down.position.x - change.position.x > viewConfiguration.touchSlop) {
                             change.consume()
                             swiping = true
                             return@withTimeoutOrNull false

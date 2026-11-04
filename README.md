@@ -16,7 +16,8 @@ it needs no other Zenith app.
 - Auto-capitalization that follows the text field's settings.
 - Key-press preview bubble for characters.
 - Long-press for accents, digits (top row) and extra symbols: slide to pick, release to type.
-- Backspace repeats while held. Slide left on it to delete a word, and further for more words.
+- Backspace repeats while held. Slide left on it to delete a word, and further for more words
+  (can be turned off in Gestures settings).
 - The Enter key follows the field's action (Go, Search, Send, Next, Done) or inserts a new line.
 - Number and phone fields open on the digit layer.
 - Emoji panel: all Unicode emoji the device can draw, by category, with recently used first.
