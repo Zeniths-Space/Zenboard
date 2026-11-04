@@ -20,7 +20,8 @@ it needs no other Zenith app.
   strip; backspace right after removes the glided word. Off in password fields. Can be turned off
   in Gestures settings.
 - Backspace repeats while held. Slide left on it to delete a word, and further for more words
-  (can be turned off in Gestures settings).
+  (can be turned off in Gestures settings). Optionally, double tap backspace to delete a word
+  (off by default, Gestures settings).
 - The Enter key follows the field's action (Go, Search, Send, Next, Done) or inserts a new line.
 - Number and phone fields open on the digit layer.
 - Emoji panel: all Unicode emoji the device can draw, by category, with recently used first.

@@ -134,6 +134,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         spaceLabel = settings.spaceLabel,
                         spaceSlide = settings.spaceSlide,
                         backspaceSlide = settings.backspaceSlide,
+                        backspaceDoubleTap = settings.backspaceDoubleTap,
                         glideEnabled = settings.glide && glideField && emojiQuery == null,
                         onGlide = ::onGlide,
                         emoji = emoji,

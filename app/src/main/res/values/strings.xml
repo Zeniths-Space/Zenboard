@@ -49,7 +49,9 @@
     <string name="settings_section_space_bar">Space bar</string>
     <string name="settings_space_bar_summary">Slide %1$s, hold to switch %2$s, label %3$s</string>
     <string name="settings_section_gestures">Gestures</string>
-    <string name="settings_gestures_summary">Glide typing %1$s, backspace slide %2$s</string>
+    <string name="settings_gestures_summary">Glide typing %1$s, backspace slide %2$s, double tap %3$s</string>
+    <string name="settings_backspace_double_tap">Double tap backspace to delete a word</string>
+    <string name="settings_backspace_double_tap_sub">A quick second tap deletes the whole word. Quick taps to delete single letters will then delete words.</string>
     <string name="settings_glide">Glide typing</string>
     <string name="settings_glide_sub">Slide across the letters to type a word, offline. Off in password fields.</string>
     <string name="settings_backspace_slide">Slide backspace to delete words</string>

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-/** User settings. Defaults: pure black, key sound and hold-space switching off; space label, space slide, backspace slide, glide typing, popup, suggestions, autocorrect, vibration on. */
+/** User settings. Defaults: pure black, key sound and hold-space switching and backspace double tap off; space label, space slide, backspace slide, glide typing, popup, suggestions, autocorrect, vibration on. */
 data class ZenboardSettings(
     val pureBlack: Boolean = false,
     val keyPopup: Boolean = true,
@@ -31,6 +31,8 @@ data class ZenboardSettings(
     val spaceSlide: Boolean = true,
     /** Slide left on backspace to delete whole words. */
     val backspaceSlide: Boolean = true,
+    /** Double tap backspace to delete a word. Off by default: quick taps to delete letters would take words. */
+    val backspaceDoubleTap: Boolean = false,
     /** Slide across letters to type a word. */
     val glide: Boolean = true,
 )
@@ -55,6 +57,7 @@ private val SPACE_LABEL = booleanPreferencesKey("space_label")
 private val SPACE_SLIDE = booleanPreferencesKey("space_slide")
 private val BACKSPACE_SLIDE = booleanPreferencesKey("backspace_slide")
 private val GLIDE = booleanPreferencesKey("glide")
+private val BACKSPACE_DOUBLE_TAP = booleanPreferencesKey("backspace_double_tap")
 
 /** Settings shared by the settings screen and the keyboard; both observe it, so changes apply live. */
 object SettingsStore {
@@ -75,6 +78,7 @@ object SettingsStore {
                 spaceSlide = it[SPACE_SLIDE] ?: true,
                 backspaceSlide = it[BACKSPACE_SLIDE] ?: true,
                 glide = it[GLIDE] ?: true,
+                backspaceDoubleTap = it[BACKSPACE_DOUBLE_TAP] ?: false,
             )
         }
 
@@ -124,5 +128,9 @@ object SettingsStore {
 
     suspend fun setGlide(context: Context, value: Boolean) {
         context.applicationContext.settingsStore.edit { it[GLIDE] = value }
+    }
+
+    suspend fun setBackspaceDoubleTap(context: Context, value: Boolean) {
+        context.applicationContext.settingsStore.edit { it[BACKSPACE_DOUBLE_TAP] = value }
     }
 }

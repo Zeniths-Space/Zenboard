@@ -208,7 +208,7 @@ private fun HomeScreen(
                     GroupTile(
                         badge = { ScallopBadge(KeyIcons.Backspace, ZenithColors.indicator, ZenithColors.onIndicator) },
                         title = stringResource(R.string.settings_section_gestures),
-                        subtitle = stringResource(R.string.settings_gestures_summary, onOff(settings.glide), onOff(settings.backspaceSlide)),
+                        subtitle = stringResource(R.string.settings_gestures_summary, onOff(settings.glide), onOff(settings.backspaceSlide), onOff(settings.backspaceDoubleTap)),
                         onClick = { onOpen(Page.GESTURES) },
                     )
                 },
@@ -407,6 +407,15 @@ private fun GesturesScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                         subtitle = stringResource(R.string.settings_backspace_slide_sub),
                         checked = settings.backspaceSlide,
                         onCheckedChange = { scope.launch { SettingsStore.setBackspaceSlide(context, it) } },
+                    )
+                },
+                {
+                    SwitchTile(
+                        icon = KeyIcons.Backspace,
+                        title = stringResource(R.string.settings_backspace_double_tap),
+                        subtitle = stringResource(R.string.settings_backspace_double_tap_sub),
+                        checked = settings.backspaceDoubleTap,
+                        onCheckedChange = { scope.launch { SettingsStore.setBackspaceDoubleTap(context, it) } },
                     )
                 },
             ),

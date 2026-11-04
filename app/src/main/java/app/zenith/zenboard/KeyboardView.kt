@@ -1,6 +1,7 @@
 package app.zenith.zenboard
 
 import android.annotation.SuppressLint
+import android.os.SystemClock
 import android.view.HapticFeedbackConstants
 import android.view.inputmethod.EditorInfo
 import androidx.compose.animation.animateColorAsState
@@ -96,6 +97,7 @@ fun KeyboardView(
     spaceLabel: Boolean,
     spaceSlide: Boolean,
     backspaceSlide: Boolean,
+    backspaceDoubleTap: Boolean,
     /** Glide typing on for this field and layer. */
     glideEnabled: Boolean,
     onGlide: (path: List<Offset>, geo: KeyGeometry) -> Unit,
@@ -193,7 +195,7 @@ fun KeyboardView(
                     key(key) {
                         KeyButton(
                             key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                            backspaceSlide, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, Modifier.weight(keyWeight(key, row)),
+                            backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, Modifier.weight(keyWeight(key, row)),
                         )
                     }
                 }
@@ -215,6 +217,8 @@ private fun KeyButton(
     onDeleteWord: () -> Unit,
     /** Slide left on backspace to delete words. */
     backspaceSlide: Boolean,
+    /** A second backspace tap in quick succession deletes a word. */
+    backspaceDoubleTap: Boolean,
     /** Null when sliding along space to move the cursor is off. */
     onMoveCursor: ((Int) -> Unit)?,
     spaceLabel: Boolean,
@@ -264,6 +268,20 @@ private fun KeyButton(
     // Long-press alternates: open above the key, follow the finger, type the pick on release.
     val alternates = alternatesFor(key)
     val longPressMs = LocalViewConfiguration.current.longPressTimeoutMillis
+    val doubleTapMs = LocalViewConfiguration.current.doubleTapTimeoutMillis
+    // Backspace double tap: the first tap deletes a character at once (no wait), a quick second one
+    // deletes the word, and so does each further quick tap.
+    val lastBackspaceTap = remember { longArrayOf(0L) }
+    val backspaceTap: () -> Unit = {
+        val now = SystemClock.uptimeMillis()
+        if (backspaceDoubleTap && now - lastBackspaceTap[0] <= doubleTapMs) {
+            feedback.press(key)
+            onDeleteWord()
+        } else {
+            press()
+        }
+        lastBackspaceTap[0] = now
+    }
     val openPanel: () -> Unit = {
         val b = bounds.rect
         val options = alternates.map { state.textFor(Key.Text(it)) }
@@ -304,6 +322,7 @@ private fun KeyButton(
                         .backspaceGestures(
                             slide = backspaceSlide,
                             onPressedChange = { heldPressed = it },
+                            onTap = backspaceTap,
                             onDelete = press,
                             onDeleteWord = {
                                 feedback.haptic(HapticFeedbackConstants.CLOCK_TICK)
@@ -535,7 +554,7 @@ private suspend fun AwaitPointerEventScope.awaitRelease(id: PointerId): PointerI
 }
 
 /**
- * Tap deletes on release. Holding repeats like a hardware key. With [slide], sliding left before the
+ * Tap ([onTap]) deletes on release. Holding repeats like a hardware key. With [slide], sliding left before the
  * repeat starts deletes a word, and one more for each further [WORD_STEP] of slide.
  * rememberUpdatedState keeps the gesture alive when a keystroke recomposes the key mid-hold.
  */
@@ -543,10 +562,12 @@ private suspend fun AwaitPointerEventScope.awaitRelease(id: PointerId): PointerI
 private fun Modifier.backspaceGestures(
     slide: Boolean,
     onPressedChange: (Boolean) -> Unit,
+    onTap: () -> Unit,
     onDelete: () -> Unit,
     onDeleteWord: () -> Unit,
 ): Modifier {
     val delete by rememberUpdatedState(onDelete)
+    val tap by rememberUpdatedState(onTap)
     val deleteWord by rememberUpdatedState(onDeleteWord)
     val pressedChange by rememberUpdatedState(onPressedChange)
     // Keyed on the setting: it can change while the keyboard is up.
@@ -570,7 +591,7 @@ private fun Modifier.backspaceGestures(
                     @Suppress("UNREACHABLE_CODE") null
                 }
                 when {
-                    tapped == true -> delete()
+                    tapped == true -> tap()
                     swiping -> {
                         deleteWord()
                         val step = WORD_STEP.toPx()
