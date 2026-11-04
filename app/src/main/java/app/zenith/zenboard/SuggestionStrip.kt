@@ -44,8 +44,8 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (freshClip != null) {
-            // Only the copied text, as wide as it needs (long text ends in an ellipsis).
-            FreshClip(freshClip, onPasteFresh, Modifier)
+            // Only the copied text, centred, as wide as it needs (long text ends in an ellipsis).
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { FreshClip(freshClip, onPasteFresh, Modifier) }
             return@Row
         }
         ToolButton(KeyIcons.History, R.string.toolbar_clipboard) { onAction(ToolbarAction.CLIPBOARD) }
@@ -58,7 +58,7 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
     }
 }
 
-/** The text just copied, plain text on the toolbar: tap to paste it. */
+/** The text just copied, in a faint pill: tap to paste it. */
 @Composable
 private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
     val feedback = LocalKeyFeedback.current
@@ -69,6 +69,8 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
             .padding(horizontal = 4.dp)
             .height(34.dp)
             .clip(RoundedCornerShape(17.dp))
+            // A faint pill: present, but lighter than a key.
+            .background(cs.secondaryContainer.copy(alpha = 0.4f))
             .clickable(role = Role.Button, onClickLabel = label) {
                 feedback.press()
                 onPaste()
