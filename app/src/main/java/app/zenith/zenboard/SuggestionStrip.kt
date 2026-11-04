@@ -69,7 +69,7 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
             .padding(horizontal = 4.dp)
             .height(34.dp)
             .clip(RoundedCornerShape(17.dp))
-            .background(cs.tertiary.copy(alpha = 0.8f))
+            .background(cs.tertiary.copy(alpha = 0.4f))
             .clickable(role = Role.Button, onClickLabel = label) {
                 feedback.press()
                 onPaste()
@@ -79,7 +79,8 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
     ) {
         Text(
             text.replace(Regex("\\s+"), " ").trim(),
-            color = cs.onTertiary,
+            // The pill is see-through, so the text follows the surface behind it, not the tertiary colour.
+            color = cs.onSurface,
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
