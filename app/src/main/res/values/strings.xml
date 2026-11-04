@@ -6,6 +6,9 @@
     <string name="emoji_recents">Recently used</string>
     <string name="emoji_recents_empty">Emoji you use will show up here</string>
     <string name="emoji_loading">Loading emoji…</string>
+    <string name="emoji_search">Search emoji</string>
+    <string name="emoji_search_close">Close emoji search</string>
+    <string name="emoji_no_results">No emoji found</string>
 
     <string name="back">Back</string>
 
@@ -52,7 +55,7 @@
     <string name="about_license_sub">The license will be chosen before the first public release.</string>
     <string name="about_section_credits">Credits</string>
     <string name="about_emoji_data">Emoji data</string>
-    <string name="about_emoji_data_sub">Unicode® Emoji 18.0, © Unicode, Inc. Used under the Unicode License v3.</string>
+    <string name="about_emoji_data_sub">Unicode® Emoji 18.0 and CLDR emoji keywords, © Unicode, Inc. Used under the Unicode License v3.</string>
     <string name="about_word_list">English word list</string>
     <string name="about_word_list_sub">From the Android Open Source Project (LatinIME), Apache License 2.0.</string>
     <string name="about_icons">Icons</string>

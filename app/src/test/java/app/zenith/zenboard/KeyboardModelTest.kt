@@ -193,4 +193,29 @@ class KeyboardModelTest {
         assertEquals(1, cursorDelta("😀a", 1, forward = false))
         assertEquals(0, cursorDelta("", 3, forward = false))
     }
+
+    private val index = parseEmojiKeywords(
+        "# header\n" +
+            "😀\tgrinning face\thappy smile\n" +
+            "❤️\tred heart\tlove\n" +
+            "😍\tsmiling face with heart-eyes\tlove\n" +
+            "🇯🇵\tflag: japan\n",
+    )
+
+    @Test
+    fun `emoji search matches word prefixes in names and keywords`() {
+        assertEquals(listOf("😀"), searchEmoji(index, "grin"))
+        assertEquals(listOf("🇯🇵"), searchEmoji(index, "japan"))
+        assertEquals(listOf("😀"), searchEmoji(index, "Happy Face"))
+        assertEquals(emptyList<String>(), searchEmoji(index, "   "))
+        assertEquals(emptyList<String>(), searchEmoji(index, "xyz"))
+    }
+
+    @Test
+    fun `emoji search ranks name matches before keyword matches`() {
+        // "heart" is in both names; "love" only in keywords.
+        assertEquals(listOf("❤️", "😍"), searchEmoji(index, "heart"))
+        assertEquals(listOf("😍"), searchEmoji(index, "smiling heart love"))
+        assertEquals(listOf("❤️", "😍"), searchEmoji(index, "love"))
+    }
 }

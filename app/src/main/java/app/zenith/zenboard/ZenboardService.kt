@@ -46,6 +46,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private var emoji by mutableStateOf<List<EmojiCategory>?>(null)
     private var recentEmoji by mutableStateOf<List<String>>(emptyList())
     private val emojiRecents by lazy { EmojiRecents(this) }
+    /** Non-null while searching emoji: letter keys type into this query instead of the editor. */
+    private var emojiQuery by mutableStateOf<String?>(null)
+    private var emojiIndex by mutableStateOf<List<EmojiInfo>?>(null)
     private var barInsets by mutableStateOf(Rect())
     private var inputShown by mutableStateOf(false)
     private var settings by mutableStateOf(ZenboardSettings())
@@ -122,6 +125,10 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         emoji = emoji,
                         recentEmoji = recentEmoji,
                         onEmoji = ::onEmoji,
+                        emojiQuery = emojiQuery,
+                        emojiIndex = emojiIndex,
+                        onEmojiSearch = ::openEmojiSearch,
+                        onCloseEmojiSearch = ::openEmoji,
                         stripShown = stripShown,
                         suggestions = suggestions,
                         onPick = ::onPick,
@@ -142,6 +149,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         super.onStartInputView(info, restarting)
         updateNavBarAppearance()
         inputShown = true
+        emojiQuery = null
         state = KeyboardState(layer = initialLayer(info.inputType)).withAutoCaps(capsAtCursor())
         enterAction = enterAction(info.imeOptions)
         composing.clear()
@@ -212,6 +220,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
 
     private fun onKey(key: Key) {
         val ic = currentInputConnection ?: return
+        if (emojiQuery != null && searchKey(key)) return
         // Undo only applies to the very next key.
         val undo = lastCorrection.takeIf { key == Key.Backspace }
         lastCorrection = null
@@ -351,6 +360,10 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     /** Backspace slid left: delete the word being typed, else the word before the cursor. */
     private fun deleteWord() {
         val ic = currentInputConnection ?: return
+        if (emojiQuery != null) {
+            emojiQuery = ""
+            return
+        }
         lastCorrection = null
         when {
             composing.isNotEmpty() -> {
@@ -373,6 +386,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
      */
     private fun moveCursor(steps: Int) {
         val ic = currentInputConnection ?: return
+        if (emojiQuery != null) return
         finishComposing()
         lastCorrection = null
         val n = kotlin.math.abs(steps)
@@ -408,9 +422,35 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
 
     /** Loaded once, on first use, so keyboards that never open emoji pay nothing. */
     private fun openEmoji() {
+        emojiQuery = null
         state = state.copy(layer = Layer.EMOJI)
         if (recentEmoji.isEmpty()) recentEmoji = emojiRecents.load()
         if (emoji == null) lifecycleScope.launch { emoji = loadEmoji(this@ZenboardService) }
+    }
+
+    /** Emoji search: the letter keys come back and type into the query. The index loads on first use. */
+    private fun openEmojiSearch() {
+        emojiQuery = ""
+        state = KeyboardState(layer = Layer.LETTERS)
+        if (emojiIndex == null) lifecycleScope.launch { emojiIndex = loadEmojiIndex(this@ZenboardService) }
+    }
+
+    /** A key while searching emoji. False: not a search key, handle it as usual (shift, layer keys). */
+    private fun searchKey(key: Key): Boolean {
+        val query = emojiQuery ?: return false
+        when (key) {
+            is Key.Text -> {
+                emojiQuery = query + state.textFor(key)
+                state = state.afterText()
+            }
+            Key.Space -> emojiQuery = "$query "
+            Key.Backspace -> emojiQuery = query.dropLast(1)
+            // Enter types the best match, if there is one.
+            Key.Enter -> emojiIndex?.let { searchEmoji(it, query, max = 1).firstOrNull() }?.let(::onEmoji)
+            Key.Emoji -> openEmoji()
+            else -> return false
+        }
+        return true
     }
 
     private fun onEmoji(value: String) {

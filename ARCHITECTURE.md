@@ -72,6 +72,11 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   main thread on first use, and `Paint.hasGlyph` drops emoji the device font cannot draw. The panel
   takes the height of the three upper rows, so the keyboard does not resize. Its bottom row is
   only ABC (left) and delete (right).
+- **Emoji search** reads `assets/emoji_keywords.txt` (90 KB: Unicode name and English CLDR
+  keywords per emoji), loaded on the first search only. While searching, the letter rows return
+  and keys edit the query held in `ZenboardService` instead of the editor; nothing typed there
+  reaches the app. Matching (`searchEmoji`) is a pure word-prefix scan, unit-tested: about 1,900
+  entries, fast enough per keystroke without an index.
 - **Changing keyboard** is a long-press on space, which calls `showInputMethodPicker()`. The
   emoji key took the old globe key's place.
 - **Settings live in DataStore** (`datastore-preferences`, Apache-2.0, as the project brief specifies).

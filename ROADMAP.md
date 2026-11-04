@@ -22,7 +22,7 @@
 
 ## Later (emoji)
 - [ ] Skin-tone picker (long-press an emoji)
-- [ ] Emoji search
+- [x] Emoji search
 
 ## 0.3 — Suggestions
 - [x] On-device word suggestions (no suggestions in password fields)

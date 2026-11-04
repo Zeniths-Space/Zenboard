@@ -91,6 +91,11 @@ fun KeyboardView(
     emoji: List<EmojiCategory>?,
     recentEmoji: List<String>,
     onEmoji: (String) -> Unit,
+    /** Non-null while searching emoji: the query typed so far. */
+    emojiQuery: String?,
+    emojiIndex: List<EmojiInfo>?,
+    onEmojiSearch: () -> Unit,
+    onCloseEmojiSearch: () -> Unit,
     stripShown: Boolean,
     suggestions: Suggestions,
     onPick: (String) -> Unit,
@@ -118,7 +123,9 @@ fun KeyboardView(
             .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        if (stripShown) {
+        if (emojiQuery != null) {
+            EmojiSearchBar(emojiQuery, emojiIndex, recentEmoji, onCloseEmojiSearch, onEmoji)
+        } else if (stripShown) {
             // Words only while a word is being typed; otherwise the same space holds the toolbar.
             if (suggestions.primary == null && suggestions.others.isEmpty()) Toolbar(onToolbar) else SuggestionStrip(suggestions, onPick)
         }
@@ -126,7 +133,7 @@ fun KeyboardView(
         val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
         if (state.layer == Layer.EMOJI) {
             // Takes the place of the three upper rows, so the keyboard height does not jump.
-            EmojiPanel(emoji, recentEmoji, height = rowHeight * 3 + 4.dp, onEmoji = onEmoji)
+            EmojiPanel(emoji, recentEmoji, height = rowHeight * 3 + 4.dp, onSearch = onEmojiSearch, onEmoji = onEmoji)
         }
         keyboardRows(state.layer).forEach { row ->
             Row(Modifier.fillMaxWidth().height(rowHeight)) {

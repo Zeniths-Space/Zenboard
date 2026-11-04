@@ -41,6 +41,48 @@ suspend fun loadEmoji(context: Context): List<EmojiCategory> = withContext(Dispa
     }.filter { it.emoji.isNotEmpty() }
 }
 
+/** One searchable emoji: its Unicode name and its CLDR keywords, split into lowercase words. */
+class EmojiInfo(val emoji: String, val name: String, val nameWords: List<String>, val keywords: List<String>)
+
+private val WORD_BREAK = Regex("[^\\p{L}\\p{N}'+]+")
+
+private fun words(s: String) = s.split(WORD_BREAK).filter { it.isNotEmpty() }
+
+/** Parses assets/emoji_keywords.txt: "#" comment lines, then "emoji<TAB>name<TAB>keywords" lines. */
+fun parseEmojiKeywords(text: String): List<EmojiInfo> = text.lineSequence()
+    .filter { it.isNotBlank() && !it.startsWith("#") }
+    .mapNotNull { line ->
+        val parts = line.split('\t')
+        if (parts.size < 2) null else EmojiInfo(parts[0], parts[1], words(parts[1]), words(parts.getOrElse(2) { "" }))
+    }
+    .toList()
+
+/** The search index, loaded off the main thread on the first search. Same glyph filter as [loadEmoji]. */
+suspend fun loadEmojiIndex(context: Context): List<EmojiInfo> = withContext(Dispatchers.Default) {
+    val paint = Paint()
+    val text = context.assets.open("emoji_keywords.txt").bufferedReader().use { it.readText() }
+    parseEmojiKeywords(text).filter { paint.hasGlyph(it.emoji) }
+}
+
+/**
+ * Emoji where every query word starts some word of the name or keywords. Ranked: name starts with
+ * the query, then all words found in the name, then matches through keywords; Unicode order within.
+ */
+fun searchEmoji(index: List<EmojiInfo>, query: String, max: Int = 60): List<String> {
+    val q = query.trim().lowercase()
+    val terms = words(q)
+    if (terms.isEmpty()) return emptyList()
+    fun List<String>.has(term: String) = any { it.startsWith(term) }
+    return index.mapNotNull { e ->
+        when {
+            e.name.startsWith(q) -> 0
+            terms.all { e.nameWords.has(it) } -> 1
+            terms.all { e.nameWords.has(it) || e.keywords.has(it) } -> 2
+            else -> null
+        }?.let { it to e.emoji }
+    }.sortedBy { it.first }.take(max).map { it.second }
+}
+
 /** Most recent first, no duplicates, capped. */
 fun pushRecent(recents: List<String>, emoji: String, max: Int = 32): List<String> =
     (listOf(emoji) + recents.filter { it != emoji }).take(max)
