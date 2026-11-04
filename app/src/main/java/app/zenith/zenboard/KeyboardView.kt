@@ -91,6 +91,7 @@ fun KeyboardView(
     keyPopup: Boolean,
     spaceSwitch: Boolean,
     spaceLabel: Boolean,
+    spaceSlide: Boolean,
     emoji: List<EmojiCategory>?,
     recentEmoji: List<String>,
     emojiTones: EmojiTones,
@@ -166,7 +167,7 @@ fun KeyboardView(
                     key(key) {
                         KeyButton(
                             key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                            onMoveCursor, spaceLabel, Modifier.weight(keyWeight(key, row)),
+                            onMoveCursor.takeIf { spaceSlide }, spaceLabel, Modifier.weight(keyWeight(key, row)),
                         )
                     }
                 }
@@ -186,7 +187,8 @@ private fun KeyButton(
     /** Null when hold-space switching is off. */
     onChangeKeyboard: (() -> Unit)?,
     onDeleteWord: () -> Unit,
-    onMoveCursor: (Int) -> Unit,
+    /** Null when sliding along space to move the cursor is off. */
+    onMoveCursor: ((Int) -> Unit)?,
     spaceLabel: Boolean,
     modifier: Modifier,
 ) {
@@ -301,7 +303,7 @@ private fun KeyButton(
                                 CustomAccessibilityAction(alt) { onKey(Key.Text(alt)); true }
                             }
                         }
-                    // Hold space to change keyboard (the system input-method picker), if enabled; slide to move the cursor.
+                    // Hold space to change keyboard (the system input-method picker) and slide to move the cursor, each if enabled.
                     key == Key.Space -> Modifier
                         .spaceGestures(
                             // Off: no timeout, so a long hold is still a tap or a slide.
@@ -309,9 +311,10 @@ private fun KeyButton(
                             onPressedChange = { heldPressed = it },
                             onTap = press,
                             onLongPress = changeKeyboard,
+                            slide = onMoveCursor != null,
                             onMove = { steps ->
                                 feedback.haptic(HapticFeedbackConstants.CLOCK_TICK)
-                                onMoveCursor(steps)
+                                onMoveCursor?.invoke(steps)
                             },
                         )
                         .semantics {
@@ -560,8 +563,9 @@ private fun Modifier.backspaceGestures(
 }
 
 /**
- * Tap types a space. Holding still past [longPressMs] opens the keyboard picker. Sliding sideways
- * moves the cursor one character per [CURSOR_STEP], left or right.
+ * Tap types a space. Holding still past [longPressMs] opens the keyboard picker. With [slide],
+ * sliding sideways moves the cursor one character per [CURSOR_STEP], left or right; without it, a
+ * slide is still a tap on release.
  */
 @Composable
 private fun Modifier.spaceGestures(
@@ -569,14 +573,15 @@ private fun Modifier.spaceGestures(
     onPressedChange: (Boolean) -> Unit,
     onTap: () -> Unit,
     onLongPress: () -> Unit,
+    slide: Boolean,
     onMove: (Int) -> Unit,
 ): Modifier {
     val pressedChange by rememberUpdatedState(onPressedChange)
     val tap by rememberUpdatedState(onTap)
     val longPress by rememberUpdatedState(onLongPress)
     val move by rememberUpdatedState(onMove)
-    // Keyed on the hold time: the setting can change while the keyboard is up.
-    return pointerInput(longPressMs) {
+    // Keyed on the settings: they can change while the keyboard is up.
+    return pointerInput(longPressMs, slide) {
         awaitEachGesture {
             val down = awaitFirstDown()
             pressedChange(true)
@@ -586,7 +591,7 @@ private fun Modifier.spaceGestures(
                     while (true) {
                         val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: return@withTimeoutOrNull false
                         if (change.changedToUp()) return@withTimeoutOrNull true
-                        if (abs(change.position.x - down.position.x) > viewConfiguration.touchSlop) {
+                        if (slide && abs(change.position.x - down.position.x) > viewConfiguration.touchSlop) {
                             change.consume()
                             dragging = true
                             return@withTimeoutOrNull false

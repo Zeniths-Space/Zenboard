@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-/** User settings. Defaults: pure black, key sound and hold-space switching off; space label, popup, suggestions, autocorrect, vibration on. */
+/** User settings. Defaults: pure black, key sound and hold-space switching off; space label, space slide, popup, suggestions, autocorrect, vibration on. */
 data class ZenboardSettings(
     val pureBlack: Boolean = false,
     val keyPopup: Boolean = true,
@@ -27,6 +27,8 @@ data class ZenboardSettings(
     val spaceSwitch: Boolean = false,
     /** The language name on the space bar. */
     val spaceLabel: Boolean = true,
+    /** Slide along space to move the cursor. */
+    val spaceSlide: Boolean = true,
 )
 
 /** Long on purpose: a resting thumb on space must not open the picker. */
@@ -46,6 +48,7 @@ private val HAPTICS = booleanPreferencesKey("haptics")
 private val SOUND = booleanPreferencesKey("sound")
 private val SPACE_SWITCH = booleanPreferencesKey("space_switch")
 private val SPACE_LABEL = booleanPreferencesKey("space_label")
+private val SPACE_SLIDE = booleanPreferencesKey("space_slide")
 
 /** Settings shared by the settings screen and the keyboard; both observe it, so changes apply live. */
 object SettingsStore {
@@ -63,6 +66,7 @@ object SettingsStore {
                 sound = it[SOUND] ?: false,
                 spaceSwitch = it[SPACE_SWITCH] ?: false,
                 spaceLabel = it[SPACE_LABEL] ?: true,
+                spaceSlide = it[SPACE_SLIDE] ?: true,
             )
         }
 
@@ -100,5 +104,9 @@ object SettingsStore {
 
     suspend fun setSpaceLabel(context: Context, value: Boolean) {
         context.applicationContext.settingsStore.edit { it[SPACE_LABEL] = value }
+    }
+
+    suspend fun setSpaceSlide(context: Context, value: Boolean) {
+        context.applicationContext.settingsStore.edit { it[SPACE_SLIDE] = value }
     }
 }

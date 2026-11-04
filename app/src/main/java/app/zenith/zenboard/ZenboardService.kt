@@ -125,6 +125,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         keyPopup = settings.keyPopup,
                         spaceSwitch = settings.spaceSwitch,
                         spaceLabel = settings.spaceLabel,
+                        spaceSlide = settings.spaceSlide,
                         emoji = emoji,
                         recentEmoji = recentEmoji,
                         emojiTones = emojiTones,

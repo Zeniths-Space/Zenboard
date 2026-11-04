@@ -196,6 +196,7 @@ private fun HomeScreen(
                         title = stringResource(R.string.settings_section_space_bar),
                         subtitle = stringResource(
                             R.string.settings_space_bar_summary,
+                            onOff(settings.spaceSlide),
                             onOff(settings.spaceSwitch),
                             onOff(settings.spaceLabel),
                         ),
@@ -342,6 +343,15 @@ private fun SpaceBarScreen(settings: ZenboardSettings, onBack: () -> Unit) {
     CategoryPage(stringResource(R.string.settings_section_space_bar), onBack) {
         SegmentedGroup(
             listOf<@Composable () -> Unit>(
+                {
+                    SwitchTile(
+                        icon = KeyIcons.Next,
+                        title = stringResource(R.string.settings_space_slide),
+                        subtitle = stringResource(R.string.settings_space_slide_sub),
+                        checked = settings.spaceSlide,
+                        onCheckedChange = { scope.launch { SettingsStore.setSpaceSlide(context, it) } },
+                    )
+                },
                 {
                     SwitchTile(
                         icon = KeyIcons.Globe,

@@ -26,7 +26,8 @@ it needs no other Zenith app.
 - Recents can be cleared: "Clear all" (tap twice) between ABC and delete on the recents tab, or long-press one recent
   emoji and tap ✕ to remove just that one.
 - Hold space for 1.5 seconds to change keyboard (Android's keyboard picker), once turned on in
-  Space bar settings. Slide along space to move the cursor.
+  Space bar settings. Slide along space to move the cursor
+  (can be turned off there).
 - The space bar label can be hidden (Space bar settings).
 - Word suggestions above the keys: completions and likely fixes, best in the middle. Tap one to
   type it. Off in password fields.
