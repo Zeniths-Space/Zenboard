@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-/** User settings. Defaults: pure black, key sound and hold-space switching off; popup, suggestions, autocorrect, vibration on. */
+/** User settings. Defaults: pure black, key sound and hold-space switching off; space label, popup, suggestions, autocorrect, vibration on. */
 data class ZenboardSettings(
     val pureBlack: Boolean = false,
     val keyPopup: Boolean = true,
@@ -25,10 +25,12 @@ data class ZenboardSettings(
     val sound: Boolean = false,
     /** Holding space for [SPACE_SWITCH_HOLD_MS] opens the keyboard picker. */
     val spaceSwitch: Boolean = false,
+    /** The language name on the space bar. */
+    val spaceLabel: Boolean = true,
 )
 
 /** Long on purpose: a resting thumb on space must not open the picker. */
-const val SPACE_SWITCH_HOLD_MS = 2000L
+const val SPACE_SWITCH_HOLD_MS = 1500L
 
 const val KEY_HEIGHT_MIN = 0.8f
 const val KEY_HEIGHT_MAX = 1.3f
@@ -43,6 +45,7 @@ private val KEY_HEIGHT = floatPreferencesKey("key_height")
 private val HAPTICS = booleanPreferencesKey("haptics")
 private val SOUND = booleanPreferencesKey("sound")
 private val SPACE_SWITCH = booleanPreferencesKey("space_switch")
+private val SPACE_LABEL = booleanPreferencesKey("space_label")
 
 /** Settings shared by the settings screen and the keyboard; both observe it, so changes apply live. */
 object SettingsStore {
@@ -59,6 +62,7 @@ object SettingsStore {
                 haptics = it[HAPTICS] ?: true,
                 sound = it[SOUND] ?: false,
                 spaceSwitch = it[SPACE_SWITCH] ?: false,
+                spaceLabel = it[SPACE_LABEL] ?: true,
             )
         }
 
@@ -92,5 +96,9 @@ object SettingsStore {
 
     suspend fun setSpaceSwitch(context: Context, value: Boolean) {
         context.applicationContext.settingsStore.edit { it[SPACE_SWITCH] = value }
+    }
+
+    suspend fun setSpaceLabel(context: Context, value: Boolean) {
+        context.applicationContext.settingsStore.edit { it[SPACE_LABEL] = value }
     }
 }

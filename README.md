@@ -25,8 +25,9 @@ it needs no other Zenith app.
 - Skin tones: long-press an emoji such as 👍 to pick a tone. The pick is remembered for that emoji.
 - Recents can be cleared: "Clear all" (tap twice) between ABC and delete on the recents tab, or long-press one recent
   emoji and tap ✕ to remove just that one.
-- Hold space for 2 seconds to change keyboard (Android's keyboard picker), once turned on in
-  Typing settings. Slide along space to move the cursor.
+- Hold space for 1.5 seconds to change keyboard (Android's keyboard picker), once turned on in
+  Space bar settings. Slide along space to move the cursor.
+- The space bar label can be hidden (Space bar settings).
 - Word suggestions above the keys: completions and likely fixes, best in the middle. Tap one to
   type it. Off in password fields.
 - When no word is being typed, the suggestion strip holds a toolbar: select all, cut, copy,
@@ -51,7 +52,7 @@ Planned work is in [ROADMAP.md](ROADMAP.md).
 4. Tap **Choose keyboard** and pick Zenboard.
 
 To switch back, use the keyboard icon in the navigation bar, or turn on "Hold space to switch
-keyboard" in Typing settings and hold the space bar for 2 seconds.
+keyboard" in Space bar settings and hold the space bar for 1.5 seconds.
 Uninstalling the app also restores your previous keyboard.
 
 ## Build

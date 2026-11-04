@@ -90,6 +90,7 @@ fun KeyboardView(
     showPreviews: Boolean,
     keyPopup: Boolean,
     spaceSwitch: Boolean,
+    spaceLabel: Boolean,
     emoji: List<EmojiCategory>?,
     recentEmoji: List<String>,
     emojiTones: EmojiTones,
@@ -165,7 +166,7 @@ fun KeyboardView(
                     key(key) {
                         KeyButton(
                             key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                            onMoveCursor, Modifier.weight(keyWeight(key, row)),
+                            onMoveCursor, spaceLabel, Modifier.weight(keyWeight(key, row)),
                         )
                     }
                 }
@@ -186,6 +187,7 @@ private fun KeyButton(
     onChangeKeyboard: (() -> Unit)?,
     onDeleteWord: () -> Unit,
     onMoveCursor: (Int) -> Unit,
+    spaceLabel: Boolean,
     modifier: Modifier,
 ) {
     val feedback = LocalKeyFeedback.current
@@ -342,19 +344,24 @@ private fun KeyButton(
                 tint = content,
                 modifier = Modifier.size(if (key == Key.Backspace) 19.dp else 24.dp),
             )
+            // The globe hints at hold-to-switch, so it shows only when that is on.
             key == Key.Space -> Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    KeyIcons.Globe,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(13.dp),
-                )
-                Spacer(Modifier.width(5.dp))
-                Text(
-                    stringResource(R.string.space_label),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelMedium,
-                )
+                if (onChangeKeyboard != null) {
+                    Icon(
+                        KeyIcons.Globe,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(13.dp),
+                    )
+                }
+                if (onChangeKeyboard != null && spaceLabel) Spacer(Modifier.width(5.dp))
+                if (spaceLabel) {
+                    Text(
+                        stringResource(R.string.space_label),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
             }
             key is Key.Text -> {
                 Text(

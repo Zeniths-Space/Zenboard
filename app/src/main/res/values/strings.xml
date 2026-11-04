@@ -46,9 +46,12 @@
     <string name="settings_suggestions_sub">Show words above the keys as you type. Off in password fields.</string>
     <string name="settings_autocorrect">Autocorrect</string>
     <string name="settings_autocorrect_sub">Fix typos when you press space. Backspace right after undoes it.</string>
-    <string name="settings_typing_space">Space bar</string>
+    <string name="settings_section_space_bar">Space bar</string>
+    <string name="settings_space_bar_summary">Hold to switch %1$s, label %2$s</string>
     <string name="settings_space_switch">Hold space to switch keyboard</string>
-    <string name="settings_space_switch_sub">Hold the space bar for 2 seconds to pick another keyboard</string>
+    <string name="settings_space_switch_sub">Hold the space bar for 1.5 seconds to pick another keyboard</string>
+    <string name="settings_space_label">Space bar label</string>
+    <string name="settings_space_label_sub">Show the language name on the space bar</string>
     <string name="settings_typing_summary">Suggestions %1$s, autocorrect %2$s</string>
     <string name="settings_section_feedback">Sound and vibration</string>
     <string name="settings_feedback_summary">Vibration %1$s, sound %2$s</string>

@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private enum class Page { HOME, SETUP, APPEARANCE, TYPING, FEEDBACK, ABOUT }
+private enum class Page { HOME, SETUP, APPEARANCE, TYPING, SPACE_BAR, FEEDBACK, ABOUT }
 
 /** Launcher entry and the keyboard's settings activity: settings home, setup and about pages. */
 class SettingsActivity : ComponentActivity() {
@@ -93,6 +93,7 @@ class SettingsActivity : ComponentActivity() {
                         )
                         Page.APPEARANCE -> WithTryKeyboard { AppearanceScreen(current, onBack = { page = Page.HOME }) }
                         Page.TYPING -> WithTryKeyboard { TypingScreen(current, onBack = { page = Page.HOME }) }
+                        Page.SPACE_BAR -> WithTryKeyboard { SpaceBarScreen(current, onBack = { page = Page.HOME }) }
                         Page.FEEDBACK -> WithTryKeyboard { FeedbackScreen(current, onBack = { page = Page.HOME }) }
                         Page.ABOUT -> AboutScreen(versionName, onBack = { page = Page.HOME })
                     }
@@ -187,6 +188,18 @@ private fun HomeScreen(
                             onOff(settings.autocorrect),
                         ),
                         onClick = { onOpen(Page.TYPING) },
+                    )
+                },
+                {
+                    GroupTile(
+                        badge = { ScallopBadge(KeyIcons.Keyboard, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        title = stringResource(R.string.settings_section_space_bar),
+                        subtitle = stringResource(
+                            R.string.settings_space_bar_summary,
+                            onOff(settings.spaceSwitch),
+                            onOff(settings.spaceLabel),
+                        ),
+                        onClick = { onOpen(Page.SPACE_BAR) },
                     )
                 },
                 {
@@ -319,16 +332,32 @@ private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 },
             ),
         )
-        SectionHeader(stringResource(R.string.settings_typing_space))
+    }
+}
+
+@Composable
+private fun SpaceBarScreen(settings: ZenboardSettings, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    CategoryPage(stringResource(R.string.settings_section_space_bar), onBack) {
         SegmentedGroup(
             listOf<@Composable () -> Unit>(
                 {
                     SwitchTile(
-                        icon = KeyIcons.Keyboard,
+                        icon = KeyIcons.Globe,
                         title = stringResource(R.string.settings_space_switch),
                         subtitle = stringResource(R.string.settings_space_switch_sub),
                         checked = settings.spaceSwitch,
                         onCheckedChange = { scope.launch { SettingsStore.setSpaceSwitch(context, it) } },
+                    )
+                },
+                {
+                    SwitchTile(
+                        icon = KeyIcons.Words,
+                        title = stringResource(R.string.settings_space_label),
+                        subtitle = stringResource(R.string.settings_space_label_sub),
+                        checked = settings.spaceLabel,
+                        onCheckedChange = { scope.launch { SettingsStore.setSpaceLabel(context, it) } },
                     )
                 },
             ),
