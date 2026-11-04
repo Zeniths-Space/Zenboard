@@ -15,6 +15,8 @@ it needs no other Zenith app.
 - Shift: tap for one capital, double-tap for caps lock.
 - Auto-capitalization: a capital at the start of a field, after a new line and after . ! or ?
   followed by a space, in any app. Off in password, email and URL fields; switch in Typing settings.
+- Space after full stop: a full stop typed after a word brings its space. A digit or punctuation
+  next takes the space back (3.14, e.g., ...); a space next is not doubled. Switch in Typing settings.
 - Key-press preview bubble for characters.
 - Long-press for accents, digits (top row) and extra symbols: slide to pick, release to type.
 - Glide typing: slide across the letters to type a word. Other matches show in the suggestion

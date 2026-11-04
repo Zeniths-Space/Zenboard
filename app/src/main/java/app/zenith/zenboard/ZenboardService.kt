@@ -83,6 +83,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private var glideField by mutableStateOf(false)
     /** The word being composed came from a glide: backspace removes it whole. */
     private var glided = false
+    /** A space was just added after a full stop: the next key may take it back. */
+    private var autoSpaced = false
     private val learnedWords by lazy { LearnedWords(this) }
 
     /** The last autocorrection and what followed it, so an immediate backspace can undo it. */
@@ -221,6 +223,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         pendingMoves.clear()
         glideField = glideAllowed(info.inputType)
         glided = false
+        autoSpaced = false
         if (stripShown || autocorrectOn || (settings.glide && glideField)) ensureDictionary()
     }
 
@@ -293,6 +296,16 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         if (emojiQuery != null && searchKey(key)) return
         val wasGlided = glided
         glided = false
+        if (autoSpaced) {
+            autoSpaced = false
+            when {
+                // Already spaced: a space now would double it.
+                key == Key.Space -> return
+                // "3.14", "e.g.", "...": a digit or punctuation joins the full stop, so the space goes.
+                key is Key.Text && joinsFullStop(state.textFor(key)) &&
+                    ic.getTextBeforeCursor(2, 0)?.toString() == ". " -> ic.deleteSurroundingText(1, 0)
+            }
+        }
         // Undo only applies to the very next key.
         val undo = lastCorrection.takeIf { key == Key.Backspace }
         lastCorrection = null
@@ -305,7 +318,14 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         ic.setComposingText(composing, 1)
                         refreshSuggestions()
                     }
-                    endsWord(text) -> commitWord(ic, text)
+                    endsWord(text) -> {
+                        // A full stop after a word brings its space along; the correction undo covers both.
+                        val space = text == "." && settings.autoSpace &&
+                            autoCapsAllowed(currentInputEditorInfo?.inputType ?: 0) &&
+                            (composing.isNotEmpty() || ic.getTextBeforeCursor(1, 0)?.firstOrNull()?.isLetterOrDigit() == true)
+                        commitWord(ic, if (space) ". " else text)
+                        autoSpaced = space
+                    }
                     else -> {
                         finishComposing()
                         ic.commitText(text, 1)

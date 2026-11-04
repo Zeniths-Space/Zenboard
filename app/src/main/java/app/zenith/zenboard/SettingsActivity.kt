@@ -370,6 +370,15 @@ private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                         onCheckedChange = { scope.launch { SettingsStore.setAutoCaps(context, it) } },
                     )
                 },
+                {
+                    SwitchTile(
+                        icon = KeyIcons.Next,
+                        title = stringResource(R.string.settings_auto_space),
+                        subtitle = stringResource(R.string.settings_auto_space_sub),
+                        checked = settings.autoSpace,
+                        onCheckedChange = { scope.launch { SettingsStore.setAutoSpace(context, it) } },
+                    )
+                },
             ),
         )
     }

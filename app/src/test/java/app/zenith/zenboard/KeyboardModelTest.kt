@@ -258,4 +258,10 @@ class KeyboardModelTest {
         assertEquals(false, autoCapsAllowed(text or InputType.TYPE_TEXT_VARIATION_URI))
         assertEquals(false, autoCapsAllowed(InputType.TYPE_CLASS_NUMBER))
     }
+
+    @Test
+    fun `digits and punctuation join a full stop, letters do not`() {
+        listOf("1", ".", ",", "?", ")", "\"").forEach { assertEquals(it, true, joinsFullStop(it)) }
+        listOf("a", "B", "(", "@", "").forEach { assertEquals(it, false, joinsFullStop(it)) }
+    }
 }

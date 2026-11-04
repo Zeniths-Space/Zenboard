@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-/** User settings. Defaults: pure black, key sound and hold-space switching and backspace double tap off; space label, space slide, backspace slide, glide typing, clipboard history (1 hour), popup, suggestions, autocorrect, auto-capitalization, vibration on. */
+/** User settings. Defaults: pure black, key sound and hold-space switching and backspace double tap off; space label, space slide, backspace slide, glide typing, clipboard history (1 hour), popup, suggestions, autocorrect, auto-capitalization, space after full stop, vibration on. */
 data class ZenboardSettings(
     val pureBlack: Boolean = false,
     val keyPopup: Boolean = true,
@@ -22,6 +22,8 @@ data class ZenboardSettings(
     val autocorrect: Boolean = true,
     /** Capital letter at the start of a field and of each sentence. */
     val autoCaps: Boolean = true,
+    /** A space after a full stop typed at the end of a word. */
+    val autoSpace: Boolean = true,
     /** Key height as a multiple of the standard height, [KEY_HEIGHT_MIN] to [KEY_HEIGHT_MAX]. */
     val keyHeight: Float = 1f,
     val haptics: Boolean = true,
@@ -56,6 +58,7 @@ private val KEY_POPUP = booleanPreferencesKey("key_popup")
 private val SUGGESTIONS = booleanPreferencesKey("suggestions")
 private val AUTOCORRECT = booleanPreferencesKey("autocorrect")
 private val AUTO_CAPS = booleanPreferencesKey("auto_caps")
+private val AUTO_SPACE = booleanPreferencesKey("auto_space")
 private val KEY_HEIGHT = floatPreferencesKey("key_height")
 private val HAPTICS = booleanPreferencesKey("haptics")
 private val SOUND = booleanPreferencesKey("sound")
@@ -80,6 +83,7 @@ object SettingsStore {
                 suggestions = it[SUGGESTIONS] ?: true,
                 autocorrect = it[AUTOCORRECT] ?: true,
                 autoCaps = it[AUTO_CAPS] ?: true,
+                autoSpace = it[AUTO_SPACE] ?: true,
                 keyHeight = (it[KEY_HEIGHT] ?: 1f).coerceIn(KEY_HEIGHT_MIN, KEY_HEIGHT_MAX),
                 haptics = it[HAPTICS] ?: true,
                 sound = it[SOUND] ?: false,
@@ -112,6 +116,10 @@ object SettingsStore {
 
     suspend fun setAutoCaps(context: Context, value: Boolean) {
         context.applicationContext.settingsStore.edit { it[AUTO_CAPS] = value }
+    }
+
+    suspend fun setAutoSpace(context: Context, value: Boolean) {
+        context.applicationContext.settingsStore.edit { it[AUTO_SPACE] = value }
     }
 
     suspend fun setKeyHeight(context: Context, value: Float) {

@@ -79,6 +79,12 @@ fun sentenceStart(before: CharSequence): Boolean {
     return i >= 0 && before[i] in ".!?"
 }
 
+/** Text that belongs right after a full stop, with no space: digits and punctuation. */
+fun joinsFullStop(text: String): Boolean {
+    val c = text.firstOrNull() ?: return false
+    return c.isDigit() || c in ".,!?:;)]}\"'”’"
+}
+
 /** Auto-capitalization only where text is prose: not passwords, email addresses or URLs. */
 fun autoCapsAllowed(inputType: Int): Boolean {
     if (inputType and android.text.InputType.TYPE_MASK_CLASS != android.text.InputType.TYPE_CLASS_TEXT) return false
