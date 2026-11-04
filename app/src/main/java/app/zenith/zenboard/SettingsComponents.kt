@@ -304,6 +304,8 @@ internal fun CategoryPage(
     title: String,
     onBack: (() -> Unit)?,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    /** Pinned under the scrolling content, above the navigation bar (a page's main action). */
+    bottomBar: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -311,6 +313,7 @@ internal fun CategoryPage(
     Scaffold(
         modifier = Modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection),
         containerColor = cs.surface,
+        bottomBar = bottomBar,
         topBar = {
             TopAppBar(
                 title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },

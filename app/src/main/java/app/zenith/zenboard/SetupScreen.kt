@@ -1,16 +1,10 @@
 package app.zenith.zenboard
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -24,7 +18,30 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SetupScreen(enabled: Boolean, selected: Boolean, onEnable: () -> Unit, onSelect: () -> Unit, onBack: () -> Unit) {
     val cs = MaterialTheme.colorScheme
-    CategoryPage(stringResource(R.string.setup_title), onBack) {
+    // Signature action: only the next pending step, as a full-width pill pinned at the bottom.
+    val action = when {
+        !enabled -> stringResource(R.string.setup_open_settings) to onEnable
+        !selected -> stringResource(R.string.setup_choose_keyboard) to onSelect
+        else -> null
+    }
+    CategoryPage(
+        stringResource(R.string.setup_title),
+        onBack,
+        bottomBar = {
+            if (action != null) {
+                Button(
+                    onClick = action.second,
+                    shape = StadiumShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = cs.secondary, contentColor = cs.onSecondary),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                        .height(56.dp),
+                ) { Text(action.first, style = MaterialTheme.typography.titleMedium) }
+            }
+        },
+    ) {
         SectionHeader(stringResource(R.string.setup_section))
         SegmentedGroup(
             listOf(
@@ -55,26 +72,6 @@ fun SetupScreen(enabled: Boolean, selected: Boolean, onEnable: () -> Unit, onSel
                 },
             ),
         )
-
         Spacer(Modifier.height(24.dp))
-    }
-
-    // Signature action: only the next pending step, as a full-width pill.
-    val action = when {
-        !enabled -> stringResource(R.string.setup_open_settings) to onEnable
-        !selected -> stringResource(R.string.setup_choose_keyboard) to onSelect
-        else -> null
-    }
-    if (action != null) {
-        Button(
-            onClick = action.second,
-            shape = StadiumShape,
-            colors = ButtonDefaults.buttonColors(containerColor = cs.secondary, contentColor = cs.onSecondary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .height(56.dp),
-        ) { Text(action.first, style = MaterialTheme.typography.titleMedium) }
     }
 }
