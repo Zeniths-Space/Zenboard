@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -64,6 +65,8 @@ fun EmojiPanel(
     tones: EmojiTones,
     height: Dp,
     onSearch: () -> Unit,
+    onRemoveRecent: (String) -> Unit,
+    onClearRecents: () -> Unit,
     onEmoji: (String) -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -121,12 +124,38 @@ fun EmojiPanel(
             // key(tab): each category starts at its top.
             key(tab) {
                 LazyVerticalGrid(GridCells.Adaptive(44.dp), Modifier.weight(1f).fillMaxWidth()) {
+                    if (tab == 0) {
+                        item(span = { GridItemSpan(maxLineSpan) }) { ClearRecents(onClearRecents) }
+                    }
                     items(items) { emoji ->
-                        EmojiCell(emoji, tones, Modifier.aspectRatio(1f), onEmoji)
+                        // Recents: long-press also offers removing that one emoji.
+                        EmojiCell(emoji, tones, Modifier.aspectRatio(1f), onEmoji, onRemove = if (tab == 0) { { onRemoveRecent(emoji) } } else null)
                     }
                 }
             }
         }
+    }
+}
+
+/** "Clear all" above the recents. Two taps, so one stray touch does not wipe them. */
+@Composable
+private fun ClearRecents(onClear: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val feedback = LocalKeyFeedback.current
+    var armed by remember { mutableStateOf(false) }
+    Box(Modifier.fillMaxWidth().height(32.dp), contentAlignment = Alignment.CenterEnd) {
+        Text(
+            stringResource(if (armed) R.string.emoji_clear_recents_confirm else R.string.emoji_clear_recents),
+            color = if (armed) cs.error else cs.primary,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .clickable(role = Role.Button) {
+                    feedback.press()
+                    if (armed) onClear() else armed = true
+                }
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+        )
     }
 }
 
@@ -194,17 +223,24 @@ fun EmojiSearchBar(
 }
 
 /**
- * One emoji, shown in its picked skin tone. Tap types it; long-press opens the tone row above it
- * when the emoji has tones. Screen readers get each tone as an action.
+ * One emoji, shown in its picked skin tone. Tap types it; long-press opens a row above it with its
+ * tones and, given [onRemove], a remove button. Screen readers get each as an action.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun EmojiCell(emoji: String, tones: EmojiTones, modifier: Modifier, onEmoji: (String) -> Unit) {
+private fun EmojiCell(
+    emoji: String,
+    tones: EmojiTones,
+    modifier: Modifier,
+    onEmoji: (String) -> Unit,
+    onRemove: (() -> Unit)? = null,
+) {
     val feedback = LocalKeyFeedback.current
     val shown = tones.shown(emoji)
     val options = tones.options(shown)
     var picking by remember { mutableStateOf(false) }
     val toneLabels = TONE_LABELS.map { stringResource(it) }
+    val removeLabel = stringResource(R.string.emoji_remove_recent)
     Box(
         modifier
             .padding(1.dp)
@@ -214,7 +250,7 @@ private fun EmojiCell(emoji: String, tones: EmojiTones, modifier: Modifier, onEm
                     feedback.press()
                     onEmoji(shown)
                 },
-                onLongClick = if (options.isEmpty()) null else {
+                onLongClick = if (options.isEmpty() && onRemove == null) null else {
                     {
                         feedback.haptic(HapticFeedbackConstants.LONG_PRESS)
                         picking = true
@@ -222,11 +258,10 @@ private fun EmojiCell(emoji: String, tones: EmojiTones, modifier: Modifier, onEm
                 },
             )
             .semantics {
-                if (options.isNotEmpty()) {
-                    customActions = options.mapIndexed { i, option ->
-                        CustomAccessibilityAction(toneLabels[i]) { onEmoji(option); true }
-                    }
-                }
+                val actions = options.mapIndexed { i, option ->
+                    CustomAccessibilityAction(toneLabels[i]) { onEmoji(option); true }
+                } + listOfNotNull(onRemove?.let { remove -> CustomAccessibilityAction(removeLabel) { remove(); true } })
+                if (actions.isNotEmpty()) customActions = actions
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -259,6 +294,21 @@ private fun EmojiCell(emoji: String, tones: EmojiTones, modifier: Modifier, onEm
                                 .semantics { contentDescription = toneLabels[i] },
                             contentAlignment = Alignment.Center,
                         ) { Text(option, fontSize = 26.sp) }
+                    }
+                    if (onRemove != null) {
+                        Box(
+                            Modifier
+                                .size(46.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable(role = Role.Button) {
+                                    feedback.press()
+                                    picking = false
+                                    onRemove()
+                                },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(KeyIcons.Close, removeLabel, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(22.dp))
+                        }
                     }
                 }
             }

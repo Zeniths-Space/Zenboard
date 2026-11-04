@@ -130,6 +130,14 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         emojiQuery = emojiQuery,
                         emojiIndex = emojiIndex,
                         onEmojiSearch = ::openEmojiSearch,
+                        onRemoveRecentEmoji = { e ->
+                            recentEmoji = recentEmoji - e
+                            emojiRecents.save(recentEmoji)
+                        },
+                        onClearRecentEmoji = {
+                            recentEmoji = emptyList()
+                            emojiRecents.save(recentEmoji)
+                        },
                         onCloseEmojiSearch = ::openEmoji,
                         stripShown = stripShown,
                         suggestions = suggestions,

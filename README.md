@@ -23,6 +23,8 @@ it needs no other Zenith app.
 - Emoji search: tap the magnifier in the emoji panel and type on the letter keys. Matches emoji
   names and keywords, offline.
 - Skin tones: long-press an emoji such as 👍 to pick a tone. The pick is remembered for that emoji.
+- Recents can be cleared: "Clear all" (tap twice) above the recents, or long-press one recent
+  emoji and tap ✕ to remove just that one.
 - Hold space to change keyboard (Android's keyboard picker). Slide along space to move the cursor.
 - Word suggestions above the keys: completions and likely fixes, best in the middle. Tap one to
   type it. Off in password fields.

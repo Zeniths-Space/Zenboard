@@ -9,6 +9,9 @@
     <string name="emoji_search">Search emoji</string>
     <string name="emoji_search_close">Close emoji search</string>
     <string name="emoji_no_results">No emoji found</string>
+    <string name="emoji_clear_recents">Clear all</string>
+    <string name="emoji_clear_recents_confirm">Tap again to clear</string>
+    <string name="emoji_remove_recent">Remove from recents</string>
     <string name="emoji_tone_none">No skin tone</string>
     <string name="emoji_tone_light">Light skin tone</string>
     <string name="emoji_tone_medium_light">Medium-light skin tone</string>

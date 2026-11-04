@@ -96,6 +96,8 @@ fun KeyboardView(
     emojiQuery: String?,
     emojiIndex: List<EmojiInfo>?,
     onEmojiSearch: () -> Unit,
+    onRemoveRecentEmoji: (String) -> Unit,
+    onClearRecentEmoji: () -> Unit,
     onCloseEmojiSearch: () -> Unit,
     stripShown: Boolean,
     suggestions: Suggestions,
@@ -134,7 +136,10 @@ fun KeyboardView(
         val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
         if (state.layer == Layer.EMOJI) {
             // Takes the place of the three upper rows, so the keyboard height does not jump.
-            EmojiPanel(emoji, recentEmoji, emojiTones, height = rowHeight * 3 + 4.dp, onSearch = onEmojiSearch, onEmoji = onEmoji)
+            EmojiPanel(
+                emoji, recentEmoji, emojiTones, height = rowHeight * 3 + 4.dp, onSearch = onEmojiSearch,
+                onRemoveRecent = onRemoveRecentEmoji, onClearRecents = onClearRecentEmoji, onEmoji = onEmoji,
+            )
         }
         keyboardRows(state.layer).forEach { row ->
             Row(Modifier.fillMaxWidth().height(rowHeight)) {
