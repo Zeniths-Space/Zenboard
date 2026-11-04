@@ -45,12 +45,30 @@ data class ZenboardSettings(
     val clipRetention: ClipRetention = ClipRetention.HOUR,
     /** One-handed mode: off, or the side the narrower keyboard sits on. */
     val oneHanded: OneHanded = OneHanded.OFF,
+    /** Toolbar buttons shown, in toolbar order. Settings is always shown, last. */
+    val toolbar: List<ToolbarAction> = TOOLBAR_CHOICES,
     /** Slide across letters to type a word. */
     val glide: Boolean = true,
 )
 
 /** Long on purpose: a resting thumb on space must not open the picker. */
 const val SPACE_SWITCH_HOLD_MS = 1500L
+
+/** Toolbar buttons that can be switched on and off, in toolbar order. Settings is not one of them. */
+val TOOLBAR_CHOICES = listOf(
+    ToolbarAction.CLIPBOARD,
+    ToolbarAction.SELECT_ALL,
+    ToolbarAction.CUT,
+    ToolbarAction.COPY,
+    ToolbarAction.PASTE,
+    ToolbarAction.ONE_HANDED,
+)
+
+/** Stored names back to actions; unknown names (from another version) are skipped. */
+fun parseToolbar(stored: String): List<ToolbarAction> {
+    val names = stored.split(',').toSet()
+    return TOOLBAR_CHOICES.filter { it.name in names }
+}
 
 /** One-handed mode: the keyboard narrows to [ONE_HANDED_WIDTH] of the screen on one side. */
 enum class OneHanded { OFF, LEFT, RIGHT }
@@ -80,6 +98,7 @@ private val BACKSPACE_DOUBLE_TAP = booleanPreferencesKey("backspace_double_tap")
 private val CLIP_HISTORY = booleanPreferencesKey("clip_history")
 private val CLIP_RETENTION = stringPreferencesKey("clip_retention")
 private val ONE_HANDED = stringPreferencesKey("one_handed")
+private val TOOLBAR = stringPreferencesKey("toolbar")
 
 /** Settings shared by the settings screen and the keyboard; both observe it, so changes apply live. */
 object SettingsStore {
@@ -106,6 +125,7 @@ object SettingsStore {
                 clipHistory = it[CLIP_HISTORY] ?: true,
                 clipRetention = ClipRetention.entries.firstOrNull { r -> r.name == it[CLIP_RETENTION] } ?: ClipRetention.HOUR,
                 oneHanded = OneHanded.entries.firstOrNull { o -> o.name == it[ONE_HANDED] } ?: OneHanded.OFF,
+                toolbar = it[TOOLBAR]?.let(::parseToolbar) ?: TOOLBAR_CHOICES,
             )
         }
 
@@ -175,6 +195,15 @@ object SettingsStore {
 
     suspend fun setClipRetention(context: Context, value: ClipRetention) {
         context.applicationContext.settingsStore.edit { it[CLIP_RETENTION] = value.name }
+    }
+
+    /** Show or hide one toolbar button; the order stays the toolbar's own. */
+    suspend fun setToolbarButton(context: Context, action: ToolbarAction, shown: Boolean) {
+        context.applicationContext.settingsStore.edit {
+            val current = it[TOOLBAR]?.let(::parseToolbar) ?: TOOLBAR_CHOICES
+            val next = TOOLBAR_CHOICES.filter { a -> if (a == action) shown else a in current }
+            it[TOOLBAR] = next.joinToString(",") { a -> a.name }
+        }
     }
 
     suspend fun setOneHanded(context: Context, value: OneHanded) {

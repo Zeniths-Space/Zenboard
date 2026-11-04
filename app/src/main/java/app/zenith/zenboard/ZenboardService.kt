@@ -199,6 +199,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         onMoveCursor = ::moveCursor,
                         keyHeight = settings.keyHeight,
                         oneHanded = settings.oneHanded,
+                        toolbarButtons = settings.toolbar,
                         onOneHanded = { mode -> lifecycleScope.launch { SettingsStore.setOneHanded(this@ZenboardService, mode) } },
                         feedback = rememberKeyFeedback(settings.haptics, settings.sound),
                         onKey = ::onKey,

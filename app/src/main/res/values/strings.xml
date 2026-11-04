@@ -71,6 +71,8 @@
     <string name="settings_look_card">Theme, key size, sound, vibration</string>
     <string name="settings_setup_pill_ready">Enabled and selected</string>
     <string name="settings_hero_ready">Ready to use · v%1$s</string>
+    <string name="settings_toolbar">Toolbar</string>
+    <string name="settings_toolbar_note">Settings always stays at the end of the toolbar.</string>
     <string name="settings_app_icon">App icon</string>
     <string name="settings_launcher_icon">Show in app drawer</string>
     <string name="settings_launcher_icon_sub">Off by default. When off, open these settings with Open on Zenboard\'s App info page, or the gear in the keyboard\'s toolbar.</string>

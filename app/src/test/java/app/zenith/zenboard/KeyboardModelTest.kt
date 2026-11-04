@@ -264,4 +264,11 @@ class KeyboardModelTest {
         listOf("1", ".", ",", "?", ")", "\"").forEach { assertEquals(it, true, joinsFullStop(it)) }
         listOf("a", "B", "(", "@", "").forEach { assertEquals(it, false, joinsFullStop(it)) }
     }
+
+    @Test
+    fun `stored toolbar keeps toolbar order and skips unknown names`() {
+        assertEquals(listOf(ToolbarAction.CLIPBOARD, ToolbarAction.PASTE), parseToolbar("PASTE,CLIPBOARD"))
+        assertEquals(listOf(ToolbarAction.CUT), parseToolbar("CUT,TRANSLATE,SETTINGS"))
+        assertEquals(emptyList<ToolbarAction>(), parseToolbar(""))
+    }
 }

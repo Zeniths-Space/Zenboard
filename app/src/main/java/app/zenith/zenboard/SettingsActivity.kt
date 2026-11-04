@@ -392,6 +392,22 @@ private fun LookScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 },
             ),
         )
+        SectionHeader(stringResource(R.string.settings_toolbar))
+        SegmentedGroup(
+            TOOLBAR_CHOICES.map { action ->
+                @Composable {
+                    SwitchTile(toolIcon(action), stringResource(toolLabel(action)), "", action in settings.toolbar) {
+                        scope.launch { SettingsStore.setToolbarButton(context, action, it) }
+                    }
+                }
+            },
+        )
+        Text(
+            stringResource(R.string.settings_toolbar_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 8.dp, top = 8.dp),
+        )
         SectionHeader(stringResource(R.string.settings_app_icon))
         var shown by remember { mutableStateOf(LauncherIcon.isShown(context)) }
         SegmentedGroup(

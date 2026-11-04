@@ -45,7 +45,14 @@ enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, CLIPBOARD, ONE_HANDED, 
  * Just after a copy, [freshClip] alone fills the row, as a one-tap paste sized to its text.
  */
 @Composable
-fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh: () -> Unit, clipboardOpen: Boolean, oneHandedOn: Boolean) {
+fun Toolbar(
+    onAction: (ToolbarAction) -> Unit,
+    freshClip: String?,
+    onPasteFresh: () -> Unit,
+    clipboardOpen: Boolean,
+    oneHandedOn: Boolean,
+    buttons: List<ToolbarAction>,
+) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -60,15 +67,33 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
         }
         // Each button gets an equal share of the row, so the touch targets fill it with no dead gap.
         val slot = Modifier.weight(1f)
-        // Lit while the clipboard is open; a second tap closes it.
-        ToolButton(KeyIcons.Clipboard, R.string.toolbar_clipboard, slot, selected = clipboardOpen) { onAction(ToolbarAction.CLIPBOARD) }
-        ToolButton(KeyIcons.SelectAll, R.string.toolbar_select_all, slot) { onAction(ToolbarAction.SELECT_ALL) }
-        ToolButton(KeyIcons.Cut, R.string.toolbar_cut, slot) { onAction(ToolbarAction.CUT) }
-        ToolButton(KeyIcons.Copy, R.string.toolbar_copy, slot) { onAction(ToolbarAction.COPY) }
-        ToolButton(KeyIcons.Paste, R.string.toolbar_paste, slot) { onAction(ToolbarAction.PASTE) }
-        ToolButton(KeyIcons.OneHanded, R.string.toolbar_one_handed, slot, selected = oneHandedOn) { onAction(ToolbarAction.ONE_HANDED) }
-        ToolButton(KeyIcons.Settings, R.string.toolbar_settings, slot) { onAction(ToolbarAction.SETTINGS) }
+        // The chosen buttons (Look & feel > Toolbar), then settings, always last.
+        (buttons + ToolbarAction.SETTINGS).forEach { action ->
+            // Clipboard and one-handed are lit while on; a second tap turns them off.
+            val selected = (action == ToolbarAction.CLIPBOARD && clipboardOpen) || (action == ToolbarAction.ONE_HANDED && oneHandedOn)
+            ToolButton(toolIcon(action), toolLabel(action), slot, selected = selected) { onAction(action) }
+        }
     }
+}
+
+fun toolIcon(action: ToolbarAction) = when (action) {
+    ToolbarAction.CLIPBOARD -> KeyIcons.Clipboard
+    ToolbarAction.SELECT_ALL -> KeyIcons.SelectAll
+    ToolbarAction.CUT -> KeyIcons.Cut
+    ToolbarAction.COPY -> KeyIcons.Copy
+    ToolbarAction.PASTE -> KeyIcons.Paste
+    ToolbarAction.ONE_HANDED -> KeyIcons.OneHanded
+    ToolbarAction.SETTINGS -> KeyIcons.Settings
+}
+
+fun toolLabel(action: ToolbarAction) = when (action) {
+    ToolbarAction.CLIPBOARD -> R.string.toolbar_clipboard
+    ToolbarAction.SELECT_ALL -> R.string.toolbar_select_all
+    ToolbarAction.CUT -> R.string.toolbar_cut
+    ToolbarAction.COPY -> R.string.toolbar_copy
+    ToolbarAction.PASTE -> R.string.toolbar_paste
+    ToolbarAction.ONE_HANDED -> R.string.toolbar_one_handed
+    ToolbarAction.SETTINGS -> R.string.toolbar_settings
 }
 
 /** The text just copied, in a glassy outlined pill: tap to paste it. */

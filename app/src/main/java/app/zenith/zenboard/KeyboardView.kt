@@ -131,6 +131,7 @@ fun KeyboardView(
     keyHeight: Float,
     oneHanded: OneHanded,
     onOneHanded: (OneHanded) -> Unit,
+    toolbarButtons: List<ToolbarAction>,
     feedback: KeyFeedback,
     onKey: (Key) -> Unit,
 ) = CompositionLocalProvider(LocalKeyFeedback provides feedback) {
@@ -188,6 +189,7 @@ fun KeyboardView(
                     onPasteFresh = { freshClip?.let(onPasteClip) },
                     clipboardOpen = state.layer == Layer.CLIPBOARD,
                     oneHandedOn = oneHanded != OneHanded.OFF,
+                    buttons = toolbarButtons,
                 )
             }
             // Cap rows at 9% of screen height so landscape keeps most of the app visible.
