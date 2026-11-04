@@ -16,6 +16,7 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 | `Feedback.kt` | Key vibration and click sound, switched by settings. |
 | `Theme.kt` | Theme: wallpaper colours with the AMOLED / tinted-page surface treatment, semibold type, motion tokens. |
 | `KeyPreview.kt` | Key-press preview bubble, drawn in one overlay window. |
+| `GlideTyping.kt` | Glide typing: the whole-keyboard gesture, its trail, and the word decoder. |
 | `EmojiData.kt` / `EmojiPanel.kt` | Emoji list (asset), recents, and the tabbed emoji grid. |
 | `Dictionary.kt` | Word list (sorted asset, binary search), completions, typo candidates with typing-aware edit distance, suggestion ranking. |
 | `SuggestionStrip.kt` | The three-slot strip above the keys. |
@@ -83,6 +84,17 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   the cell, unclipped so it can rise over the keyboard top. The last pick per emoji is kept in the
   same private preferences as recents, under the same incognito rule. Two-tone combinations (such
   as a handshake with two different tones) are not offered.
+- **Glide typing** runs above the keys: `glideGestures` on the keyboard watches each touch in
+  the Initial pointer pass. A touch that starts on a letter and travels 0.75 key widths becomes a
+  glide; its events are then consumed, so the key it started on sees a cancelled touch and types
+  nothing. Taps, long-presses (alternates open) and touches with a second finger down stay with
+  the keys, so fast typing is unaffected. `decodeGlide` is pure and unit-tested: SHARK2-style
+  location matching of the resampled finger path against each candidate word's key-centre path,
+  with frequency to break near ties. Candidates are pruned to words starting and ending near the
+  path ends whose letters all lie near the path, so a decode compares a few hundred words and runs
+  off the main thread. The word goes in as composing text with the next matches in the strip;
+  backspace right after removes it whole. Off in password fields. No language model: words that
+  trace the same line ("typing" and "topping") are told apart by frequency only.
 - **Changing keyboard** is a 1.5-second hold on space, off by default (Space bar settings), which calls
   `showInputMethodPicker()`. Off, the hold has no timeout, so it still ends as a tap or a slide. The
   emoji key took the old globe key's place.

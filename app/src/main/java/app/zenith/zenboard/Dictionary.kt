@@ -63,6 +63,16 @@ class Dictionary(
         return known
     }
 
+    /** Every word whose lowercase form starts with [first], with its frequency (0-255). */
+    fun forEachStartingWith(first: Char, action: (word: String, frequency: Int) -> Unit) {
+        val key = first.toString()
+        var i = lowerBound(key)
+        while (i < keys.size && keys[i].startsWith(key)) {
+            action(words[i], freqs[i])
+            i++
+        }
+    }
+
     /** Highest-frequency spelling for [key] (lowercase), or null. */
     private fun best(key: String): Int? {
         var best: Int? = null

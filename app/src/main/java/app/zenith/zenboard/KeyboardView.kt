@@ -47,6 +47,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToUp
@@ -93,6 +96,9 @@ fun KeyboardView(
     spaceLabel: Boolean,
     spaceSlide: Boolean,
     backspaceSlide: Boolean,
+    /** Glide typing on for this field and layer. */
+    glideEnabled: Boolean,
+    onGlide: (path: List<Offset>, geo: KeyGeometry) -> Unit,
     emoji: List<EmojiCategory>?,
     recentEmoji: List<String>,
     emojiTones: EmojiTones,
@@ -117,6 +123,9 @@ fun KeyboardView(
 ) = CompositionLocalProvider(LocalKeyFeedback provides feedback) {
     val preview = remember { PreviewState() }
     preview.bubbles = keyPopup
+    val glide = remember { GlideState() }
+    val glideCoords = remember { object { var c: LayoutCoordinates? = null } }
+    val trailColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
     var size by remember { mutableStateOf(IntSize.Zero) }
     if (showPreviews && size != IntSize.Zero) KeyPreviewOverlay(preview, size)
     Column(
@@ -128,7 +137,23 @@ fun KeyboardView(
             }
             .background(MaterialTheme.colorScheme.surface)
             .padding(systemBars)
-            .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
+            .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp)
+            .onGloballyPositioned { glideCoords.c = it }
+            .glideGestures(
+                glide,
+                enabled = glideEnabled && state.layer == Layer.LETTERS,
+                panelOpen = { preview.panel != null },
+                toRoot = { p -> glideCoords.c?.takeIf { it.isAttached }?.localToRoot(p) ?: p },
+                onGlide = onGlide,
+            )
+            // The trail is read only here, so a glide redraws the keyboard without recomposing it.
+            .drawWithContent {
+                drawContent()
+                val trail = glide.trail
+                for (i in 1 until trail.size) {
+                    drawLine(trailColor, trail[i - 1], trail[i], strokeWidth = 6.dp.toPx(), cap = StrokeCap.Round)
+                }
+            },
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         if (emojiQuery != null) {
@@ -168,7 +193,7 @@ fun KeyboardView(
                     key(key) {
                         KeyButton(
                             key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                            backspaceSlide, onMoveCursor.takeIf { spaceSlide }, spaceLabel, Modifier.weight(keyWeight(key, row)),
+                            backspaceSlide, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, Modifier.weight(keyWeight(key, row)),
                         )
                     }
                 }
@@ -193,13 +218,15 @@ private fun KeyButton(
     /** Null when sliding along space to move the cursor is off. */
     onMoveCursor: ((Int) -> Unit)?,
     spaceLabel: Boolean,
+    glide: GlideState,
     modifier: Modifier,
 ) {
     val feedback = LocalKeyFeedback.current
     val interaction = remember { MutableInteractionSource() }
     val clickPressed by interaction.collectIsPressedAsState()
     var heldPressed by remember { mutableStateOf(false) }
-    val pressed = clickPressed || heldPressed
+    // A glide that started on this key: no press look, no preview bubble.
+    val pressed = (clickPressed || heldPressed) && !glide.active
 
     // Expressive press: the key springs toward a pill and dips slightly.
     val morph by animateFloatAsState(if (pressed) 1f else 0f, Motion.press(), label = "press")
@@ -292,6 +319,7 @@ private fun KeyButton(
                     key is Key.Text -> Modifier
                         .longPressAlternates(
                             longPressMs = longPressMs,
+                            isGliding = { glide.active },
                             hasAlternates = alternates.isNotEmpty(),
                             onPressedChange = { heldPressed = it },
                             onTap = press,
@@ -331,7 +359,11 @@ private fun KeyButton(
             )
             .semantics { contentDescription = description }
             .padding(horizontal = 2.5.dp, vertical = 2.5.dp)
-            .onGloballyPositioned { bounds.rect = it.boundsInRoot() }
+            .onGloballyPositioned {
+                bounds.rect = it.boundsInRoot()
+                val c = (key as? Key.Text)?.value?.singleOrNull()
+                if (state.layer == Layer.LETTERS && c != null && c in 'a'..'z') glide.keys[c] = bounds.rect
+            }
             .graphicsLayer {
                 val s = 1f - 0.05f * morph
                 scaleX = s
@@ -435,6 +467,7 @@ private fun keyIcon(key: Key, state: KeyboardState, enterAction: Int?): ImageVec
 @Composable
 private fun Modifier.longPressAlternates(
     longPressMs: Long,
+    isGliding: () -> Boolean,
     hasAlternates: Boolean,
     onPressedChange: (Boolean) -> Unit,
     onTap: () -> Unit,
@@ -461,8 +494,13 @@ private fun Modifier.longPressAlternates(
                     finished = true
                 }
                 if (finished) {
-                    // Released before the long press: a normal tap (null means the gesture was cancelled).
+                    // Released before the long press: a normal tap (null: cancelled, or it became a glide).
                     if (up != null) tap()
+                    return@awaitEachGesture
+                }
+                // Still down at the long-press time because it is gliding: the glide owns this touch.
+                if (isGliding()) {
+                    awaitRelease(down.id)
                     return@awaitEachGesture
                 }
                 open()
@@ -486,12 +524,13 @@ private fun Modifier.longPressAlternates(
 
 /**
  * Waits for pointer [id] to lift, even outside the key: fast typists' fingers drift past the edge
- * before release. Null when the pointer is gone without lifting (gesture cancelled).
+ * before release. Null when the pointer is gone without lifting, or its release was consumed (a
+ * glide took over the touch).
  */
 private suspend fun AwaitPointerEventScope.awaitRelease(id: PointerId): PointerInputChange? {
     while (true) {
         val change = awaitPointerEvent().changes.firstOrNull { it.id == id } ?: return null
-        if (change.changedToUp()) return change
+        if (change.changedToUpIgnoreConsumed()) return change.takeUnless { it.isConsumed }
     }
 }
 

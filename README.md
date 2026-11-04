@@ -16,6 +16,9 @@ it needs no other Zenith app.
 - Auto-capitalization that follows the text field's settings.
 - Key-press preview bubble for characters.
 - Long-press for accents, digits (top row) and extra symbols: slide to pick, release to type.
+- Glide typing: slide across the letters to type a word. Other matches show in the suggestion
+  strip; backspace right after removes the glided word. Off in password fields. Can be turned off
+  in Gestures settings.
 - Backspace repeats while held. Slide left on it to delete a word, and further for more words
   (can be turned off in Gestures settings).
 - The Enter key follows the field's action (Go, Search, Send, Next, Done) or inserts a new line.

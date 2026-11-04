@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-/** User settings. Defaults: pure black, key sound and hold-space switching off; space label, space slide, backspace slide, popup, suggestions, autocorrect, vibration on. */
+/** User settings. Defaults: pure black, key sound and hold-space switching off; space label, space slide, backspace slide, glide typing, popup, suggestions, autocorrect, vibration on. */
 data class ZenboardSettings(
     val pureBlack: Boolean = false,
     val keyPopup: Boolean = true,
@@ -31,6 +31,8 @@ data class ZenboardSettings(
     val spaceSlide: Boolean = true,
     /** Slide left on backspace to delete whole words. */
     val backspaceSlide: Boolean = true,
+    /** Slide across letters to type a word. */
+    val glide: Boolean = true,
 )
 
 /** Long on purpose: a resting thumb on space must not open the picker. */
@@ -52,6 +54,7 @@ private val SPACE_SWITCH = booleanPreferencesKey("space_switch")
 private val SPACE_LABEL = booleanPreferencesKey("space_label")
 private val SPACE_SLIDE = booleanPreferencesKey("space_slide")
 private val BACKSPACE_SLIDE = booleanPreferencesKey("backspace_slide")
+private val GLIDE = booleanPreferencesKey("glide")
 
 /** Settings shared by the settings screen and the keyboard; both observe it, so changes apply live. */
 object SettingsStore {
@@ -71,6 +74,7 @@ object SettingsStore {
                 spaceLabel = it[SPACE_LABEL] ?: true,
                 spaceSlide = it[SPACE_SLIDE] ?: true,
                 backspaceSlide = it[BACKSPACE_SLIDE] ?: true,
+                glide = it[GLIDE] ?: true,
             )
         }
 
@@ -116,5 +120,9 @@ object SettingsStore {
 
     suspend fun setBackspaceSlide(context: Context, value: Boolean) {
         context.applicationContext.settingsStore.edit { it[BACKSPACE_SLIDE] = value }
+    }
+
+    suspend fun setGlide(context: Context, value: Boolean) {
+        context.applicationContext.settingsStore.edit { it[GLIDE] = value }
     }
 }

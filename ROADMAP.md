@@ -34,6 +34,6 @@
 - [ ] More layouts and languages
 - [ ] Clipboard within Android's restrictions
 - [ ] Themes
-- [ ] Swipe typing
+- [x] Swipe typing (glide typing; shape matching, no language model yet)
 - [ ] Signed release workflow and GitHub Releases
 - [ ] Choose a license

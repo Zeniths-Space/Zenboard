@@ -28,6 +28,9 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import androidx.compose.ui.geometry.Offset
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 
 /**
@@ -63,6 +66,10 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private var suggestions by mutableStateOf(Suggestions.NONE)
     private var stripShown by mutableStateOf(false)
     private var autocorrectOn = false
+    /** This field takes glided words (any text field but a password). */
+    private var glideField by mutableStateOf(false)
+    /** The word being composed came from a glide: backspace removes it whole. */
+    private var glided = false
     private val learnedWords by lazy { LearnedWords(this) }
 
     /** The last autocorrection and what followed it, so an immediate backspace can undo it. */
@@ -127,6 +134,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         spaceLabel = settings.spaceLabel,
                         spaceSlide = settings.spaceSlide,
                         backspaceSlide = settings.backspaceSlide,
+                        glideEnabled = settings.glide && glideField && emojiQuery == null,
+                        onGlide = ::onGlide,
                         emoji = emoji,
                         recentEmoji = recentEmoji,
                         emojiTones = emojiTones,
@@ -173,7 +182,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         lastCorrection = null
         cursor = info.initialSelEnd.coerceAtLeast(0)
         pendingMoves.clear()
-        if (stripShown || autocorrectOn) ensureDictionary()
+        glideField = glideAllowed(info.inputType)
+        glided = false
+        if (stripShown || autocorrectOn || (settings.glide && glideField)) ensureDictionary()
     }
 
     // The preview overlay window exists only while the keyboard is on screen.
@@ -235,6 +246,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private fun onKey(key: Key) {
         val ic = currentInputConnection ?: return
         if (emojiQuery != null && searchKey(key)) return
+        val wasGlided = glided
+        glided = false
         // Undo only applies to the very next key.
         val undo = lastCorrection.takeIf { key == Key.Backspace }
         lastCorrection = null
@@ -258,6 +271,11 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
             Key.Space -> commitWord(ic, " ")
             Key.Backspace -> if (undo != null && undoCorrection(ic, undo)) {
                 // Reverted to what was typed.
+            } else if (wasGlided && composing.isNotEmpty()) {
+                // A glided word goes in one press, the way it came.
+                ic.setComposingText("", 1)
+                composing.clear()
+                suggestions = Suggestions.NONE
             } else if (composing.isNotEmpty()) {
                 composing.deleteCharAt(composing.lastIndex)
                 ic.setComposingText(composing, 1)
@@ -445,6 +463,49 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                 emoji = loadEmoji(this@ZenboardService)
             }
         }
+    }
+
+    /** A finished glide: decode it off the main thread, then type the best word. */
+    private fun onGlide(path: List<Offset>, geo: KeyGeometry) {
+        val dict = dictionary ?: return ensureDictionary()
+        val shift = state.shift
+        lifecycleScope.launch {
+            val words = withContext(Dispatchers.Default) { decodeGlide(path, geo, dict) }
+            if (words.isEmpty()) return@launch
+            commitGlide(
+                words.map {
+                    when (shift) {
+                        ShiftMode.LOCKED -> it.uppercase()
+                        ShiftMode.ONCE -> it.replaceFirstChar(Char::uppercase)
+                        ShiftMode.OFF -> it
+                    }
+                },
+            )
+        }
+    }
+
+    /**
+     * Types a glided word as composing text, with a space before it when it follows a word. The
+     * other matches go to the suggestion strip; a space accepts the word as is (no autocorrect).
+     */
+    private fun commitGlide(words: List<String>) {
+        val ic = currentInputConnection ?: return
+        lastCorrection = null
+        ic.beginBatchEdit()
+        val afterWord = if (composing.isNotEmpty()) {
+            ic.finishComposingText()
+            composing.clear()
+            true
+        } else {
+            ic.getTextBeforeCursor(1, 0)?.let { it.isNotEmpty() && !it[0].isWhitespace() } == true
+        }
+        if (afterWord) ic.commitText(" ", 1)
+        composing.append(words[0])
+        ic.setComposingText(composing, 1)
+        ic.endBatchEdit()
+        suggestions = Suggestions(words[0], words.drop(1), autocorrect = null, typedIsUnknown = false)
+        glided = true
+        state = state.afterText()
     }
 
     /** Emoji search: the letter keys come back and type into the query. The index loads on first use. */

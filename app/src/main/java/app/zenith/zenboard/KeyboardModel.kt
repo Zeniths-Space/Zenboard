@@ -81,6 +81,17 @@ fun suggestionsAllowed(inputType: Int): Boolean {
     }
 }
 
+/** Glide typing types whole words: any text field except passwords. */
+fun glideAllowed(inputType: Int): Boolean {
+    if (inputType and android.text.InputType.TYPE_MASK_CLASS != android.text.InputType.TYPE_CLASS_TEXT) return false
+    return when (inputType and android.text.InputType.TYPE_MASK_VARIATION) {
+        android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD,
+        android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+        android.text.InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD -> false
+        else -> true
+    }
+}
+
 /** Autocorrect also stays off where text is not prose: email addresses, URLs and filters. */
 fun autocorrectAllowed(inputType: Int): Boolean = suggestionsAllowed(inputType) &&
     when (inputType and android.text.InputType.TYPE_MASK_VARIATION) {
