@@ -32,7 +32,7 @@ enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, CLIPBOARD, SETTINGS }
 /**
  * Fills the strip while no word is being typed: text editing and clipboard on the left, settings on
  * the right. Same height as the word strip, so the keyboard does not jump when one replaces the other.
- * Just after a copy, [freshClip] takes the place of the editing buttons as a one-tap paste.
+ * Just after a copy, [freshClip] alone fills the row, as a one-tap paste sized to its text.
  */
 @Composable
 fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh: () -> Unit) {
@@ -43,16 +43,17 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ToolButton(KeyIcons.History, R.string.toolbar_clipboard) { onAction(ToolbarAction.CLIPBOARD) }
         if (freshClip != null) {
-            FreshClip(freshClip, onPasteFresh, Modifier.weight(1f))
-        } else {
-            ToolButton(KeyIcons.SelectAll, R.string.toolbar_select_all) { onAction(ToolbarAction.SELECT_ALL) }
-            ToolButton(KeyIcons.Cut, R.string.toolbar_cut) { onAction(ToolbarAction.CUT) }
-            ToolButton(KeyIcons.Copy, R.string.toolbar_copy) { onAction(ToolbarAction.COPY) }
-            ToolButton(KeyIcons.Paste, R.string.toolbar_paste) { onAction(ToolbarAction.PASTE) }
-            Spacer(Modifier.weight(1f))
+            // Only the copied text, as wide as it needs (long text ends in an ellipsis).
+            FreshClip(freshClip, onPasteFresh, Modifier)
+            return@Row
         }
+        ToolButton(KeyIcons.History, R.string.toolbar_clipboard) { onAction(ToolbarAction.CLIPBOARD) }
+        ToolButton(KeyIcons.SelectAll, R.string.toolbar_select_all) { onAction(ToolbarAction.SELECT_ALL) }
+        ToolButton(KeyIcons.Cut, R.string.toolbar_cut) { onAction(ToolbarAction.CUT) }
+        ToolButton(KeyIcons.Copy, R.string.toolbar_copy) { onAction(ToolbarAction.COPY) }
+        ToolButton(KeyIcons.Paste, R.string.toolbar_paste) { onAction(ToolbarAction.PASTE) }
+        Spacer(Modifier.weight(1f))
         ToolButton(KeyIcons.Settings, R.string.toolbar_settings) { onAction(ToolbarAction.SETTINGS) }
     }
 }
