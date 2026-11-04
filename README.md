@@ -40,7 +40,7 @@ it needs no other Zenith app.
   in every field, with word suggestions on or off. While a word is being typed and suggestions
   are on, the same row shows the suggestions instead.
 - Clipboard history: the clock button in the toolbar opens recent copies. Tap one to paste,
-  long-press to pin or delete, Clear all removes everything unpinned. Just after a copy, the
+  long-press to pin or delete. Clearing the whole history is in Clipboard settings. Just after a copy, the
   toolbar offers it as a one-tap paste until you press a key. Copied passwords are never kept.
   Retention (1 hour, 1 day, until removed) in Clipboard settings.
 - Autocorrect on space or end punctuation, with the word it will type highlighted in the strip.

@@ -46,7 +46,7 @@ import androidx.compose.ui.window.PopupProperties
 
 /**
  * Clipboard history in the space of the upper key rows. Pinned clips first. Tap pastes; long-press
- * offers pin or delete. "Clear all" (unpinned) sits in the bottom row, like the emoji recents.
+ * offers pin or delete. Clearing the whole history is in the settings screen.
  */
 @Composable
 fun ClipboardPanel(

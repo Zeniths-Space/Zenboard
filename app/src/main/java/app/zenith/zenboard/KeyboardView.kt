@@ -118,7 +118,6 @@ fun KeyboardView(
     onPasteClip: (String) -> Unit,
     onPinClip: (Clip) -> Unit,
     onDeleteClip: (Clip) -> Unit,
-    onClearClips: () -> Unit,
     stripShown: Boolean,
     suggestions: Suggestions,
     onPick: (String) -> Unit,
@@ -205,8 +204,6 @@ fun KeyboardView(
                         Box(Modifier.weight(pad * 2).fillMaxHeight(), contentAlignment = Alignment.Center) {
                             when (state.layer) {
                                 Layer.EMOJI -> if (emojiTab == 0 && emoji != null && recentEmoji.isNotEmpty()) ClearRecents(onClearRecentEmoji)
-                                // Clear all takes the unpinned clips; pinned ones stay.
-                                Layer.CLIPBOARD -> if (clips.any { !it.pinned }) ClearRecents(onClearClips)
                                 else -> {}
                             }
                         }

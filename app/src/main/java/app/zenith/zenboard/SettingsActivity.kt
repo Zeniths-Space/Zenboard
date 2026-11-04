@@ -31,11 +31,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.semantics.Role
 import androidx.compose.material3.RadioButton
 import androidx.compose.foundation.selection.selectable
@@ -463,6 +468,51 @@ private fun ClipboardScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 },
             ),
         )
+        // Counts read from disk when the page opens and after each clear.
+        var saved by remember { mutableStateOf<List<Clip>?>(null) }
+        var confirm by remember { mutableStateOf<Boolean?>(null) } // true: clear pinned too
+        val store = remember { ClipStore(context) }
+        LaunchedEffect(Unit) { saved = store.load() }
+        val unpinned = saved?.count { !it.pinned } ?: 0
+        val pinned = saved?.count { it.pinned } ?: 0
+        SectionHeader(stringResource(R.string.settings_clip_saved))
+        SegmentedGroup(
+            listOf<@Composable () -> Unit>(
+                {
+                    GroupTile(
+                        badge = { ScallopBadge(KeyIcons.Close, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        title = stringResource(R.string.settings_clip_clear),
+                        subtitle = pluralStringResource(R.plurals.settings_clip_unpinned, unpinned, unpinned),
+                        onClick = if (unpinned > 0) { { confirm = false } } else null,
+                    )
+                },
+                {
+                    GroupTile(
+                        badge = { ScallopBadge(KeyIcons.Pin, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        title = stringResource(R.string.settings_clip_clear_all),
+                        subtitle = pluralStringResource(R.plurals.settings_clip_pinned, pinned, pinned),
+                        onClick = if (unpinned + pinned > 0) { { confirm = true } } else null,
+                    )
+                },
+            ),
+        )
+        confirm?.let { all ->
+            AlertDialog(
+                onDismissRequest = { confirm = null },
+                title = { Text(stringResource(if (all) R.string.settings_clip_clear_all else R.string.settings_clip_clear)) },
+                text = { Text(stringResource(if (all) R.string.settings_clip_clear_all_confirm else R.string.settings_clip_clear_confirm)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        confirm = null
+                        scope.launch {
+                            store.clear(includePinned = all)
+                            saved = store.load()
+                        }
+                    }) { Text(stringResource(R.string.settings_clip_clear_button)) }
+                },
+                dismissButton = { TextButton(onClick = { confirm = null }) { Text(stringResource(android.R.string.cancel)) } },
+            )
+        }
         if (settings.clipHistory) {
             SectionHeader(stringResource(R.string.settings_clip_keep))
             SegmentedGroup(

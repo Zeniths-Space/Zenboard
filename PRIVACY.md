@@ -17,7 +17,7 @@ Zenboard is built so that what you type stays on your device.
   the copying app marks as sensitive (`ClipDescription.EXTRA_IS_SENSITIVE`, set by password
   managers) is never kept, and nothing is recorded while you type in an incognito field. Only plain
   text is kept, never links to files or other content. Turning history off deletes the unpinned
-  clips at once; Clear all in the clipboard panel does the same. Android lets only the active
+  clips at once; Clipboard settings can also clear unpinned clips, or every clip. Android lets only the active
   keyboard and the focused app read the clipboard.
 - **No logging** of typed content.
 - **Learned words** (up to 1,000): a word is learned only when you undo an autocorrect or tap the

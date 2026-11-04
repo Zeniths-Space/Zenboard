@@ -20,6 +20,20 @@
     <string name="settings_clip_history">Clipboard history</string>
     <string name="settings_clip_history_sub">Keep text you copy so you can paste it again. Stays on this device. Copied passwords are never kept. Turning this off deletes unpinned clips.</string>
     <string name="settings_clip_keep">Keep unpinned clips</string>
+    <string name="settings_clip_saved">Saved clips</string>
+    <string name="settings_clip_clear">Clear clipboard history</string>
+    <string name="settings_clip_clear_all">Delete pinned clips too</string>
+    <string name="settings_clip_clear_confirm">Delete all unpinned clips? Pinned clips stay.</string>
+    <string name="settings_clip_clear_all_confirm">Delete every saved clip, pinned ones included?</string>
+    <string name="settings_clip_clear_button">Delete</string>
+    <plurals name="settings_clip_unpinned">
+        <item quantity="one">%d unpinned clip</item>
+        <item quantity="other">%d unpinned clips</item>
+    </plurals>
+    <plurals name="settings_clip_pinned">
+        <item quantity="one">Clears everything, with %d pinned clip</item>
+        <item quantity="other">Clears everything, with %d pinned clips</item>
+    </plurals>
     <string name="settings_clip_hour">1 hour</string>
     <string name="settings_clip_day">1 day</string>
     <string name="settings_clip_forever">Until removed</string>

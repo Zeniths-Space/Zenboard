@@ -3,6 +3,7 @@ package app.zenith.zenboard
 import android.content.ClipData
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -58,11 +59,28 @@ fun clipText(data: ClipData?): String? {
 }
 
 /**
+ * Clears made in the settings screen, for a keyboard that is running in the same process: it drops
+ * the clips from memory too. The value is true when pinned clips go as well.
+ */
+object ClipClears {
+    val events = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+}
+
+/**
  * Clipboard history on the device only: a JSON file in no-backup app storage. Read once when the
  * keyboard starts, written after each change, off the main thread.
  */
 class ClipStore(context: Context) {
     private val file = File(context.noBackupFilesDir, "clipboard.json")
+    private val meta = context.getSharedPreferences("clipboard", Context.MODE_PRIVATE)
+
+    /**
+     * When clips were last deleted (wall clock). A copy still on the system clipboard from before
+     * then is not picked up again, so a deleted clip stays deleted.
+     */
+    var forgetBefore: Long
+        get() = meta.getLong("forget_before", 0L)
+        set(value) = meta.edit().putLong("forget_before", value).apply()
 
     suspend fun load(): List<Clip> = withContext(Dispatchers.IO) {
         runCatching {
@@ -73,6 +91,13 @@ class ClipStore(context: Context) {
                 Clip(o.getString("text"), o.getLong("time"), o.optBoolean("pinned"))
             }
         }.getOrDefault(emptyList()) // An unreadable file starts an empty history instead of crashing the keyboard.
+    }
+
+    /** Deletes unpinned clips, or every clip with [includePinned], on disk and in a running keyboard. */
+    suspend fun clear(includePinned: Boolean) {
+        forgetBefore = System.currentTimeMillis()
+        save(if (includePinned) emptyList() else load().filter(Clip::pinned))
+        ClipClears.events.tryEmit(includePinned)
     }
 
     suspend fun save(clips: List<Clip>) = withContext(Dispatchers.IO) {

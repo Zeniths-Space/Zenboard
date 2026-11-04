@@ -103,8 +103,9 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   incognito fields are skipped; only plain text is kept. Clips live in memory and in
   `noBackupFilesDir/clipboard.json`, written whole (temp file, then rename) after each change on
   `Dispatchers.IO`. Expiry is checked when the history changes or the panel opens, never on a
-  timer. The panel reuses the emoji layout: it replaces the three upper rows, with ABC, Clear all
-  and delete in the short bottom row.
+  timer. The panel reuses the emoji layout: it replaces the three upper rows, with ABC and delete
+  in the short bottom row. Clearing lives in the settings screen: it rewrites the file and, through
+  the in-process `ClipClears` flow, empties a running keyboard's memory too.
 - **Changing keyboard** is a 1.5-second hold on space, off by default (Space bar settings), which calls
   `showInputMethodPicker()`. Off, the hold has no timeout, so it still ends as a tap or a slide. The
   emoji key took the old globe key's place.

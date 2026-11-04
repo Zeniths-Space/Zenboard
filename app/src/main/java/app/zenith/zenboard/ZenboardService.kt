@@ -104,6 +104,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                 updateClips(if (it.clipHistory) clips else clips.filter(Clip::pinned))
             }
         }
+        lifecycleScope.launch {
+            ClipClears.events.collect { all -> updateClips(if (all) emptyList() else clips.filter(Clip::pinned)) }
+        }
         clipboard.addPrimaryClipChangedListener(clipListener)
     }
 
@@ -177,8 +180,10 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         onPasteClip = ::pasteClip,
                         // Unpinning restarts the clip's clock, so an old clip does not vanish the moment it is unpinned.
                         onPinClip = { c -> updateClips(clips.map { if (it.text == c.text) it.copy(pinned = !it.pinned, time = System.currentTimeMillis()) else it }) },
-                        onDeleteClip = { c -> updateClips(clips.filter { it.text != c.text }) },
-                        onClearClips = { updateClips(clips.filter(Clip::pinned)) },
+                        onDeleteClip = { c ->
+                            clipStore.forgetBefore = System.currentTimeMillis()
+                            updateClips(clips.filter { it.text != c.text })
+                        },
                         stripShown = stripShown,
                         suggestions = suggestions,
                         onPick = ::onPick,
@@ -604,8 +609,11 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
 
     private fun openClipboard() {
         finishComposing()
-        // A copy made while the keyboard was not running was not heard: pick up what is on the clipboard now.
-        val current = runCatching { clipText(clipboard.primaryClip) }.getOrNull()
+        // A copy made while the keyboard was not running was not heard: pick up what is on the clipboard
+        // now, unless it was copied before the last delete (then it was deleted on purpose).
+        val current = runCatching {
+            clipboard.primaryClip?.takeIf { it.description.timestamp > clipStore.forgetBefore }?.let(::clipText)
+        }.getOrNull()
         updateClips(if (settings.clipHistory && current != null && clips.none { it.text == current }) addClip(clips, current, System.currentTimeMillis()) else clips)
         state = state.copy(layer = Layer.CLIPBOARD)
     }
