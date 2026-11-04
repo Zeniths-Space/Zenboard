@@ -58,7 +58,7 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
     }
 }
 
-/** The text just copied, in a faint pill: tap to paste it. */
+/** The text just copied, in a tertiary pill: tap to paste it. */
 @Composable
 private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
     val feedback = LocalKeyFeedback.current
@@ -69,8 +69,7 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
             .padding(horizontal = 4.dp)
             .height(34.dp)
             .clip(RoundedCornerShape(17.dp))
-            // A faint pill: present, but lighter than a key.
-            .background(cs.secondaryContainer.copy(alpha = 0.4f))
+            .background(cs.tertiary.copy(alpha = 0.8f))
             .clickable(role = Role.Button, onClickLabel = label) {
                 feedback.press()
                 onPaste()
@@ -80,7 +79,7 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
     ) {
         Text(
             text.replace(Regex("\\s+"), " ").trim(),
-            color = cs.onSurface,
+            color = cs.onTertiary,
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
