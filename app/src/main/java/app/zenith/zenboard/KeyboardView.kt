@@ -344,24 +344,12 @@ private fun KeyButton(
                 tint = content,
                 modifier = Modifier.size(if (key == Key.Backspace) 19.dp else 24.dp),
             )
-            // The globe hints at hold-to-switch, so it shows only when that is on.
-            key == Key.Space -> Row(verticalAlignment = Alignment.CenterVertically) {
-                if (onChangeKeyboard != null) {
-                    Icon(
-                        KeyIcons.Globe,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(13.dp),
-                    )
-                }
-                if (onChangeKeyboard != null && spaceLabel) Spacer(Modifier.width(5.dp))
-                if (spaceLabel) {
-                    Text(
-                        stringResource(R.string.space_label),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                }
+            key == Key.Space -> if (spaceLabel) {
+                Text(
+                    stringResource(R.string.space_label),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium,
+                )
             }
             key is Key.Text -> {
                 Text(
