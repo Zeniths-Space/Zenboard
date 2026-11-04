@@ -37,6 +37,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.size
@@ -148,104 +151,108 @@ private fun HomeScreen(
 ) {
     val cs = MaterialTheme.colorScheme
     val ready = enabled && selected
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(cs.surface)
-            .safeDrawingPadding()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-    ) {
-        Spacer(Modifier.height(24.dp))
-        Hero(ready, enabled, versionName, onClick = { onOpen(Page.ABOUT) })
-        Spacer(Modifier.height(24.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            CategoryPill(
-                KeyIcons.Words,
-                stringResource(R.string.settings_section_typing),
-                stringResource(R.string.settings_typing_card),
-                cs.primaryContainer,
-                cs.onPrimaryContainer,
-            ) { onOpen(Page.TYPING) }
-            CategoryPill(
-                KeyIcons.Keyboard,
-                stringResource(R.string.settings_section_keys),
-                stringResource(R.string.settings_keys_card),
-                cs.tertiaryContainer,
-                cs.onTertiaryContainer,
-            ) { onOpen(Page.KEYS) }
-            CategoryPill(
-                KeyIcons.Clipboard,
-                stringResource(R.string.settings_section_clipboard),
-                if (settings.clipHistory) {
-                    stringResource(R.string.settings_clipboard_summary_on, stringResource(retentionLabel(settings.clipRetention)).lowercase())
-                } else {
-                    stringResource(R.string.settings_clipboard_summary_off)
-                },
-                cs.secondaryContainer,
-                cs.onSecondaryContainer,
-            ) { onOpen(Page.CLIPBOARD) }
-            CategoryPill(
-                KeyIcons.DarkMode,
-                stringResource(R.string.settings_section_look),
-                stringResource(R.string.settings_look_card),
-                cs.inversePrimary,
-                cs.onSurface,
-            ) { onOpen(Page.LOOK) }
+    // The page fills the screen: hero in the upper part, rows in the lower part within thumb reach.
+    // On short screens (landscape) it scrolls instead.
+    BoxWithConstraints(Modifier.fillMaxSize().background(cs.surface).safeDrawingPadding()) {
+        val screen = maxHeight
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = screen)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Box(Modifier.fillMaxWidth().heightIn(min = screen * 0.38f), contentAlignment = Alignment.Center) {
+                Hero(ready, enabled, versionName, onClick = { onOpen(Page.ABOUT) })
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CategoryPill(
+                    KeyIcons.Words,
+                    stringResource(R.string.settings_section_typing),
+                    stringResource(R.string.settings_typing_card),
+                    cs.primaryContainer,
+                    cs.onPrimaryContainer,
+                ) { onOpen(Page.TYPING) }
+                CategoryPill(
+                    KeyIcons.Keyboard,
+                    stringResource(R.string.settings_section_keys),
+                    stringResource(R.string.settings_keys_card),
+                    cs.tertiaryContainer,
+                    cs.onTertiaryContainer,
+                ) { onOpen(Page.KEYS) }
+                CategoryPill(
+                    KeyIcons.Clipboard,
+                    stringResource(R.string.settings_section_clipboard),
+                    if (settings.clipHistory) {
+                        stringResource(R.string.settings_clipboard_summary_on, stringResource(retentionLabel(settings.clipRetention)).lowercase())
+                    } else {
+                        stringResource(R.string.settings_clipboard_summary_off)
+                    },
+                    cs.secondaryContainer,
+                    cs.onSecondaryContainer,
+                ) { onOpen(Page.CLIPBOARD) }
+                CategoryPill(
+                    KeyIcons.DarkMode,
+                    stringResource(R.string.settings_section_look),
+                    stringResource(R.string.settings_look_card),
+                    cs.inversePrimary,
+                    cs.onSurface,
+                ) { onOpen(Page.LOOK) }
+                Spacer(Modifier.height(12.dp))
+                CategoryPill(
+                    if (ready) KeyIcons.Done else KeyIcons.Keyboard,
+                    stringResource(R.string.setup_title),
+                    stringResource(
+                        when {
+                            ready -> R.string.settings_setup_pill_ready
+                            enabled -> R.string.settings_setup_not_selected
+                            else -> R.string.settings_setup_not_enabled
+                        },
+                    ),
+                    if (ready) cs.surfaceContainerHighest else cs.errorContainer,
+                    if (ready) cs.onSurfaceVariant else cs.onErrorContainer,
+                ) { onOpen(Page.SETUP) }
+                Spacer(Modifier.height(FabClearance))
+            }
         }
-        Spacer(Modifier.height(20.dp))
-        CategoryPill(
-            if (ready) KeyIcons.Done else KeyIcons.Keyboard,
-            stringResource(R.string.setup_title),
-            stringResource(
-                when {
-                    ready -> R.string.settings_setup_pill_ready
-                    enabled -> R.string.settings_setup_not_selected
-                    else -> R.string.settings_setup_not_enabled
-                },
-            ),
-            if (ready) cs.surfaceContainerHighest else cs.errorContainer,
-            if (ready) cs.onSurfaceVariant else cs.onErrorContainer,
-        ) { onOpen(Page.SETUP) }
-        Spacer(Modifier.height(FabClearance))
     }
 }
 
-/** The app's icon and name with its setup status. Tinted as an error until setup is done. */
+/** The app's icon, name and setup status, centred; tap for About. The status turns red until set up. */
 @Composable
 private fun Hero(ready: Boolean, enabled: Boolean, versionName: String, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
-    val (container, content) = if (ready) cs.surfaceContainerHigh to cs.onSurface else cs.errorContainer to cs.onErrorContainer
-    Surface(onClick = onClick, shape = RoundedCornerShape(32.dp), color = container, modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            // The launcher icon's own layers, so the hero always matches the icon.
-            Box(Modifier.size(64.dp).clip(RoundedCornerShape(20.dp))) {
-                Image(painterResource(R.drawable.ic_launcher_background), contentDescription = null, modifier = Modifier.fillMaxSize())
-                Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.fillMaxSize())
-            }
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineSmall, color = content)
-                Spacer(Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        if (ready) KeyIcons.Done else KeyIcons.Info,
-                        contentDescription = null,
-                        tint = if (ready) cs.primary else content,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        when {
-                            ready -> stringResource(R.string.settings_hero_ready, versionName)
-                            enabled -> stringResource(R.string.settings_setup_not_selected)
-                            else -> stringResource(R.string.settings_setup_not_enabled)
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = content.copy(alpha = 0.8f),
-                    )
-                }
-            }
+    Column(
+        Modifier
+            .clip(RoundedCornerShape(32.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // The launcher icon's own layers, so the hero always matches the icon.
+        Box(Modifier.size(96.dp).clip(RoundedCornerShape(30.dp))) {
+            Image(painterResource(R.drawable.ic_launcher_background), contentDescription = null, modifier = Modifier.fillMaxSize())
+            Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.fillMaxSize())
+        }
+        Spacer(Modifier.height(16.dp))
+        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, color = cs.onSurface)
+        Spacer(Modifier.height(10.dp))
+        val (chip, onChip) = if (ready) cs.surfaceContainerHigh to cs.onSurfaceVariant else cs.errorContainer to cs.onErrorContainer
+        Row(
+            Modifier.background(chip, RoundedCornerShape(50)).padding(horizontal = 14.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(if (ready) KeyIcons.Done else KeyIcons.Info, contentDescription = null, tint = if (ready) cs.primary else onChip, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(
+                when {
+                    ready -> stringResource(R.string.settings_hero_ready, versionName)
+                    enabled -> stringResource(R.string.settings_setup_not_selected)
+                    else -> stringResource(R.string.settings_setup_not_enabled)
+                },
+                style = MaterialTheme.typography.labelLarge,
+                color = onChip,
+            )
         }
     }
 }

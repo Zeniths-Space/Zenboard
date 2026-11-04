@@ -355,7 +355,7 @@ internal fun CategoryPill(
 ) {
     val cs = MaterialTheme.colorScheme
     Surface(onClick = onClick, shape = RoundedCornerShape(36.dp), color = cs.surfaceContainerHigh, modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(48.dp).background(iconContainer, CircleShape), contentAlignment = Alignment.Center) {
                 Icon(icon, contentDescription = null, tint = iconContent, modifier = Modifier.size(22.dp))
             }
