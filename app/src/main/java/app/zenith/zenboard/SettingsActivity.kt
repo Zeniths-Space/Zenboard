@@ -319,6 +319,20 @@ private fun TypingScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 },
             ),
         )
+        SectionHeader(stringResource(R.string.settings_typing_space))
+        SegmentedGroup(
+            listOf<@Composable () -> Unit>(
+                {
+                    SwitchTile(
+                        icon = KeyIcons.Keyboard,
+                        title = stringResource(R.string.settings_space_switch),
+                        subtitle = stringResource(R.string.settings_space_switch_sub),
+                        checked = settings.spaceSwitch,
+                        onCheckedChange = { scope.launch { SettingsStore.setSpaceSwitch(context, it) } },
+                    )
+                },
+            ),
+        )
     }
 }
 

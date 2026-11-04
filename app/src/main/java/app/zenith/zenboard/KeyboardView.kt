@@ -89,6 +89,7 @@ fun KeyboardView(
     systemBars: PaddingValues,
     showPreviews: Boolean,
     keyPopup: Boolean,
+    spaceSwitch: Boolean,
     emoji: List<EmojiCategory>?,
     recentEmoji: List<String>,
     emojiTones: EmojiTones,
@@ -163,8 +164,8 @@ fun KeyboardView(
                     // colour animations to whichever key lands in the same position.
                     key(key) {
                         KeyButton(
-                            key, state, enterAction, preview, onKey, onChangeKeyboard, onDeleteWord, onMoveCursor,
-                            Modifier.weight(keyWeight(key, row)),
+                            key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
+                            onMoveCursor, Modifier.weight(keyWeight(key, row)),
                         )
                     }
                 }
@@ -181,7 +182,8 @@ private fun KeyButton(
     enterAction: Int?,
     preview: PreviewState,
     onKey: (Key) -> Unit,
-    onChangeKeyboard: () -> Unit,
+    /** Null when hold-space switching is off. */
+    onChangeKeyboard: (() -> Unit)?,
     onDeleteWord: () -> Unit,
     onMoveCursor: (Int) -> Unit,
     modifier: Modifier,
@@ -216,9 +218,9 @@ private fun KeyButton(
     val description = keyDescription(key, state, enterAction)
     val deleteWordLabel = stringResource(R.string.key_delete_word)
     val changeKeyboardLabel = stringResource(R.string.key_change_keyboard)
-    val changeKeyboard = {
+    val changeKeyboard: () -> Unit = {
         feedback.haptic(HapticFeedbackConstants.LONG_PRESS)
-        onChangeKeyboard()
+        onChangeKeyboard?.invoke()
     }
     val press = {
         feedback.press(key)
@@ -297,10 +299,11 @@ private fun KeyButton(
                                 CustomAccessibilityAction(alt) { onKey(Key.Text(alt)); true }
                             }
                         }
-                    // Hold space to change keyboard (the system input-method picker); slide to move the cursor.
+                    // Hold space to change keyboard (the system input-method picker), if enabled; slide to move the cursor.
                     key == Key.Space -> Modifier
                         .spaceGestures(
-                            longPressMs = longPressMs,
+                            // Off: no timeout, so a long hold is still a tap or a slide.
+                            longPressMs = if (onChangeKeyboard != null) SPACE_SWITCH_HOLD_MS else Long.MAX_VALUE,
                             onPressedChange = { heldPressed = it },
                             onTap = press,
                             onLongPress = changeKeyboard,
@@ -312,7 +315,7 @@ private fun KeyButton(
                         .semantics {
                             role = Role.Button
                             onClick { press(); true }
-                            onLongClick(changeKeyboardLabel) { changeKeyboard(); true }
+                            if (onChangeKeyboard != null) onLongClick(changeKeyboardLabel) { changeKeyboard(); true }
                         }
                     else -> Modifier.clickable(interactionSource = interaction, indication = null, onClick = press)
                 },
@@ -577,7 +580,8 @@ private fun Modifier.spaceGestures(
     val tap by rememberUpdatedState(onTap)
     val longPress by rememberUpdatedState(onLongPress)
     val move by rememberUpdatedState(onMove)
-    return pointerInput(Unit) {
+    // Keyed on the hold time: the setting can change while the keyboard is up.
+    return pointerInput(longPressMs) {
         awaitEachGesture {
             val down = awaitFirstDown()
             pressedChange(true)

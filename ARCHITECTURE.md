@@ -83,7 +83,8 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   the cell, unclipped so it can rise over the keyboard top. The last pick per emoji is kept in the
   same private preferences as recents, under the same incognito rule. Two-tone combinations (such
   as a handshake with two different tones) are not offered.
-- **Changing keyboard** is a long-press on space, which calls `showInputMethodPicker()`. The
+- **Changing keyboard** is a 2-second hold on space, off by default (Typing settings), which calls
+  `showInputMethodPicker()`. Off, the hold has no timeout, so it still ends as a tap or a slide. The
   emoji key took the old globe key's place.
 - **Settings live in DataStore** (`datastore-preferences`, Apache-2.0, as the project brief specifies).
   Both the settings screen and the IME collect the same `Flow`, so a toggle changes the open

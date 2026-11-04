@@ -123,6 +123,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         systemBars = bars,
                         showPreviews = inputShown,
                         keyPopup = settings.keyPopup,
+                        spaceSwitch = settings.spaceSwitch,
                         emoji = emoji,
                         recentEmoji = recentEmoji,
                         emojiTones = emojiTones,
@@ -483,7 +484,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         }
     }
 
-    /** Hold space: the system keyboard picker, also the way back to another keyboard. */
+    /** Hold space (when enabled): the system keyboard picker. */
     private fun showKeyboardPicker() {
         getSystemService(InputMethodManager::class.java).showInputMethodPicker()
     }

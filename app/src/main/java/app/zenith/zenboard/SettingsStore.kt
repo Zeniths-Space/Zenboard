@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-/** User settings. Defaults: pure black and key sound off; popup, suggestions, autocorrect, vibration on. */
+/** User settings. Defaults: pure black, key sound and hold-space switching off; popup, suggestions, autocorrect, vibration on. */
 data class ZenboardSettings(
     val pureBlack: Boolean = false,
     val keyPopup: Boolean = true,
@@ -23,7 +23,12 @@ data class ZenboardSettings(
     val keyHeight: Float = 1f,
     val haptics: Boolean = true,
     val sound: Boolean = false,
+    /** Holding space for [SPACE_SWITCH_HOLD_MS] opens the keyboard picker. */
+    val spaceSwitch: Boolean = false,
 )
+
+/** Long on purpose: a resting thumb on space must not open the picker. */
+const val SPACE_SWITCH_HOLD_MS = 2000L
 
 const val KEY_HEIGHT_MIN = 0.8f
 const val KEY_HEIGHT_MAX = 1.3f
@@ -37,6 +42,7 @@ private val AUTOCORRECT = booleanPreferencesKey("autocorrect")
 private val KEY_HEIGHT = floatPreferencesKey("key_height")
 private val HAPTICS = booleanPreferencesKey("haptics")
 private val SOUND = booleanPreferencesKey("sound")
+private val SPACE_SWITCH = booleanPreferencesKey("space_switch")
 
 /** Settings shared by the settings screen and the keyboard; both observe it, so changes apply live. */
 object SettingsStore {
@@ -52,6 +58,7 @@ object SettingsStore {
                 keyHeight = (it[KEY_HEIGHT] ?: 1f).coerceIn(KEY_HEIGHT_MIN, KEY_HEIGHT_MAX),
                 haptics = it[HAPTICS] ?: true,
                 sound = it[SOUND] ?: false,
+                spaceSwitch = it[SPACE_SWITCH] ?: false,
             )
         }
 
@@ -81,5 +88,9 @@ object SettingsStore {
 
     suspend fun setSound(context: Context, value: Boolean) {
         context.applicationContext.settingsStore.edit { it[SOUND] = value }
+    }
+
+    suspend fun setSpaceSwitch(context: Context, value: Boolean) {
+        context.applicationContext.settingsStore.edit { it[SPACE_SWITCH] = value }
     }
 }
