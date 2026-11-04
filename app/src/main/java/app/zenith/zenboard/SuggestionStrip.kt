@@ -33,6 +33,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/** Height of the toolbar and the word strip, shared so swapping one for the other never moves the keys. */
+private val StripHeight = 36.dp
+
 enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, CLIPBOARD, SETTINGS }
 
 /**
@@ -46,7 +49,7 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
     Row(
         Modifier
             .fillMaxWidth()
-            .height(42.dp)
+            .height(StripHeight)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -78,8 +81,8 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
             .padding(horizontal = 4.dp)
             // Long copies stop at about half the row and end in an ellipsis.
             .widthIn(max = 200.dp)
-            .height(34.dp)
-            .clip(RoundedCornerShape(17.dp))
+            .height(30.dp)
+            .clip(RoundedCornerShape(15.dp))
             // A dark glassy pill: faint primary-to-tertiary tint inside, a thin light rim that
             // shifts colour along its length.
             .background(
@@ -90,7 +93,7 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
                 Brush.horizontalGradient(
                     listOf(cs.primary.copy(alpha = 0.55f), cs.onSurface.copy(alpha = 0.35f), cs.tertiary.copy(alpha = 0.55f)),
                 ),
-                RoundedCornerShape(17.dp),
+                RoundedCornerShape(15.dp),
             )
             .clickable(role = Role.Button, onClickLabel = label) {
                 feedback.press()
@@ -115,9 +118,9 @@ private fun ToolButton(icon: ImageVector, label: Int, modifier: Modifier, select
     val feedback = LocalKeyFeedback.current
     Box(
         modifier
-            .height(40.dp)
+            .height(34.dp)
             .padding(horizontal = 2.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(17.dp))
             .background(if (selected) ZenithColors.indicator else Color.Transparent)
             .semantics { this.selected = selected }
             .clickable(role = Role.Button) {
@@ -130,7 +133,7 @@ private fun ToolButton(icon: ImageVector, label: Int, modifier: Modifier, select
             icon,
             stringResource(label),
             tint = if (selected) ZenithColors.onIndicator else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(19.dp),
         )
     }
 }
@@ -142,7 +145,7 @@ fun SuggestionStrip(suggestions: Suggestions, onPick: (String) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .height(42.dp)
+            .height(StripHeight)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -151,7 +154,7 @@ fun SuggestionStrip(suggestions: Suggestions, onPick: (String) -> Unit) {
                 Box(
                     Modifier
                         .width(1.dp)
-                        .height(18.dp)
+                        .height(16.dp)
                         .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (word != null && slots[i - 1] != null) 1f else 0f)),
                 )
             }
