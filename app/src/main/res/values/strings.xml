@@ -16,6 +16,9 @@
     <string name="clipboard_unpin">Unpin</string>
     <string name="clipboard_delete">Delete</string>
     <string name="toolbar_clipboard">Clipboard</string>
+    <string name="toolbar_one_handed">One-handed mode</string>
+    <string name="one_handed_swap">Move keyboard to the other side</string>
+    <string name="one_handed_exit">Full-width keyboard</string>
     <string name="toolbar_paste_clip">Paste copied text</string>
     <string name="settings_section_clipboard">Clipboard</string>
     <string name="settings_clipboard_summary_on">History on, kept %1$s</string>

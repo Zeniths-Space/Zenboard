@@ -43,12 +43,19 @@ data class ZenboardSettings(
     /** Keep copied text for pasting later. */
     val clipHistory: Boolean = true,
     val clipRetention: ClipRetention = ClipRetention.HOUR,
+    /** One-handed mode: off, or the side the narrower keyboard sits on. */
+    val oneHanded: OneHanded = OneHanded.OFF,
     /** Slide across letters to type a word. */
     val glide: Boolean = true,
 )
 
 /** Long on purpose: a resting thumb on space must not open the picker. */
 const val SPACE_SWITCH_HOLD_MS = 1500L
+
+/** One-handed mode: the keyboard narrows to [ONE_HANDED_WIDTH] of the screen on one side. */
+enum class OneHanded { OFF, LEFT, RIGHT }
+
+const val ONE_HANDED_WIDTH = 0.82f
 
 const val KEY_HEIGHT_MIN = 0.8f
 const val KEY_HEIGHT_MAX = 1.3f
@@ -72,6 +79,7 @@ private val GLIDE = booleanPreferencesKey("glide")
 private val BACKSPACE_DOUBLE_TAP = booleanPreferencesKey("backspace_double_tap")
 private val CLIP_HISTORY = booleanPreferencesKey("clip_history")
 private val CLIP_RETENTION = stringPreferencesKey("clip_retention")
+private val ONE_HANDED = stringPreferencesKey("one_handed")
 
 /** Settings shared by the settings screen and the keyboard; both observe it, so changes apply live. */
 object SettingsStore {
@@ -97,6 +105,7 @@ object SettingsStore {
                 backspaceDoubleTap = it[BACKSPACE_DOUBLE_TAP] ?: false,
                 clipHistory = it[CLIP_HISTORY] ?: true,
                 clipRetention = ClipRetention.entries.firstOrNull { r -> r.name == it[CLIP_RETENTION] } ?: ClipRetention.HOUR,
+                oneHanded = OneHanded.entries.firstOrNull { o -> o.name == it[ONE_HANDED] } ?: OneHanded.OFF,
             )
         }
 
@@ -166,6 +175,10 @@ object SettingsStore {
 
     suspend fun setClipRetention(context: Context, value: ClipRetention) {
         context.applicationContext.settingsStore.edit { it[CLIP_RETENTION] = value.name }
+    }
+
+    suspend fun setOneHanded(context: Context, value: OneHanded) {
+        context.applicationContext.settingsStore.edit { it[ONE_HANDED] = value.name }
     }
 }
 

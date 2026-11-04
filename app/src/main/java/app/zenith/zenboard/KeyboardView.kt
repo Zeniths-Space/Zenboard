@@ -41,6 +41,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -126,6 +129,8 @@ fun KeyboardView(
     onDeleteWord: () -> Unit,
     onMoveCursor: (Int) -> Unit,
     keyHeight: Float,
+    oneHanded: OneHanded,
+    onOneHanded: (OneHanded) -> Unit,
     feedback: KeyFeedback,
     onKey: (Key) -> Unit,
 ) = CompositionLocalProvider(LocalKeyFeedback provides feedback) {
@@ -136,7 +141,7 @@ fun KeyboardView(
     val trailColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
     var size by remember { mutableStateOf(IntSize.Zero) }
     if (showPreviews && size != IntSize.Zero) KeyPreviewOverlay(preview, size)
-    Column(
+    Row(
         Modifier
             .fillMaxWidth()
             .onSizeChanged {
@@ -145,80 +150,124 @@ fun KeyboardView(
             }
             .background(MaterialTheme.colorScheme.surface)
             .padding(systemBars)
-            .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp)
-            .onGloballyPositioned { glideCoords.c = it }
-            .glideGestures(
-                glide,
-                enabled = glideEnabled && state.layer == Layer.LETTERS,
-                panelOpen = { preview.panel != null },
-                toRoot = { p -> glideCoords.c?.takeIf { it.isAttached }?.localToRoot(p) ?: p },
-                onGlide = onGlide,
-            )
-            // The trail is read only here, so a glide redraws the keyboard without recomposing it.
-            .drawWithContent {
-                drawContent()
-                val trail = glide.trail
-                for (i in 1 until trail.size) {
-                    drawLine(trailColor, trail[i - 1], trail[i], strokeWidth = 6.dp.toPx(), cap = StrokeCap.Round)
-                }
-            },
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+            .height(IntrinsicSize.Min),
     ) {
-        if (emojiQuery != null) {
-            EmojiSearchBar(emojiQuery, emojiIndex, recentEmoji, emojiTones, onCloseEmojiSearch, onEmoji)
-        } else if (stripShown && (suggestions.primary != null || suggestions.others.isNotEmpty())) {
-            SuggestionStrip(suggestions, onPick)
-        } else {
-            // Always there, suggestions on or off: editing, clipboard and settings are one tap away.
-            Toolbar(onToolbar, freshClip, onPasteFresh = { freshClip?.let(onPasteClip) }, clipboardOpen = state.layer == Layer.CLIPBOARD)
-        }
-        // Cap rows at 9% of screen height so landscape keeps most of the app visible.
-        val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
-        // Emoji and clipboard: a shorter bottom row (ABC, delete) gives the panel more room.
-        val panelLayer = state.layer == Layer.EMOJI || state.layer == Layer.CLIPBOARD
-        val emojiRowHeight = rowHeight * 0.7f
-        // Tab 0 (recents) each time the panel opens; it lives here so the bottom row can show "Clear all".
-        var emojiTab by remember(state.layer == Layer.EMOJI) { mutableIntStateOf(0) }
-        if (state.layer == Layer.EMOJI) {
-            // Takes the place of the three upper rows, so the keyboard height does not jump.
-            EmojiPanel(
-                emoji, recentEmoji, emojiTones, emojiTab, { emojiTab = it },
-                height = rowHeight * 4 - emojiRowHeight + 4.dp, onSearch = onEmojiSearch,
-                onRemoveRecent = onRemoveRecentEmoji, onEmoji = onEmoji,
-            )
-        }
-        if (state.layer == Layer.CLIPBOARD) {
-            ClipboardPanel(
-                clips, clipHistoryOn, height = rowHeight * 4 - emojiRowHeight + 4.dp,
-                onPaste = onPasteClip, onPin = onPinClip, onDelete = onDeleteClip,
-            )
-        }
-        keyboardRows(state.layer).forEach { row ->
-            Row(Modifier.fillMaxWidth().height(if (panelLayer) emojiRowHeight else rowHeight)) {
-                val pad = (ROW_UNITS - row.sumOf { keyWeight(it, row).toDouble() }.toFloat()) / 2
-                // Short rows are centred, except the panel row: ABC at the left edge, delete at the right.
-                val spread = panelLayer
-                if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
-                row.forEachIndexed { i, key ->
-                    if (spread && i == row.lastIndex && pad > 0f) {
-                        Box(Modifier.weight(pad * 2).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                            when (state.layer) {
-                                Layer.EMOJI -> if (emojiTab == 0 && emoji != null && recentEmoji.isNotEmpty()) ClearRecents(onClearRecentEmoji)
-                                else -> {}
+        // One-handed: the keyboard keeps ONE_HANDED_WIDTH on its side; the strip beside it swaps sides or exits.
+        if (oneHanded == OneHanded.RIGHT) OneHandedStrip(oneHanded, onOneHanded, Modifier.weight(1f - ONE_HANDED_WIDTH))
+        Column(
+            Modifier
+                .weight(if (oneHanded == OneHanded.OFF) 1f else ONE_HANDED_WIDTH)
+                .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp)
+                .onGloballyPositioned { glideCoords.c = it }
+                .glideGestures(
+                    glide,
+                    enabled = glideEnabled && state.layer == Layer.LETTERS,
+                    panelOpen = { preview.panel != null },
+                    toRoot = { p -> glideCoords.c?.takeIf { it.isAttached }?.localToRoot(p) ?: p },
+                    onGlide = onGlide,
+                )
+                // The trail is read only here, so a glide redraws the keyboard without recomposing it.
+                .drawWithContent {
+                    drawContent()
+                    val trail = glide.trail
+                    for (i in 1 until trail.size) {
+                        drawLine(trailColor, trail[i - 1], trail[i], strokeWidth = 6.dp.toPx(), cap = StrokeCap.Round)
+                    }
+                },
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            if (emojiQuery != null) {
+                EmojiSearchBar(emojiQuery, emojiIndex, recentEmoji, emojiTones, onCloseEmojiSearch, onEmoji)
+            } else if (stripShown && (suggestions.primary != null || suggestions.others.isNotEmpty())) {
+                SuggestionStrip(suggestions, onPick)
+            } else {
+                // Always there, suggestions on or off: editing, clipboard and settings are one tap away.
+                Toolbar(
+                    onToolbar,
+                    freshClip,
+                    onPasteFresh = { freshClip?.let(onPasteClip) },
+                    clipboardOpen = state.layer == Layer.CLIPBOARD,
+                    oneHandedOn = oneHanded != OneHanded.OFF,
+                )
+            }
+            // Cap rows at 9% of screen height so landscape keeps most of the app visible.
+            val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
+            // Emoji and clipboard: a shorter bottom row (ABC, delete) gives the panel more room.
+            val panelLayer = state.layer == Layer.EMOJI || state.layer == Layer.CLIPBOARD
+            val emojiRowHeight = rowHeight * 0.7f
+            // Tab 0 (recents) each time the panel opens; it lives here so the bottom row can show "Clear all".
+            var emojiTab by remember(state.layer == Layer.EMOJI) { mutableIntStateOf(0) }
+            if (state.layer == Layer.EMOJI) {
+                // Takes the place of the three upper rows, so the keyboard height does not jump.
+                EmojiPanel(
+                    emoji, recentEmoji, emojiTones, emojiTab, { emojiTab = it },
+                    height = rowHeight * 4 - emojiRowHeight + 4.dp, onSearch = onEmojiSearch,
+                    onRemoveRecent = onRemoveRecentEmoji, onEmoji = onEmoji,
+                )
+            }
+            if (state.layer == Layer.CLIPBOARD) {
+                ClipboardPanel(
+                    clips, clipHistoryOn, height = rowHeight * 4 - emojiRowHeight + 4.dp,
+                    onPaste = onPasteClip, onPin = onPinClip, onDelete = onDeleteClip,
+                )
+            }
+            keyboardRows(state.layer).forEach { row ->
+                Row(Modifier.fillMaxWidth().height(if (panelLayer) emojiRowHeight else rowHeight)) {
+                    val pad = (ROW_UNITS - row.sumOf { keyWeight(it, row).toDouble() }.toFloat()) / 2
+                    // Short rows are centred, except the panel row: ABC at the left edge, delete at the right.
+                    val spread = panelLayer
+                    if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
+                    row.forEachIndexed { i, key ->
+                        if (spread && i == row.lastIndex && pad > 0f) {
+                            Box(Modifier.weight(pad * 2).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                                when (state.layer) {
+                                    Layer.EMOJI -> if (emojiTab == 0 && emoji != null && recentEmoji.isNotEmpty()) ClearRecents(onClearRecentEmoji)
+                                    else -> {}
+                                }
                             }
                         }
+                        // Identity by key, not slot: switching layers must not hand one key's press and
+                        // colour animations to whichever key lands in the same position.
+                        key(key) {
+                            KeyButton(
+                                key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
+                                backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, Modifier.weight(keyWeight(key, row)),
+                            )
+                        }
                     }
-                    // Identity by key, not slot: switching layers must not hand one key's press and
-                    // colour animations to whichever key lands in the same position.
-                    key(key) {
-                        KeyButton(
-                            key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                            backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, Modifier.weight(keyWeight(key, row)),
-                        )
-                    }
+                    if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
                 }
-                if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
             }
+        }
+        if (oneHanded == OneHanded.LEFT) OneHandedStrip(oneHanded, onOneHanded, Modifier.weight(1f - ONE_HANDED_WIDTH))
+    }
+}
+
+/** Beside the one-handed keyboard: move it to the other side, or back to full width. */
+@Composable
+private fun OneHandedStrip(side: OneHanded, onChange: (OneHanded) -> Unit, modifier: Modifier) {
+    val feedback = LocalKeyFeedback.current
+    val cs = MaterialTheme.colorScheme
+    Column(
+        modifier.fillMaxHeight(),
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        listOf(
+            Triple(KeyIcons.SwapSides, R.string.one_handed_swap) { onChange(if (side == OneHanded.LEFT) OneHanded.RIGHT else OneHanded.LEFT) },
+            Triple(KeyIcons.FullWidth, R.string.one_handed_exit) { onChange(OneHanded.OFF) },
+        ).forEach { (icon, label, action) ->
+            Box(
+                Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(cs.surfaceContainerHigh)
+                    .clickable(role = Role.Button) {
+                        feedback.press()
+                        action()
+                    },
+                contentAlignment = Alignment.Center,
+            ) { Icon(icon, stringResource(label), tint = cs.onSurfaceVariant, modifier = Modifier.size(22.dp)) }
         }
     }
 }

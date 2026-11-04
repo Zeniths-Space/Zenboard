@@ -198,6 +198,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         onDeleteWord = ::deleteWord,
                         onMoveCursor = ::moveCursor,
                         keyHeight = settings.keyHeight,
+                        oneHanded = settings.oneHanded,
+                        onOneHanded = { mode -> lifecycleScope.launch { SettingsStore.setOneHanded(this@ZenboardService, mode) } },
                         feedback = rememberKeyFeedback(settings.haptics, settings.sound),
                         onKey = ::onKey,
                     )
@@ -500,6 +502,11 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private fun onToolbar(action: ToolbarAction) {
         val ic = currentInputConnection ?: return
         lastCorrection = null
+        if (action == ToolbarAction.ONE_HANDED) {
+            val next = if (settings.oneHanded == OneHanded.OFF) OneHanded.RIGHT else OneHanded.OFF
+            lifecycleScope.launch { SettingsStore.setOneHanded(this@ZenboardService, next) }
+            return
+        }
         if (action == ToolbarAction.CLIPBOARD) {
             if (state.layer == Layer.CLIPBOARD) state = state.copy(layer = Layer.LETTERS) else openClipboard()
             return

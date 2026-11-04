@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.sp
 /** Height of the toolbar and the word strip, shared so swapping one for the other never moves the keys. */
 private val StripHeight = 36.dp
 
-enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, CLIPBOARD, SETTINGS }
+enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, CLIPBOARD, ONE_HANDED, SETTINGS }
 
 /**
  * Fills the strip while no word is being typed: clipboard, editing actions and settings, spread
@@ -45,7 +45,7 @@ enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, CLIPBOARD, SETTINGS }
  * Just after a copy, [freshClip] alone fills the row, as a one-tap paste sized to its text.
  */
 @Composable
-fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh: () -> Unit, clipboardOpen: Boolean) {
+fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh: () -> Unit, clipboardOpen: Boolean, oneHandedOn: Boolean) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -66,6 +66,7 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
         ToolButton(KeyIcons.Cut, R.string.toolbar_cut, slot) { onAction(ToolbarAction.CUT) }
         ToolButton(KeyIcons.Copy, R.string.toolbar_copy, slot) { onAction(ToolbarAction.COPY) }
         ToolButton(KeyIcons.Paste, R.string.toolbar_paste, slot) { onAction(ToolbarAction.PASTE) }
+        ToolButton(KeyIcons.OneHanded, R.string.toolbar_one_handed, slot, selected = oneHandedOn) { onAction(ToolbarAction.ONE_HANDED) }
         ToolButton(KeyIcons.Settings, R.string.toolbar_settings, slot) { onAction(ToolbarAction.SETTINGS) }
     }
 }

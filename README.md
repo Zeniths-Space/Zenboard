@@ -39,6 +39,8 @@ it needs no other Zenith app.
 - The space bar label can be hidden (Gestures settings).
 - Word suggestions above the keys: completions and likely fixes, best in the middle. Tap one to
   type it. Off in password fields.
+- One-handed mode from the toolbar: the keyboard narrows to one side; the strip beside it moves it
+  to the other side or back to full width. The choice is remembered.
 - A toolbar row above the keys (select all, cut, copy, paste, and a settings shortcut), shown
   in every field, with word suggestions on or off. While a word is being typed and suggestions
   are on, the same row shows the suggestions instead.
