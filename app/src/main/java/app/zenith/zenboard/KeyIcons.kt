@@ -2,16 +2,17 @@ package app.zenith.zenboard
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.unit.dp
 
 /**
- * Icons as vector paths on a 24-unit grid. The arrows, backspace, search, send, check, keyboard, lock, emoji face, moon, info, speech bubble and pin are
- * Material Icons paths (Apache-2.0); shift and globe are drawn here. The toolbar icons are Material
- * Symbols Rounded (Apache-2.0). Avoids the multi-megabyte material-icons-extended artifact for a
- * dozen glyphs.
+ * Icons as vector paths on a 24-unit grid. The arrows, backspace, search, send, check, keyboard,
+ * lock, emoji face, moon, info, speech bubble and pin are Material Icons paths (Apache-2.0); shift,
+ * globe and paste are drawn here. The other toolbar icons are Material Symbols Rounded
+ * (Apache-2.0). Avoids the multi-megabyte material-icons-extended artifact for a dozen glyphs.
  */
 object KeyIcons {
     val Backspace = filled(
@@ -97,15 +98,36 @@ object KeyIcons {
             "-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-520q0-17 11.5-28.5T160-720q17 0 28.5 11.5T200" +
             "-680v520h400q17 0 28.5 11.5T640-120q0 17-11.5 28.5T600-80H200Zm160-240v-480 480Z",
     )
-    /** Paste (content_paste_go): a clipboard with an arrow, apart from the clipboard history icon. */
-    val Paste = symbol(
-        "M727-240H520q-17 0-28.5-11.5T480-280q0-17 11.5-28.5T520-320h207l-36-36q-11-11-11-27.5t12-28.5q11-11 28-11t28 1" +
-            "1l104 104q12 12 12 28t-12 28L748-148q-12 12-28 11.5T692-149q-11-12-11.5-28t11.5-28l35-35ZM200-120q-33 0-56.5-2" +
-            "3.5T120-200v-560q0-33 23.5-56.5T200-840h167q11-35 43-57.5t70-22.5q40 0 71.5 22.5T594-840h166q33 0 56.5 23.5T84" +
-            "0-760v200q0 17-11.5 28.5T800-520q-17 0-28.5-11.5T760-560v-200h-80v80q0 17-11.5 28.5T640-640H320q-17 0-28.5-11." +
-            "5T280-680v-80h-80v560h160q17 0 28.5 11.5T400-160q0 17-11.5 28.5T360-120H200Zm280-640q17 0 28.5-11.5T520-800q0-" +
-            "17-11.5-28.5T480-840q-17 0-28.5 11.5T440-800q0 17 11.5 28.5T480-760Z",
-    )
+    /**
+     * Paste: a clipboard with a sheet of paper in front, drawn here in the Symbols' rounded style.
+     * The clipboard is clipped around the paper, so the two read apart without a fill.
+     */
+    val Paste = builder()
+        .addGroup(clipPathData = PathParser().parsePathString("M0,0H24V7.6H8.6V24H0Z").toNodes())
+        .addPath(
+            PathParser().parsePathString(
+                "M7.5,4.5H5.5A1.8,1.8 0 0,0 3.7,6.3V19.7A1.8,1.8 0 0,0 5.5,21.5H13.5A1.8,1.8 0 0,0 15.3,19.7V6.3" +
+                    "A1.8,1.8 0 0,0 13.5,4.5H11.5" +
+                    "M8.3,2.7H10.7A0.8,0.8 0 0,1 11.5,3.5V5.5A0.8,0.8 0 0,1 10.7,6.3H8.3A0.8,0.8 0 0,1 7.5,5.5V3.5" +
+                    "A0.8,0.8 0 0,1 8.3,2.7Z",
+            ).toNodes(),
+            stroke = SolidColor(Color.Black),
+            strokeLineWidth = 1.8f,
+            strokeLineCap = StrokeCap.Round,
+            strokeLineJoin = StrokeJoin.Round,
+        )
+        .clearGroup()
+        .addPath(
+            PathParser().parsePathString(
+                "M11.6,9.4H16.4L20.3,13.3V20.7A0.9,0.9 0 0,1 19.4,21.6H11.6A0.9,0.9 0 0,1 10.7,20.7V10.3" +
+                    "A0.9,0.9 0 0,1 11.6,9.4ZM13.4,16H17.6M13.4,18.8H17.6",
+            ).toNodes(),
+            stroke = SolidColor(Color.Black),
+            strokeLineWidth = 1.8f,
+            strokeLineCap = StrokeCap.Round,
+            strokeLineJoin = StrokeJoin.Round,
+        )
+        .build()
     val Settings = symbol(
         "M433-80q-27 0-46.5-18T363-142l-9-66q-13-5-24.5-12T307-235l-62 26q-25 11-50 2t-39-32l-47-82q-14-23-8-49t27-43l5" +
             "3-40q-1-7-1-13.5v-27q0-6.5 1-13.5l-53-40q-21-17-27-43t8-49l47-82q14-23 39-32t50 2l62 26q11-8 23-15t24-12l9-66q" +
