@@ -186,7 +186,7 @@ fun KeyboardView(
                 // No toolbar: with suggestions on, the empty strip keeps its row. A row that came and
                 // went with each word would resize the keyboard while typing, and fast taps land on
                 // the wrong keys during the resize (tested: "hello there now" came out garbled).
-                if (stripShown) SuggestionStrip(suggestions, onPick)
+                if (stripShown) IdleStrip()
             } else {
                 // Shown with suggestions on or off: editing, clipboard and settings are one tap away.
                 Toolbar(

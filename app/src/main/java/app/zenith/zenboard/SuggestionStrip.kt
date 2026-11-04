@@ -164,6 +164,22 @@ private fun ToolButton(icon: ImageVector, label: Int, modifier: Modifier, select
     }
 }
 
+/**
+ * The suggestion row with no word to suggest for (toolbar off): a faint handle, so the row reads as
+ * part of the keyboard rather than empty space. It keeps the row's height, so words can appear
+ * without resizing the keyboard.
+ */
+@Composable
+fun IdleStrip() {
+    Box(Modifier.fillMaxWidth().height(StripHeight), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .size(width = 36.dp, height = 4.dp)
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f), RoundedCornerShape(2.dp)),
+        )
+    }
+}
+
 /** Three slots: alternative, best (centre, bold), alternative. An unknown typed word is shown in quotes. */
 @Composable
 fun SuggestionStrip(suggestions: Suggestions, onPick: (String) -> Unit) {
