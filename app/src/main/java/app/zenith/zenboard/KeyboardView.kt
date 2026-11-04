@@ -80,8 +80,8 @@ import kotlin.math.abs
 
 private val KeyCorner = 10.dp
 
-/** Pressed keys round toward a pill (radius is clamped to half the key height). */
-private val PressedCorner = 24.dp
+/** Pressed keys round a little more: a hint of the press, not a pill. */
+private val PressedCorner = 12.dp
 
 // LocalWindowInfo.containerSize (lint's suggestion) is the IME window, which is only as tall as the
 // keyboard itself, so it cannot size the keyboard. The screen height from Configuration is what we need.
@@ -250,7 +250,7 @@ private fun KeyButton(
     // A glide that started on this key: no press look, no preview bubble.
     val pressed = (clickPressed || heldPressed) && !glide.active
 
-    // Expressive press: the key springs toward a pill and dips slightly.
+    // Expressive press: the key's corners round a little and it dips slightly.
     val morph by animateFloatAsState(if (pressed) 1f else 0f, Motion.press(), label = "press")
     val shape = keyShape(morph.coerceIn(0f, 1f))
     val (container, content) = keyColors(key, state, pressed)
