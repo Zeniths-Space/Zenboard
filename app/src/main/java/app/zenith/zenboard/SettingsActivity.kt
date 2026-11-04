@@ -36,6 +36,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.material3.RadioButton
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -43,7 +46,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private enum class Page { HOME, SETUP, APPEARANCE, TYPING, SPACE_BAR, GESTURES, FEEDBACK, ABOUT }
+private enum class Page { HOME, SETUP, APPEARANCE, TYPING, SPACE_BAR, GESTURES, CLIPBOARD, FEEDBACK, ABOUT }
 
 /** Launcher entry and the keyboard's settings activity: settings home, setup and about pages. */
 class SettingsActivity : ComponentActivity() {
@@ -95,6 +98,7 @@ class SettingsActivity : ComponentActivity() {
                         Page.TYPING -> WithTryKeyboard { TypingScreen(current, onBack = { page = Page.HOME }) }
                         Page.SPACE_BAR -> WithTryKeyboard { SpaceBarScreen(current, onBack = { page = Page.HOME }) }
                         Page.GESTURES -> WithTryKeyboard { GesturesScreen(current, onBack = { page = Page.HOME }) }
+                        Page.CLIPBOARD -> WithTryKeyboard { ClipboardScreen(current, onBack = { page = Page.HOME }) }
                         Page.FEEDBACK -> WithTryKeyboard { FeedbackScreen(current, onBack = { page = Page.HOME }) }
                         Page.ABOUT -> AboutScreen(versionName, onBack = { page = Page.HOME })
                     }
@@ -210,6 +214,18 @@ private fun HomeScreen(
                         title = stringResource(R.string.settings_section_gestures),
                         subtitle = stringResource(R.string.settings_gestures_summary, onOff(settings.glide), onOff(settings.backspaceSlide), onOff(settings.backspaceDoubleTap)),
                         onClick = { onOpen(Page.GESTURES) },
+                    )
+                },
+                {
+                    GroupTile(
+                        badge = { ScallopBadge(KeyIcons.History, ZenithColors.indicator, ZenithColors.onIndicator) },
+                        title = stringResource(R.string.settings_section_clipboard),
+                        subtitle = if (settings.clipHistory) {
+                            stringResource(R.string.settings_clipboard_summary_on, stringResource(retentionLabel(settings.clipRetention)).lowercase())
+                        } else {
+                            stringResource(R.string.settings_clipboard_summary_off)
+                        },
+                        onClick = { onOpen(Page.CLIPBOARD) },
                     )
                 },
                 {
@@ -420,6 +436,53 @@ private fun GesturesScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                 },
             ),
         )
+    }
+}
+
+private fun retentionLabel(r: ClipRetention) = when (r) {
+    ClipRetention.HOUR -> R.string.settings_clip_hour
+    ClipRetention.DAY -> R.string.settings_clip_day
+    ClipRetention.FOREVER -> R.string.settings_clip_forever
+}
+
+@Composable
+private fun ClipboardScreen(settings: ZenboardSettings, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    CategoryPage(stringResource(R.string.settings_section_clipboard), onBack) {
+        SegmentedGroup(
+            listOf<@Composable () -> Unit>(
+                {
+                    SwitchTile(
+                        icon = KeyIcons.History,
+                        title = stringResource(R.string.settings_clip_history),
+                        subtitle = stringResource(R.string.settings_clip_history_sub),
+                        checked = settings.clipHistory,
+                        onCheckedChange = { scope.launch { SettingsStore.setClipHistory(context, it) } },
+                    )
+                },
+            ),
+        )
+        if (settings.clipHistory) {
+            SectionHeader(stringResource(R.string.settings_clip_keep))
+            SegmentedGroup(
+                ClipRetention.entries.map { r ->
+                    @Composable {
+                        GroupTile(
+                            badge = null,
+                            title = stringResource(retentionLabel(r)),
+                            subtitle = if (r == ClipRetention.FOREVER) stringResource(R.string.settings_clip_forever_sub) else "",
+                            modifier = Modifier.selectable(
+                                selected = settings.clipRetention == r,
+                                role = Role.RadioButton,
+                                onClick = { scope.launch { SettingsStore.setClipRetention(context, r) } },
+                            ),
+                            trailing = { RadioButton(selected = settings.clipRetention == r, onClick = null) },
+                        )
+                    }
+                },
+            )
+        }
     }
 }
 

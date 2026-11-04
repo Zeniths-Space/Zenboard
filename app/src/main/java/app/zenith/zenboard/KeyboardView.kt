@@ -112,6 +112,13 @@ fun KeyboardView(
     onRemoveRecentEmoji: (String) -> Unit,
     onClearRecentEmoji: () -> Unit,
     onCloseEmojiSearch: () -> Unit,
+    clips: List<Clip>,
+    clipHistoryOn: Boolean,
+    freshClip: String?,
+    onPasteClip: (String) -> Unit,
+    onPinClip: (Clip) -> Unit,
+    onDeleteClip: (Clip) -> Unit,
+    onClearClips: () -> Unit,
     stripShown: Boolean,
     suggestions: Suggestions,
     onPick: (String) -> Unit,
@@ -164,11 +171,12 @@ fun KeyboardView(
             SuggestionStrip(suggestions, onPick)
         } else {
             // Always there, suggestions on or off: editing, clipboard and settings are one tap away.
-            Toolbar(onToolbar)
+            Toolbar(onToolbar, freshClip, onPasteFresh = { freshClip?.let(onPasteClip) })
         }
         // Cap rows at 9% of screen height so landscape keeps most of the app visible.
         val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
-        // Emoji layer: a shorter bottom row (ABC, delete) gives the grid more room.
+        // Emoji and clipboard: a shorter bottom row (ABC, delete) gives the panel more room.
+        val panelLayer = state.layer == Layer.EMOJI || state.layer == Layer.CLIPBOARD
         val emojiRowHeight = rowHeight * 0.7f
         // Tab 0 (recents) each time the panel opens; it lives here so the bottom row can show "Clear all".
         var emojiTab by remember(state.layer == Layer.EMOJI) { mutableIntStateOf(0) }
@@ -180,16 +188,27 @@ fun KeyboardView(
                 onRemoveRecent = onRemoveRecentEmoji, onEmoji = onEmoji,
             )
         }
+        if (state.layer == Layer.CLIPBOARD) {
+            ClipboardPanel(
+                clips, clipHistoryOn, height = rowHeight * 4 - emojiRowHeight + 4.dp,
+                onPaste = onPasteClip, onPin = onPinClip, onDelete = onDeleteClip,
+            )
+        }
         keyboardRows(state.layer).forEach { row ->
-            Row(Modifier.fillMaxWidth().height(if (state.layer == Layer.EMOJI) emojiRowHeight else rowHeight)) {
+            Row(Modifier.fillMaxWidth().height(if (panelLayer) emojiRowHeight else rowHeight)) {
                 val pad = (ROW_UNITS - row.sumOf { keyWeight(it, row).toDouble() }.toFloat()) / 2
-                // Short rows are centred, except the emoji row: ABC at the left edge, delete at the right.
-                val spread = state.layer == Layer.EMOJI
+                // Short rows are centred, except the panel row: ABC at the left edge, delete at the right.
+                val spread = panelLayer
                 if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
                 row.forEachIndexed { i, key ->
                     if (spread && i == row.lastIndex && pad > 0f) {
                         Box(Modifier.weight(pad * 2).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                            if (emojiTab == 0 && emoji != null && recentEmoji.isNotEmpty()) ClearRecents(onClearRecentEmoji)
+                            when (state.layer) {
+                                Layer.EMOJI -> if (emojiTab == 0 && emoji != null && recentEmoji.isNotEmpty()) ClearRecents(onClearRecentEmoji)
+                                // Clear all takes the unpinned clips; pinned ones stay.
+                                Layer.CLIPBOARD -> if (clips.any { !it.pinned }) ClearRecents(onClearClips)
+                                else -> {}
+                            }
                         }
                     }
                     // Identity by key, not slot: switching layers must not hand one key's press and

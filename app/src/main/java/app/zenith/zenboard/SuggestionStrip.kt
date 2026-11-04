@@ -27,14 +27,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, SETTINGS }
+enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, CLIPBOARD, SETTINGS }
 
 /**
- * Fills the strip while no word is being typed: text editing on the left, settings on the right.
- * Same height as the word strip, so the keyboard does not jump when one replaces the other.
+ * Fills the strip while no word is being typed: text editing and clipboard on the left, settings on
+ * the right. Same height as the word strip, so the keyboard does not jump when one replaces the other.
+ * Just after a copy, [freshClip] takes the place of the editing buttons as a one-tap paste.
  */
 @Composable
-fun Toolbar(onAction: (ToolbarAction) -> Unit) {
+fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -42,12 +43,48 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit) {
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ToolButton(KeyIcons.SelectAll, R.string.toolbar_select_all) { onAction(ToolbarAction.SELECT_ALL) }
-        ToolButton(KeyIcons.Cut, R.string.toolbar_cut) { onAction(ToolbarAction.CUT) }
-        ToolButton(KeyIcons.Copy, R.string.toolbar_copy) { onAction(ToolbarAction.COPY) }
-        ToolButton(KeyIcons.Paste, R.string.toolbar_paste) { onAction(ToolbarAction.PASTE) }
-        Spacer(Modifier.weight(1f))
+        ToolButton(KeyIcons.History, R.string.toolbar_clipboard) { onAction(ToolbarAction.CLIPBOARD) }
+        if (freshClip != null) {
+            FreshClip(freshClip, onPasteFresh, Modifier.weight(1f))
+        } else {
+            ToolButton(KeyIcons.SelectAll, R.string.toolbar_select_all) { onAction(ToolbarAction.SELECT_ALL) }
+            ToolButton(KeyIcons.Cut, R.string.toolbar_cut) { onAction(ToolbarAction.CUT) }
+            ToolButton(KeyIcons.Copy, R.string.toolbar_copy) { onAction(ToolbarAction.COPY) }
+            ToolButton(KeyIcons.Paste, R.string.toolbar_paste) { onAction(ToolbarAction.PASTE) }
+            Spacer(Modifier.weight(1f))
+        }
         ToolButton(KeyIcons.Settings, R.string.toolbar_settings) { onAction(ToolbarAction.SETTINGS) }
+    }
+}
+
+/** The text just copied, as a pill: tap to paste it. */
+@Composable
+private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
+    val feedback = LocalKeyFeedback.current
+    val cs = MaterialTheme.colorScheme
+    val label = stringResource(R.string.toolbar_paste_clip)
+    Row(
+        modifier
+            .padding(horizontal = 4.dp)
+            .height(34.dp)
+            .clip(RoundedCornerShape(17.dp))
+            .background(cs.secondaryContainer)
+            .clickable(role = Role.Button, onClickLabel = label) {
+                feedback.press()
+                onPaste()
+            }
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(KeyIcons.Paste, contentDescription = null, tint = cs.onSecondaryContainer, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text.replace(Regex("\\s+"), " ").trim(),
+            color = cs.onSecondaryContainer,
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

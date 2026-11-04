@@ -1,5 +1,6 @@
 package app.zenith.zenboard
 
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Rect
@@ -53,6 +54,14 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     /** Non-null while searching emoji: letter keys type into this query instead of the editor. */
     private var emojiQuery by mutableStateOf<String?>(null)
     private var emojiIndex by mutableStateOf<List<EmojiInfo>?>(null)
+    /** Clipboard history, newest first; pinned clips stay. Loaded once at start. */
+    private var clips by mutableStateOf<List<Clip>>(emptyList())
+    private val clipStore by lazy { ClipStore(this) }
+    /** Text copied in the last [FRESH_CLIP_MS], offered as a one-tap paste in the toolbar until a key is pressed. */
+    private var freshClip by mutableStateOf<String?>(null)
+    private var freshClipTime = 0L
+    private val clipboard by lazy { getSystemService(ClipboardManager::class.java) }
+    private val clipListener = ClipboardManager.OnPrimaryClipChangedListener { onClipChanged() }
     private var barInsets by mutableStateOf(Rect())
     private var inputShown by mutableStateOf(false)
     private var settings by mutableStateOf(ZenboardSettings())
@@ -87,10 +96,19 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         savedStateController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         // Live settings: toggles in the settings screen apply to the open keyboard immediately.
-        lifecycleScope.launch { SettingsStore.settings(this@ZenboardService).collect { settings = it } }
+        lifecycleScope.launch {
+            clips = clipStore.load()
+            SettingsStore.settings(this@ZenboardService).collect {
+                settings = it
+                // History off deletes the unpinned clips; a shorter retention drops the old ones.
+                updateClips(if (it.clipHistory) clips else clips.filter(Clip::pinned))
+            }
+        }
+        clipboard.addPrimaryClipChangedListener(clipListener)
     }
 
     override fun onDestroy() {
+        clipboard.removePrimaryClipChangedListener(clipListener)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         super.onDestroy()
     }
@@ -153,6 +171,14 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                             emojiRecents.save(recentEmoji)
                         },
                         onCloseEmojiSearch = ::openEmoji,
+                        clips = panelOrder(clips),
+                        clipHistoryOn = settings.clipHistory,
+                        freshClip = freshClip,
+                        onPasteClip = ::pasteClip,
+                        // Unpinning restarts the clip's clock, so an old clip does not vanish the moment it is unpinned.
+                        onPinClip = { c -> updateClips(clips.map { if (it.text == c.text) it.copy(pinned = !it.pinned, time = System.currentTimeMillis()) else it }) },
+                        onDeleteClip = { c -> updateClips(clips.filter { it.text != c.text }) },
+                        onClearClips = { updateClips(clips.filter(Clip::pinned)) },
                         stripShown = stripShown,
                         suggestions = suggestions,
                         onPick = ::onPick,
@@ -174,6 +200,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         updateNavBarAppearance()
         inputShown = true
         emojiQuery = null
+        if (System.currentTimeMillis() - freshClipTime > FRESH_CLIP_MS) freshClip = null
         state = KeyboardState(layer = initialLayer(info.inputType)).withAutoCaps(capsAtCursor())
         enterAction = enterAction(info.imeOptions)
         composing.clear()
@@ -247,6 +274,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private fun onKey(key: Key) {
         val ic = currentInputConnection ?: return
         if (emojiQuery != null && searchKey(key)) return
+        // Typing means the copied text is not wanted now: the editing buttons come back.
+        if (freshClip != null) freshClip = null
         val wasGlided = glided
         glided = false
         // Undo only applies to the very next key.
@@ -436,6 +465,10 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private fun onToolbar(action: ToolbarAction) {
         val ic = currentInputConnection ?: return
         lastCorrection = null
+        if (action == ToolbarAction.CLIPBOARD) {
+            openClipboard()
+            return
+        }
         if (action == ToolbarAction.SETTINGS) {
             requestHideSelf(0)
             startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
@@ -547,6 +580,42 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                 emojiRecents.saveTones(tones.chosen)
             }
         }
+    }
+
+    /**
+     * Something was copied. Only the default keyboard and the focused app may read the clipboard
+     * (Android 10+), so a read can fail; that copy is then just not recorded.
+     */
+    private fun onClipChanged() {
+        val text = runCatching { clipText(clipboard.primaryClip) }.getOrNull() ?: return
+        if (inputShown && isIncognito(currentInputEditorInfo)) return
+        freshClip = text
+        freshClipTime = System.currentTimeMillis()
+        if (settings.clipHistory) updateClips(addClip(clips, text, freshClipTime))
+    }
+
+    /** New history: expired clips dropped, saved to disk when it changed. */
+    private fun updateClips(new: List<Clip>) {
+        val pruned = pruneClips(new, System.currentTimeMillis(), settings.clipRetention)
+        if (pruned == clips) return
+        clips = pruned
+        lifecycleScope.launch { clipStore.save(pruned) }
+    }
+
+    private fun openClipboard() {
+        finishComposing()
+        // A copy made while the keyboard was not running was not heard: pick up what is on the clipboard now.
+        val current = runCatching { clipText(clipboard.primaryClip) }.getOrNull()
+        updateClips(if (settings.clipHistory && current != null && clips.none { it.text == current }) addClip(clips, current, System.currentTimeMillis()) else clips)
+        state = state.copy(layer = Layer.CLIPBOARD)
+    }
+
+    private fun pasteClip(text: String) {
+        val ic = currentInputConnection ?: return
+        finishComposing()
+        lastCorrection = null
+        ic.commitText(text, 1)
+        freshClip = null
     }
 
     /** Hold space (when enabled): the system keyboard picker. */

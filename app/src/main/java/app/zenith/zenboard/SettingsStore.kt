@@ -7,13 +7,14 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-/** User settings. Defaults: pure black, key sound and hold-space switching and backspace double tap off; space label, space slide, backspace slide, glide typing, popup, suggestions, autocorrect, vibration on. */
+/** User settings. Defaults: pure black, key sound and hold-space switching and backspace double tap off; space label, space slide, backspace slide, glide typing, clipboard history (1 hour), popup, suggestions, autocorrect, vibration on. */
 data class ZenboardSettings(
     val pureBlack: Boolean = false,
     val keyPopup: Boolean = true,
@@ -33,6 +34,9 @@ data class ZenboardSettings(
     val backspaceSlide: Boolean = true,
     /** Double tap backspace to delete a word. Off by default: quick taps to delete letters would take words. */
     val backspaceDoubleTap: Boolean = false,
+    /** Keep copied text for pasting later. */
+    val clipHistory: Boolean = true,
+    val clipRetention: ClipRetention = ClipRetention.HOUR,
     /** Slide across letters to type a word. */
     val glide: Boolean = true,
 )
@@ -58,6 +62,8 @@ private val SPACE_SLIDE = booleanPreferencesKey("space_slide")
 private val BACKSPACE_SLIDE = booleanPreferencesKey("backspace_slide")
 private val GLIDE = booleanPreferencesKey("glide")
 private val BACKSPACE_DOUBLE_TAP = booleanPreferencesKey("backspace_double_tap")
+private val CLIP_HISTORY = booleanPreferencesKey("clip_history")
+private val CLIP_RETENTION = stringPreferencesKey("clip_retention")
 
 /** Settings shared by the settings screen and the keyboard; both observe it, so changes apply live. */
 object SettingsStore {
@@ -79,6 +85,8 @@ object SettingsStore {
                 backspaceSlide = it[BACKSPACE_SLIDE] ?: true,
                 glide = it[GLIDE] ?: true,
                 backspaceDoubleTap = it[BACKSPACE_DOUBLE_TAP] ?: false,
+                clipHistory = it[CLIP_HISTORY] ?: true,
+                clipRetention = ClipRetention.entries.firstOrNull { r -> r.name == it[CLIP_RETENTION] } ?: ClipRetention.HOUR,
             )
         }
 
@@ -132,5 +140,13 @@ object SettingsStore {
 
     suspend fun setBackspaceDoubleTap(context: Context, value: Boolean) {
         context.applicationContext.settingsStore.edit { it[BACKSPACE_DOUBLE_TAP] = value }
+    }
+
+    suspend fun setClipHistory(context: Context, value: Boolean) {
+        context.applicationContext.settingsStore.edit { it[CLIP_HISTORY] = value }
+    }
+
+    suspend fun setClipRetention(context: Context, value: ClipRetention) {
+        context.applicationContext.settingsStore.edit { it[CLIP_RETENTION] = value.name }
     }
 }

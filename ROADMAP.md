@@ -32,7 +32,7 @@
 
 ## Later
 - [ ] More layouts and languages
-- [ ] Clipboard within Android's restrictions
+- [x] Clipboard history within Android's restrictions (pin, delete, retention)
 - [ ] Themes
 - [x] Swipe typing (glide typing; shape matching, no language model yet)
 - [ ] Signed release workflow and GitHub Releases

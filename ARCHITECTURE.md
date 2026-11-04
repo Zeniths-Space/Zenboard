@@ -16,6 +16,7 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 | `Feedback.kt` | Key vibration and click sound, switched by settings. |
 | `Theme.kt` | Theme: wallpaper colours with the AMOLED / tinted-page surface treatment, semibold type, motion tokens. |
 | `KeyPreview.kt` | Key-press preview bubble, drawn in one overlay window. |
+| `ClipboardHistory.kt` / `ClipboardPanel.kt` | Clipboard history: add, prune and order (pure), the JSON store, and the panel. |
 | `GlideTyping.kt` | Glide typing: the whole-keyboard gesture, its trail, and the word decoder. |
 | `EmojiData.kt` / `EmojiPanel.kt` | Emoji list (asset), recents, and the tabbed emoji grid. |
 | `Dictionary.kt` | Word list (sorted asset, binary search), completions, typo candidates with typing-aware edit distance, suggestion ranking. |
@@ -95,6 +96,15 @@ editor cursor moves -> onUpdateSelection -> auto-caps check -> KeyboardState
   off the main thread. The word goes in as composing text with the next matches in the strip;
   backspace right after removes it whole. Off in password fields. No language model: words that
   trace the same line ("typing" and "topping") are told apart by frequency only.
+- **Clipboard history** listens with `ClipboardManager.addPrimaryClipChangedListener`, which
+  Android delivers only to the default keyboard and the focused app. A read can fail, so it is
+  wrapped; opening the panel also picks up the current clip, in case a copy happened while the
+  keyboard process was not running. Sensitive clips (`EXTRA_IS_SENSITIVE`) and copies made in
+  incognito fields are skipped; only plain text is kept. Clips live in memory and in
+  `noBackupFilesDir/clipboard.json`, written whole (temp file, then rename) after each change on
+  `Dispatchers.IO`. Expiry is checked when the history changes or the panel opens, never on a
+  timer. The panel reuses the emoji layout: it replaces the three upper rows, with ABC, Clear all
+  and delete in the short bottom row.
 - **Changing keyboard** is a 1.5-second hold on space, off by default (Space bar settings), which calls
   `showInputMethodPicker()`. Off, the hold has no timeout, so it still ends as a tap or a slide. The
   emoji key took the old globe key's place.

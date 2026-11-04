@@ -4,7 +4,7 @@ import android.view.inputmethod.EditorInfo
 
 /** Pure keyboard logic. No Android framework calls, so it is unit-testable on the JVM. */
 
-enum class Layer { LETTERS, SYMBOLS, MORE_SYMBOLS, EMOJI }
+enum class Layer { LETTERS, SYMBOLS, MORE_SYMBOLS, EMOJI, CLIPBOARD }
 
 enum class ShiftMode { OFF, ONCE, LOCKED }
 
@@ -146,8 +146,8 @@ fun keyboardRows(layer: Layer): List<List<Key>> {
             listOf(Key.ToSymbols) + row("%©®™✓[]") + Key.Backspace,
             bottom,
         )
-        // The emoji grid fills the space of the upper rows; only the bottom row has keys.
-        Layer.EMOJI -> listOf(listOf(Key.ToLetters, Key.Backspace))
+        // The emoji grid or clipboard fills the space of the upper rows; only the bottom row has keys.
+        Layer.EMOJI, Layer.CLIPBOARD -> listOf(listOf(Key.ToLetters, Key.Backspace))
     }
 }
 

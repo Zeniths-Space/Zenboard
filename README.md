@@ -39,6 +39,10 @@ it needs no other Zenith app.
 - A toolbar row above the keys (select all, cut, copy, paste, and a settings shortcut), shown
   in every field, with word suggestions on or off. While a word is being typed and suggestions
   are on, the same row shows the suggestions instead.
+- Clipboard history: the clock button in the toolbar opens recent copies. Tap one to paste,
+  long-press to pin or delete, Clear all removes everything unpinned. Just after a copy, the
+  toolbar offers it as a one-tap paste until you press a key. Copied passwords are never kept.
+  Retention (1 hour, 1 day, until removed) in Clipboard settings.
 - Autocorrect on space or end punctuation, with the word it will type highlighted in the strip.
   Backspace right after undoes it and keeps your word. Off in email, URL and password fields.
 - Settings by category, each on its own page: Setup; Appearance (pure black, key height,

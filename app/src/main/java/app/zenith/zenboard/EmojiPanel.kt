@@ -320,7 +320,7 @@ private val TONE_LABELS = listOf(
 )
 
 /** Centred above the anchor, kept inside the window horizontally. */
-private object AboveAnchor : PopupPositionProvider {
+internal object AboveAnchor : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
         windowSize: IntSize,
