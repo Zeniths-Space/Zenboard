@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -48,7 +49,7 @@ fun Toolbar(onAction: (ToolbarAction) -> Unit, freshClip: String?, onPasteFresh:
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (freshClip != null) {
-            // Only the copied text, centred, as wide as it needs (long text ends in an ellipsis).
+            // Only the copied text, centred, as wide as it needs up to a cap (then an ellipsis).
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { FreshClip(freshClip, onPasteFresh, Modifier) }
             return@Row
         }
@@ -73,6 +74,8 @@ private fun FreshClip(text: String, onPaste: () -> Unit, modifier: Modifier) {
     Row(
         modifier
             .padding(horizontal = 4.dp)
+            // Long copies stop at about half the row and end in an ellipsis.
+            .widthIn(max = 200.dp)
             .height(34.dp)
             .clip(RoundedCornerShape(17.dp))
             .background(cs.tertiary.copy(alpha = 0.4f))
