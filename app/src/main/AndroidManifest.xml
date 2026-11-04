@@ -12,17 +12,26 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Zenboard">
 
-        <!-- Exported: the system opens it from keyboard settings (method.xml settingsActivity). -->
+        <!--
+            Exported: the system opens it from keyboard settings (method.xml settingsActivity).
+            MAIN + INFO is the entry Android's "Open" buttons use (App info, the installer) before
+            the launcher icon, so the app can always be opened. Launchers ignore it.
+        -->
         <activity
             android:name=".SettingsActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.INFO" />
+            </intent-filter>
+        </activity>
 
         <!--
             The launcher icon, off until "Show in app drawer" turns it on. Off in the manifest on
             purpose: Android 10+ puts an App info stand-in in the drawer for an app that requests
             permissions and switches off a launcher icon its manifest enables, so the only way to
-            hide it completely is to start hidden. Settings open from the system keyboard settings.
+            hide it completely is to start hidden. The INFO entry above keeps the app openable.
         -->
         <activity-alias
             android:name=".Launcher"

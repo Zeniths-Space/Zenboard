@@ -48,10 +48,9 @@ it needs no other Zenith app.
   Retention (1 hour, 1 day, until removed) in Clipboard settings.
 - Autocorrect on space or end punctuation, with the word it will type highlighted in the strip.
   Backspace right after undoes it and keeps your word. Off in email, URL and password fields.
-- No app-drawer icon by default, so the keyboard stays out of the way. Open settings from
-  Android's keyboard settings (Settings > General management > Keyboard list and default, or
-  System > Keyboard on other phones) or the gear in the keyboard's toolbar. Look & feel >
-  "Show in app drawer" adds the icon.
+- No app-drawer icon by default, so the keyboard stays out of the way. Open settings with
+  **Open** on Zenboard's App info page (or the installer), or the gear in the keyboard's
+  toolbar. Look & feel > "Show in app drawer" adds the icon.
 - Settings home: a hero card with the setup status (tap it for About), then four categories as
   rounded pills, each opening its own page. Typing (suggestions, autocorrect, capitals, spacing);
   Gestures (glide typing, backspace, space bar); Clipboard; Look & feel (theme, key height,
@@ -64,12 +63,13 @@ Planned work is in [ROADMAP.md](ROADMAP.md).
 
 ## Install and enable
 
-1. Install the APK (see Build below). Zenboard has no app-drawer icon by default.
-2. In Android's keyboard settings (Settings > General management > Keyboard list and default
-   on Samsung, Settings > System > Keyboard elsewhere), turn on Zenboard.
+1. Install the APK (see Build below) and tap **Open** in the installer. Zenboard has no
+   app-drawer icon by default; later, open it from **Open** on its App info page
+   (Settings > Apps > Zenboard), or the gear in the keyboard's toolbar.
+2. In **Setup**, tap **Enable keyboard** and turn on Zenboard.
    Android shows a standard warning that any keyboard can see typed text.
    This app has no internet permission, so that text cannot leave the device.
-3. Tap Zenboard there to open its settings, then **Setup** > **Choose keyboard** and pick Zenboard.
+3. Tap **Choose keyboard** and pick Zenboard.
 4. Optional: Look & feel > **Show in app drawer** adds a launcher icon.
 
 To switch back, use the keyboard icon in the navigation bar, or turn on "Hold space to switch
