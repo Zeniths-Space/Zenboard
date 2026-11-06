@@ -307,7 +307,7 @@ private fun KeyButton(
     // A glide that started on this key: no press look, no preview bubble.
     val pressed = (clickPressed || heldPressed) && !glide.active
 
-    // Expressive press: the key's corners round a little and it dips slightly.
+    // Expressive press: the key's corners round a little and it dips.
     val morph by animateFloatAsState(if (pressed) 1f else 0f, Motion.press(), label = "press")
     val shape = keyShape(morph.coerceIn(0f, 1f))
     val (container, content) = keyColors(key, state, pressed)
@@ -462,7 +462,7 @@ private fun KeyButton(
                 if (state.layer == Layer.LETTERS && c != null && c in 'a'..'z') glide.keys[c] = bounds.rect
             }
             .graphicsLayer {
-                val s = 1f - 0.05f * morph
+                val s = 1f - 0.08f * morph
                 scaleX = s
                 scaleY = s
                 this.shape = shape
