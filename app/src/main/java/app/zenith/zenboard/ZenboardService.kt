@@ -79,6 +79,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     /** The word being typed, shown underlined in the editor as composing text. */
     private val composing = StringBuilder()
     private var suggestions by mutableStateOf(Suggestions.NONE)
+    // Suggestions for the latest keystroke, being worked out off the main thread.
+    private var suggesting: Job? = null
     private var stripShown by mutableStateOf(false)
     private var autocorrectOn = false
     /** This field takes glided words (any text field but a password). */
@@ -408,7 +410,11 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
      */
     private fun commitWord(ic: android.view.inputmethod.InputConnection, separator: String, record: Boolean = true) {
         val typed = composing.toString()
-        val fix = suggestions.autocorrect?.takeIf { autocorrectOn && typed.isNotEmpty() && it != typed }
+        // A space typed before the last letter's suggestions arrived: work them out now, so the fix
+        // is always for the word as typed.
+        val current = if (suggesting?.isActive == true) dictionary?.let { suggest(it, typed, autocorrectOn) } ?: suggestions else suggestions
+        suggesting?.cancel()
+        val fix = current.autocorrect?.takeIf { autocorrectOn && typed.isNotEmpty() && it != typed }
         ic.beginBatchEdit()
         if (fix != null) ic.commitText(fix, 1) else ic.finishComposingText()
         if (separator.isNotEmpty()) ic.commitText(separator, 1)
@@ -447,9 +453,24 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         suggestions = Suggestions.NONE
     }
 
+    /**
+     * Off the main thread: scoring a half-typed word against the whole dictionary can take longer
+     * than a frame, which made typing stutter. The newest keystroke wins; a result for a word that
+     * has since changed is dropped.
+     */
     private fun refreshSuggestions() {
+        suggesting?.cancel()
         val dict = dictionary
-        suggestions = if (dict == null || composing.isEmpty()) Suggestions.NONE else suggest(dict, composing.toString(), allowAutocorrect = autocorrectOn)
+        val typed = composing.toString()
+        if (dict == null || typed.isEmpty()) {
+            suggestions = Suggestions.NONE
+            return
+        }
+        val autocorrect = autocorrectOn
+        suggesting = lifecycleScope.launch {
+            val result = withContext(Dispatchers.Default) { suggest(dict, typed, allowAutocorrect = autocorrect) }
+            if (composing.contentEquals(typed)) suggestions = result
+        }
     }
 
     /** Tap on a suggestion: it replaces the word being typed, followed by a space. */
@@ -589,6 +610,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         composing.append(words[0])
         ic.setComposingText(composing, 1)
         ic.endBatchEdit()
+        suggesting?.cancel()
         suggestions = Suggestions(words[0], words.drop(1), autocorrect = null, typedIsUnknown = false)
         glided = true
         state = state.afterText()

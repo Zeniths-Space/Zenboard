@@ -24,7 +24,8 @@ class Dictionary(
     private val freqs = IntArray(entries.size) { entries[it].second }
 
     /** Words the user kept (reverted an autocorrect or tapped the typed word). */
-    private val learned = HashSet<String>()
+    // Written on the main thread, read by suggestions in the background.
+    private val learned: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
     fun learn(word: String) {
         learned += word.lowercase()
