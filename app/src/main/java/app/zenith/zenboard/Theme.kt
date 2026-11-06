@@ -83,19 +83,40 @@ private fun ColorScheme.withDarkSurfaces(): ColorScheme {
     )
 }
 
+/** Grey of the same brightness: wallpaper schemes tint every surface, which reads as a blue/purple cast. */
+private fun Color.neutral(): Color {
+    val y = 0.2126f * red + 0.7152f * green + 0.0722f * blue
+    return Color(y, y, y, alpha)
+}
+
+/** Neutral backgrounds, cards and keys; accents (primary, secondary, ...) keep the wallpaper colour. */
+private fun ColorScheme.withNeutralSurfaces(): ColorScheme = copy(
+    surface = surface.neutral(),
+    background = background.neutral(),
+    surfaceDim = surfaceDim.neutral(),
+    surfaceBright = surfaceBright.neutral(),
+    surfaceVariant = surfaceVariant.neutral(),
+    surfaceContainerLowest = surfaceContainerLowest.neutral(),
+    surfaceContainerLow = surfaceContainerLow.neutral(),
+    surfaceContainer = surfaceContainer.neutral(),
+    surfaceContainerHigh = surfaceContainerHigh.neutral(),
+    surfaceContainerHighest = surfaceContainerHighest.neutral(),
+)
+
 /**
  * Wallpaper colours on Android 12+; the stock M3 baseline before that.
  * Dark mode keeps the scheme's own surfaces unless [pureBlack] asks for the AMOLED ladder.
  */
 private fun schemeFor(context: Context, dark: Boolean, pureBlack: Boolean): ColorScheme {
     val dynamic = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    return when {
+    val scheme = when {
         dark -> {
             val scheme = if (dynamic) dynamicDarkColorScheme(context) else darkColorScheme()
             if (pureBlack) scheme.withDarkSurfaces() else scheme
         }
         else -> (if (dynamic) dynamicLightColorScheme(context) else lightColorScheme()).withLightSurfaces()
     }
+    return scheme.withNeutralSurfaces()
 }
 
 /** System font (the user's choice); only weights are emphasized. */
