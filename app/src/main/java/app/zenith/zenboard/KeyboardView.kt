@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.os.SystemClock
 import android.view.HapticFeedbackConstants
 import android.view.inputmethod.EditorInfo
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -178,26 +180,45 @@ fun KeyboardView(
                 },
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            if (emojiQuery != null) {
-                EmojiSearchBar(emojiQuery, emojiIndex, recentEmoji, emojiTones, onCloseEmojiSearch, onEmoji)
-            } else if (stripShown && (suggestions.primary != null || suggestions.others.isNotEmpty())) {
-                SuggestionStrip(suggestions, onPick)
-            } else if (!toolbarShown) {
-                // No toolbar: with suggestions on, the empty strip keeps its row. A row that came and
-                // went with each word would resize the keyboard while typing, and fast taps land on
-                // the wrong keys during the resize (tested: "hello there now" came out garbled).
-                if (stripShown) IdleStrip()
-            } else {
-                // Shown with suggestions on or off: editing, clipboard and settings are one tap away.
-                Toolbar(
-                    onToolbar,
-                    freshClip,
-                    onPasteFresh = { freshClip?.let(onPasteClip) },
-                    clipboardOpen = state.layer == Layer.CLIPBOARD,
-                    oneHandedOn = oneHanded != OneHanded.OFF,
-                    buttons = toolbarButtons,
-                )
+            val topRow = when {
+                emojiQuery != null -> TopRow.SEARCH
+                stripShown && (suggestions.primary != null || suggestions.others.isNotEmpty()) -> TopRow.SUGGESTIONS
+                !toolbarShown -> if (stripShown) TopRow.IDLE else TopRow.NONE
+                else -> TopRow.TOOLBAR
             }
+            // A quick fade between toolbar, suggestions and search; the rows are one height, so nothing moves.
+            Crossfade(topRow, animationSpec = Motion.effects(150), label = "top row") { row ->
+                when (row) {
+                    TopRow.SEARCH -> if (emojiQuery != null) EmojiSearchBar(emojiQuery, emojiIndex, recentEmoji, emojiTones, onCloseEmojiSearch, onEmoji)
+                    TopRow.SUGGESTIONS -> SuggestionStrip(suggestions, onPick)
+                    // No toolbar: with suggestions on, the empty strip keeps its row. A row that came and
+                    // went with each word would resize the keyboard while typing, and fast taps land on
+                    // the wrong keys during the resize (tested: "hello there now" came out garbled).
+                    TopRow.IDLE -> IdleStrip()
+                    TopRow.NONE -> {}
+                    // Shown with suggestions on or off: editing, clipboard and settings are one tap away.
+                    TopRow.TOOLBAR -> Toolbar(
+                        onToolbar,
+                        freshClip,
+                        onPasteFresh = { freshClip?.let(onPasteClip) },
+                        clipboardOpen = state.layer == Layer.CLIPBOARD,
+                        oneHandedOn = oneHanded != OneHanded.OFF,
+                        buttons = toolbarButtons,
+                    )
+                }
+            }
+            // Switching letters, symbols, emoji or clipboard fades the new keys in. Opacity only: a
+            // scale or slide would move the key bounds that glide typing and previews read.
+            val layerIn = remember { Animatable(1f) }
+            var shownLayer by remember { mutableStateOf(state.layer) }
+            LaunchedEffect(state.layer) {
+                if (state.layer != shownLayer) {
+                    shownLayer = state.layer
+                    layerIn.snapTo(0f)
+                    layerIn.animateTo(1f, Motion.effects(180))
+                }
+            }
+            Column(Modifier.graphicsLayer { alpha = 0.35f + 0.65f * layerIn.value }, verticalArrangement = Arrangement.spacedBy(2.dp)) {
             // Cap rows at 9% of screen height so landscape keeps most of the app visible.
             val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
             // Emoji and clipboard: a shorter bottom row (ABC, delete) gives the panel more room.
@@ -245,6 +266,7 @@ fun KeyboardView(
                     }
                     if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
                 }
+            }
             }
         }
         if (oneHanded == OneHanded.LEFT) OneHandedStrip(oneHanded, onOneHanded, Modifier.weight(1f - ONE_HANDED_WIDTH))
@@ -801,3 +823,6 @@ private fun keyDescription(key: Key, state: KeyboardState, enterAction: Int?): S
         },
     )
 }
+
+/** What the row above the keys shows. */
+private enum class TopRow { SEARCH, SUGGESTIONS, IDLE, NONE, TOOLBAR }
