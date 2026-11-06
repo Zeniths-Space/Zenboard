@@ -143,6 +143,12 @@ object ZenithColors {
             secondary.copy(alpha = if (LocalDark.current) 0.30f else 0.18f).compositeOver(surfaceContainerHigh)
         }
 
+    /** Pressed key: like [indicator], but a softer wash in dark mode so a tap doesn't flash bright. */
+    val pressedKey: Color
+        @Composable @ReadOnlyComposable get() = MaterialTheme.colorScheme.run {
+            secondary.copy(alpha = if (LocalDark.current) 0.16f else 0.18f).compositeOver(surfaceContainerHigh)
+        }
+
     /**
      * Function keys (shift, delete, ?123, globe): a tone deeper than letter keys. Light mode uses surfaceDim,
      * since the nested-card tone is nearly the page colour there and the keys would vanish.

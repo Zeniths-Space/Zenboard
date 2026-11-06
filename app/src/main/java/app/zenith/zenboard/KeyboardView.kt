@@ -523,7 +523,7 @@ private fun keyShape(morph: Float): Shape = RoundedCornerShape(lerp(KeyCorner, P
 @Composable
 private fun keyColors(key: Key, state: KeyboardState, pressed: Boolean): Pair<Color, Color> {
     val cs = MaterialTheme.colorScheme
-    val active = ZenithColors.indicator to ZenithColors.onIndicator
+    val active = ZenithColors.pressedKey to ZenithColors.onIndicator
     return when (key) {
         Key.Enter -> cs.secondary to cs.onSecondary
         // Shift state shows in the icon and its colour only; the key background stays a function key.
