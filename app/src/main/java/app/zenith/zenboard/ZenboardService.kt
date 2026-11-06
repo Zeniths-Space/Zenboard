@@ -59,9 +59,11 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     /** Clipboard history, newest first; pinned clips stay. Loaded once at start. */
     private var clips by mutableStateOf<List<Clip>>(emptyList())
     private val clipStore by lazy { ClipStore(this) }
-    /** Text copied in the last [FRESH_CLIP_MS], offered as a one-tap paste in the toolbar until pasted. */
+    /** Text copied in the last [FRESH_CLIP_MS], offered as a one-tap paste until pasted, typed past or ignored. */
     private var freshClip by mutableStateOf<String?>(null)
     private var freshClipTime = 0L
+    /** The fresh clip was on screen when this field opened; closing the keyboard then dismisses it. */
+    private var freshClipSeen = false
     /** One timer per copy that takes the chip down when it is no longer fresh. */
     private var freshClipExpiry: Job? = null
     private val clipboard by lazy { getSystemService(ClipboardManager::class.java) }
@@ -216,6 +218,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         inputShown = true
         emojiQuery = null
         if (System.currentTimeMillis() - freshClipTime > FRESH_CLIP_MS) freshClip = null
+        freshClipSeen = freshClip != null
         state = KeyboardState(layer = initialLayer(info.inputType)).withAutoCaps(capsAtCursor())
         enterAction = enterAction(info.imeOptions)
         composing.clear()
@@ -235,6 +238,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     override fun onFinishInputView(finishingInput: Boolean) {
         inputShown = false
         finishComposing()
+        // Offered once: ignored in a field means not wanted. A copy made in this field survives for the next one.
+        if (freshClipSeen) freshClip = null
+        freshClipSeen = false
         super.onFinishInputView(finishingInput)
     }
 
@@ -315,6 +321,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         lastCorrection = null
         when (key) {
             is Key.Text -> {
+                // Typing instead of pasting: the user does not want the clip here.
+                freshClip = null
                 val text = state.textFor(key)
                 when {
                     (stripShown || autocorrectOn) && isWordChar(text, composing) && startOrContinueWord(ic) -> {

@@ -25,8 +25,8 @@ const val MAX_CLIPS = 30
 /** Longest text kept; a larger copy is stored cut to this length. */
 const val MAX_CLIP_CHARS = 5_000
 
-/** A clip this recent is offered as a one-tap paste in the toolbar. */
-const val FRESH_CLIP_MS = 5 * 60_000L
+/** A clip this recent is offered as a one-tap paste in the toolbar (until typed past or ignored). */
+const val FRESH_CLIP_MS = 60_000L
 
 /**
  * [text] copied at [now]: newest first, an existing copy moves to the top (keeping its pin),
