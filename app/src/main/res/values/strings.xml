@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Zenboard</string>
+    <string name="app_name">Elara Keyboard</string>
     <string name="subtype_en_us">English (US)</string>
 
     <string name="space_label">English</string>
@@ -11,7 +11,7 @@
     <string name="clipboard_age_hours">%dh</string>
     <string name="clipboard_age_days">%dd</string>
     <string name="clipboard_empty">Text you copy shows up here</string>
-    <string name="clipboard_off">Clipboard history is off. Turn it on in Zenboard settings, Clipboard.</string>
+    <string name="clipboard_off">Clipboard history is off. Turn it on in Elara Keyboard settings, Clipboard.</string>
     <string name="clipboard_pin">Pin</string>
     <string name="clipboard_unpin">Unpin</string>
     <string name="clipboard_delete">Delete</string>
@@ -73,12 +73,12 @@
     <string name="settings_hero_ready">Ready to use · v%1$s</string>
     <string name="settings_toolbar">Toolbar</string>
     <string name="settings_toolbar_shown">Show toolbar</string>
-    <string name="settings_toolbar_shown_sub">The row of buttons above the keys. When off, clipboard history, the copied-text paste and one-handed mode have no button; open settings from Zenboard\'s App info page.</string>
+    <string name="settings_toolbar_shown_sub">The row of buttons above the keys. When off, clipboard history, the copied-text paste and one-handed mode have no button; open settings from Elara Keyboard\'s App info page.</string>
     <string name="settings_toolbar_buttons">Toolbar buttons</string>
     <string name="settings_toolbar_note">Settings always stays at the end of the toolbar.</string>
     <string name="settings_app_icon">App icon</string>
     <string name="settings_launcher_icon">Show in app drawer</string>
-    <string name="settings_launcher_icon_sub">Off by default. When off, open these settings with Open on Zenboard\'s App info page, or the gear in the keyboard\'s toolbar.</string>
+    <string name="settings_launcher_icon_sub">Off by default. When off, open these settings with Open on Elara Keyboard\'s App info page, or the gear in the keyboard\'s toolbar.</string>
     <string name="settings_typing_caps_spacing">Capitals and spacing</string>
     <string name="settings_key_popup">Key-press popup</string>
     <string name="settings_key_popup_sub">Show a larger letter above the key you press</string>
@@ -133,7 +133,7 @@
     <string name="about_icons_sub">Material Icons paths, Apache License 2.0.</string>
 
     <string name="setup_section">Steps</string>
-    <string name="setup_step_enable">Enable Zenboard</string>
+    <string name="setup_step_enable">Enable Elara Keyboard</string>
     <string name="setup_step_enable_sub">Turn it on in system keyboard settings</string>
     <string name="setup_step_select">Select it as your keyboard</string>
     <string name="setup_step_select_sub">Switch from your current keyboard</string>
@@ -158,7 +158,7 @@
     <string name="toolbar_cut">Cut</string>
     <string name="toolbar_copy">Copy</string>
     <string name="toolbar_paste">Paste</string>
-    <string name="toolbar_settings">Zenboard settings</string>
+    <string name="toolbar_settings">Elara Keyboard settings</string>
     <string name="key_emoji">Emoji</string>
     <string name="key_change_keyboard">Change keyboard</string>
     <string name="key_delete_word">Delete word</string>

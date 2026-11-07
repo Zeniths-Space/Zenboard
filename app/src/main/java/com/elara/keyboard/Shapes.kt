@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape

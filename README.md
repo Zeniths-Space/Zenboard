@@ -1,10 +1,10 @@
-# Zenboard
+# Elara Keyboard
 
 A privacy-conscious, fully offline Android keyboard. Part of the
 Zenith's Space app ecosystem, but it is standalone:
 it needs no other Zenith app.
 
-- **Application ID:** `app.zenith.zenboard`
+- **Application ID:** `com.elara.keyboard`
 - **Status:** early development (0.1.0). Not yet released.
 - **Permissions:** only `VIBRATE`, for key vibration. No internet access.
 
@@ -55,7 +55,7 @@ it needs no other Zenith app.
 - Autocorrect on space or end punctuation, with the word it will type highlighted in the strip.
   Backspace right after undoes it and keeps your word. Off in email, URL and password fields.
 - No app-drawer icon by default, so the keyboard stays out of the way. Open settings with
-  **Open** on Zenboard's App info page (or the installer), or the gear in the keyboard's
+  **Open** on Elara Keyboard's App info page (or the installer), or the gear in the keyboard's
   toolbar. Look & feel > "Show in app drawer" adds the icon.
 - Settings home: a hero card with the setup status (tap it for About), then four categories as
   rounded pills, each opening its own page. Typing (suggestions, autocorrect, capitals, spacing);
@@ -69,13 +69,13 @@ Planned work is in [ROADMAP.md](ROADMAP.md).
 
 ## Install and enable
 
-1. Install the APK (see Build below) and tap **Open** in the installer. Zenboard has no
+1. Install the APK (see Build below) and tap **Open** in the installer. Elara Keyboard has no
    app-drawer icon by default; later, open it from **Open** on its App info page
-   (Settings > Apps > Zenboard), or the gear in the keyboard's toolbar.
-2. In **Setup**, tap **Enable keyboard** and turn on Zenboard.
+   (Settings > Apps > Elara Keyboard), or the gear in the keyboard's toolbar.
+2. In **Setup**, tap **Enable keyboard** and turn on Elara Keyboard.
    Android shows a standard warning that any keyboard can see typed text.
    This app has no internet permission, so that text cannot leave the device.
-3. Tap **Choose keyboard** and pick Zenboard.
+3. Tap **Choose keyboard** and pick Elara Keyboard.
 4. Optional: Look & feel > **Show in app drawer** adds a launcher icon.
 
 To switch back, use the keyboard icon in the navigation bar, or turn on "Hold space to switch
@@ -93,8 +93,8 @@ Requirements: JDK 17 and the Android SDK with platform 37.
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Debug builds use the application ID `app.zenith.zenboard.dev` and show as "Zenboard Dev", so
-they install beside the release (`app.zenith.zenboard`) without a signature clash. Enable it
+Debug builds use the application ID `com.elara.keyboard.dev` and show as "Elara Keyboard Dev", so
+they install beside the release (`com.elara.keyboard`) without a signature clash. Enable it
 separately under Settings, then pick it from the keyboard switcher.
 
 ### Signed release build

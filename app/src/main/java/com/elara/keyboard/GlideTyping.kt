@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable

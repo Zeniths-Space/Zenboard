@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Themed-icon layer: the keyboard alone, keys cut out, no accent (the system tints it). -->
+<!-- Themed-icon layer: crescent and keycap, no accent (the system tints it). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Keyboard deck with its keys cut out (even-odd): two rows of keys, then a space-bar row. -->
+    <path
+        android:fillColor="#FFDCE3F5"
+        android:pathData="M47.39,34.16A22,22 0 1,0 71.45,60.89A18,18 0 0,1 47.39,34.16z" />
     <path
         android:fillColor="#FFDCE3F5"
         android:fillType="evenOdd"
-        android:pathData="M36,35h36a9,9 0 0 1 9,9v20a9,9 0 0 1 -9,9h-36a9,9 0 0 1 -9,-9v-20a9,9 0 0 1 9,-9zM33.5,39.5h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM42.96,39.5h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM52.42,39.5h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM61.88,39.5h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM71.34,39.5h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM38.23,48.96h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM47.69,48.96h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM57.15,48.96h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM66.61,48.96h3.16a2,2 0 0 1 2,2v3.16a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-3.16a2,2 0 0 1 2,-2zM33.5,58.42h3.16a2,2 0 0 1 2,2v6.08a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-6.08a2,2 0 0 1 2,-2zM42.96,58.42h22.08a2,2 0 0 1 2,2v6.08a2,2 0 0 1 -2,2h-22.08a2,2 0 0 1 -2,-2v-6.08a2,2 0 0 1 2,-2zM71.34,58.42h3.16a2,2 0 0 1 2,2v6.08a2,2 0 0 1 -2,2h-3.16a2,2 0 0 1 -2,-2v-6.08a2,2 0 0 1 2,-2z" />
+        android:pathData="M67,31h8a4,4 0 0 1 4,4v8a4,4 0 0 1 -4,4h-8a4,4 0 0 1 -4,-4v-8a4,4 0 0 1 4,-4zM67.5,40.5h7a1,1 0 0 1 1,1v1a1,1 0 0 1 -1,1h-7a1,1 0 0 1 -1,-1v-1a1,1 0 0 1 1,-1z" />
 </vector>

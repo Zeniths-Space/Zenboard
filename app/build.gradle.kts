@@ -14,11 +14,11 @@ val signingProps = providers.gradleProperty("zenboardSigning").orNull
     ?.let { f -> Properties().apply { f.inputStream().use { load(it) } } }
 
 android {
-    namespace = "app.zenith.zenboard"
+    namespace = "com.elara.keyboard"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "app.zenith.zenboard"
+        applicationId = "com.elara.keyboard"
         minSdk = 26
         targetSdk = 36
         versionCode = 3
@@ -37,7 +37,7 @@ android {
     }
 
     buildTypes {
-        // Dev builds install beside the release (app.zenith.zenboard) instead of clashing with its signature.
+        // Dev builds install beside the release (com.elara.keyboard) instead of clashing with its signature.
         debug {
             applicationIdSuffix = ".dev"
         }

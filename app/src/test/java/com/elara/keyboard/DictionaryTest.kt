@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

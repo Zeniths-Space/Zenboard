@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import android.content.Context
 import android.media.AudioAttributes

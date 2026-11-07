@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import android.annotation.SuppressLint
 import android.os.SystemClock

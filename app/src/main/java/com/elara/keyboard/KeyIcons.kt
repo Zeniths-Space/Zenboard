@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor

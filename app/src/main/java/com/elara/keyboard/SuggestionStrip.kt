@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

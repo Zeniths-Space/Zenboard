@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import android.text.InputType
 import android.view.inputmethod.EditorInfo

@@ -1,3 +1,3 @@
 <resources>
-    <style name="Theme.Zenboard" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Elara" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

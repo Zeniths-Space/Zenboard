@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material3.rememberTopAppBarState

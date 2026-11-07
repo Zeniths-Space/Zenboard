@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import android.content.ClipboardManager
 import android.content.Intent

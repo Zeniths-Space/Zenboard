@@ -1,6 +1,6 @@
 # Privacy
 
-Zenboard is built so that what you type stays on your device.
+Elara Keyboard is built so that what you type stays on your device.
 
 - **No internet permission.** The app cannot open network connections.
 - **No telemetry, analytics, ads, or accounts.**

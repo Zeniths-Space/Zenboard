@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import android.view.WindowManager
 import androidx.compose.animation.core.Animatable

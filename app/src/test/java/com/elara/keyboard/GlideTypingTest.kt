@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import androidx.compose.ui.geometry.Offset
 import org.junit.Assert.assertEquals

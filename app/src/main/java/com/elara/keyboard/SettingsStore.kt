@@ -1,4 +1,4 @@
-package app.zenith.zenboard
+package com.elara.keyboard
 
 import android.content.ComponentName
 import android.content.Context
@@ -224,7 +224,7 @@ object SettingsStore {
  * through PackageManager. Android keeps this state itself, so it is not stored with the settings.
  */
 object LauncherIcon {
-    private fun component(context: Context) = ComponentName(context, "app.zenith.zenboard.Launcher")
+    private fun component(context: Context) = ComponentName(context, "com.elara.keyboard.Launcher")
 
     fun isShown(context: Context): Boolean =
         context.packageManager.getComponentEnabledSetting(component(context)) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
