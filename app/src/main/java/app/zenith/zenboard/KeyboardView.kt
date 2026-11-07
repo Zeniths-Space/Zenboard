@@ -6,7 +6,6 @@ import android.view.HapticFeedbackConstants
 import android.view.inputmethod.EditorInfo
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -36,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -55,6 +53,7 @@ import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerInputChange
@@ -154,7 +153,9 @@ fun KeyboardView(
             }
             .background(MaterialTheme.colorScheme.surface)
             .padding(systemBars)
-            .height(IntrinsicSize.Min),
+            // Only the one-handed strip needs the keyboard's height. The intrinsic pass measures every
+            // key's text twice, which was most of the frame on a layer switch, so skip it otherwise.
+            .then(if (oneHanded != OneHanded.OFF) Modifier.height(IntrinsicSize.Min) else Modifier),
     ) {
         // One-handed: the keyboard keeps ONE_HANDED_WIDTH on its side; the strip beside it swaps sides or exits.
         if (oneHanded == OneHanded.RIGHT) OneHandedStrip(oneHanded, onOneHanded, Modifier.weight(1f - ONE_HANDED_WIDTH))
@@ -207,18 +208,7 @@ fun KeyboardView(
                     )
                 }
             }
-            // Switching letters, symbols, emoji or clipboard fades the new keys in. Opacity only: a
-            // scale or slide would move the key bounds that glide typing and previews read.
-            val layerIn = remember { Animatable(1f) }
-            var shownLayer by remember { mutableStateOf(state.layer) }
-            LaunchedEffect(state.layer) {
-                if (state.layer != shownLayer) {
-                    shownLayer = state.layer
-                    layerIn.snapTo(0f)
-                    layerIn.animateTo(1f, Motion.effects(180))
-                }
-            }
-            Column(Modifier.graphicsLayer { alpha = 0.35f + 0.65f * layerIn.value }, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            // Layers swap in one frame with no fade, as Gboard does: a fade only delays the keys.
             // Cap rows at 9% of screen height so landscape keeps most of the app visible.
             val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
             // Emoji and clipboard: a shorter bottom row (ABC, delete) gives the panel more room.
@@ -255,18 +245,16 @@ fun KeyboardView(
                                 }
                             }
                         }
-                        // Identity by key, not slot: switching layers must not hand one key's press and
-                        // colour animations to whichever key lands in the same position.
-                        key(key) {
-                            KeyButton(
-                                key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                                backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, Modifier.weight(keyWeight(key, row)),
-                            )
-                        }
+                        // Identity by slot: a layer switch updates the keys in place instead of building ~30
+                        // new ones, which cost a dropped frame per switch. Keys in one slot share colours, so
+                        // a press animation carried over (?123 into ABC) looks right.
+                        KeyButton(
+                            key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
+                            backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, Modifier.weight(keyWeight(key, row)),
+                        )
                     }
                     if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
                 }
-            }
             }
         }
         if (oneHanded == OneHanded.LEFT) OneHandedStrip(oneHanded, onOneHanded, Modifier.weight(1f - ONE_HANDED_WIDTH))
@@ -330,10 +318,10 @@ private fun KeyButton(
     val pressed = (clickPressed || heldPressed) && !glide.active
 
     // Expressive press: the key's corners round a little and it dips.
-    val morph by animateFloatAsState(if (pressed) 1f else 0f, Motion.press(), label = "press")
-    val shape = keyShape(morph.coerceIn(0f, 1f))
+    // Both are read only in the draw phase, so each animation frame redraws the key without recomposing it.
+    val morph = animateFloatAsState(if (pressed) 1f else 0f, Motion.press(), label = "press")
     val (container, content) = keyColors(key, state, pressed)
-    val fill by animateColorAsState(container, tween(90), label = "fill")
+    val fill = animateColorAsState(container, tween(90), label = "fill")
 
     // Character keys show a preview bubble while pressed. Bounds are kept out of state: layout
     // updates them without recomposing.
@@ -473,6 +461,14 @@ private fun KeyButton(
                             onClick { press(); true }
                             if (onChangeKeyboard != null) onLongClick(changeKeyboardLabel) { changeKeyboard(); true }
                         }
+                    // Layer keys switch on touch down, as Gboard does. The key landing in this slot (?123 becomes
+                    // ABC) keeps the gesture, so it shows pressed until the finger lifts.
+                    key == Key.ToSymbols || key == Key.ToMoreSymbols || key == Key.ToLetters -> Modifier
+                        .switchOnDown(onPressedChange = { heldPressed = it }, onDown = press)
+                        .semantics {
+                            role = Role.Button
+                            onClick { press(); true }
+                        }
                     else -> Modifier.clickable(interactionSource = interaction, indication = null, onClick = press)
                 },
             )
@@ -484,13 +480,14 @@ private fun KeyButton(
                 if (state.layer == Layer.LETTERS && c != null && c in 'a'..'z') glide.keys[c] = bounds.rect
             }
             .graphicsLayer {
-                val s = 1f - 0.08f * morph
+                val m = morph.value
+                val s = 1f - 0.08f * m
                 scaleX = s
                 scaleY = s
-                this.shape = shape
+                shape = keyShape(m.coerceIn(0f, 1f))
                 clip = true
             }
-            .background(fill),
+            .drawBehind { drawRect(fill.value) },
         contentAlignment = Alignment.Center,
     ) {
         val icon = keyIcon(key, state, enterAction)
@@ -599,7 +596,8 @@ private fun Modifier.longPressAlternates(
     val open by rememberUpdatedState(onOpen)
     val move by rememberUpdatedState(onMove)
     val end by rememberUpdatedState(onEnd)
-    return pointerInput(Unit) {
+    // Keyed on what the gesture reads directly: a layer switch can hand this slot a key with other alternates.
+    return pointerInput(hasAlternates, longPressMs) {
         awaitEachGesture {
             val down = awaitFirstDown()
             pressedChange(true)
@@ -783,6 +781,26 @@ private fun Modifier.spaceGestures(
                     }
                     tapped == null -> longPress()
                 }
+            } finally {
+                pressedChange(false)
+            }
+        }
+    }
+}
+
+/** Fires [onDown] the moment the finger lands; pressed until it lifts. */
+@Composable
+private fun Modifier.switchOnDown(onPressedChange: (Boolean) -> Unit, onDown: () -> Unit): Modifier {
+    // Updated each composition: after the switch this slot holds the other layer key, whose press differs.
+    val down by rememberUpdatedState(onDown)
+    val pressedChange by rememberUpdatedState(onPressedChange)
+    return pointerInput(Unit) {
+        awaitEachGesture {
+            awaitFirstDown()
+            pressedChange(true)
+            try {
+                down()
+                waitForUpOrCancellation()
             } finally {
                 pressedChange(false)
             }
