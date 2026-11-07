@@ -99,6 +99,16 @@ fun autoCapsAllowed(inputType: Int): Boolean {
     }
 }
 
+/**
+ * Capitals only where the field asks for them, as Gboard does. Username and login fields are plain
+ * text without a caps flag, so they stay lowercase.
+ */
+fun fieldWantsCaps(inputType: Int): Boolean = inputType and (
+    android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+        android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS or
+        android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS
+    ) != 0
+
 /** Number, phone and date fields open on the symbols layer, which has the digit row. */
 fun initialLayer(inputType: Int): Layer = when (inputType and android.text.InputType.TYPE_MASK_CLASS) {
     android.text.InputType.TYPE_CLASS_NUMBER,

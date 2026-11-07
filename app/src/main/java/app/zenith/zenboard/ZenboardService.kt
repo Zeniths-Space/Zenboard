@@ -289,14 +289,14 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     }
 
     /**
-     * Shift for the next letter. With auto-capitalization on, sentences start with a capital in any
-     * prose field, whether or not the app asks; a field that asks for every word or all capitals
-     * gets that through Android's own caps mode.
+     * Shift for the next letter. With auto-capitalization on, only fields that ask for capitals get
+     * them: sentence starts found by the keyboard itself, and every word or all capitals through
+     * Android's own caps mode.
      */
     private fun capsAtCursor(): Boolean {
         if (!settings.autoCaps) return false
         val inputType = currentInputEditorInfo?.inputType ?: return false
-        if (!autoCapsAllowed(inputType)) return false
+        if (!autoCapsAllowed(inputType) || !fieldWantsCaps(inputType)) return false
         val ic = currentInputConnection ?: return false
         if (inputType and WORD_CAPS_FLAGS != 0) return ic.getCursorCapsMode(inputType) != 0
         val before = ic.getTextBeforeCursor(CAPS_LOOKBACK, 0) ?: return false

@@ -260,6 +260,15 @@ class KeyboardModelTest {
     }
 
     @Test
+    fun `auto caps only where the field asks for capitals`() {
+        val text = InputType.TYPE_CLASS_TEXT
+        assertEquals(false, fieldWantsCaps(text))
+        assertEquals(true, fieldWantsCaps(text or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES))
+        assertEquals(true, fieldWantsCaps(text or InputType.TYPE_TEXT_FLAG_CAP_WORDS))
+        assertEquals(true, fieldWantsCaps(text or InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS))
+    }
+
+    @Test
     fun `digits and punctuation join a full stop, letters do not`() {
         listOf("1", ".", ",", "?", ")", "\"").forEach { assertEquals(it, true, joinsFullStop(it)) }
         listOf("a", "B", "(", "@", "").forEach { assertEquals(it, false, joinsFullStop(it)) }
