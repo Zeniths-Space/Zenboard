@@ -14,7 +14,7 @@ One Gradle module (`app`). It will be split only when complexity justifies it.
 | `SettingsComponents.kt` | Shared grouped tiles, switch and slider tiles, page header, scallop badge, try-it field. |
 | `SettingsStore.kt` | DataStore-backed settings, observed live by the keyboard. |
 | `Feedback.kt` | Key vibration and click sound, switched by settings. |
-| `Theme.kt` | Theme: wallpaper colours with the AMOLED / tinted-page surface treatment, semibold type, motion tokens. |
+| `Theme.kt` | Theme: Elara brand purple with the AMOLED / tinted-page surface treatment, semibold type, motion tokens. |
 | `KeyPreview.kt` | Key-press preview bubble, drawn in one overlay window. |
 | `ClipboardHistory.kt` / `ClipboardPanel.kt` | Clipboard history: add, prune and order (pure), the JSON store, and the panel. |
 | `GlideTyping.kt` | Glide typing: the whole-keyboard gesture, its trail, and the word decoder. |

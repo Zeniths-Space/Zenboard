@@ -1,7 +1,5 @@
 package com.elara.keyboard
 
-import android.content.Context
-import android.os.Build
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.tween
@@ -13,8 +11,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -24,11 +20,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 
 /*
- * Design language shared with the owner's Kontract app (M3 Expressive): wallpaper colours,
+ * Design language shared with the owner's Kontract app (M3 Expressive): Elara brand purple,
  * an optional AMOLED near-black surface ladder in dark mode, white cards on a tinted page in light mode,
  * slate ink, semibold type, springy motion.
  *
@@ -83,13 +78,13 @@ private fun ColorScheme.withDarkSurfaces(): ColorScheme {
     )
 }
 
-/** Grey of the same brightness: wallpaper schemes tint every surface, which reads as a blue/purple cast. */
+/** Grey of the same brightness: M3 schemes tint every surface, which reads as a purple cast. */
 private fun Color.neutral(): Color {
     val y = 0.2126f * red + 0.7152f * green + 0.0722f * blue
     return Color(y, y, y, alpha)
 }
 
-/** Neutral backgrounds, cards and keys; accents (primary, secondary, ...) keep the wallpaper colour. */
+/** Neutral backgrounds, cards and keys; accents (primary, secondary, ...) keep the brand purple. */
 private fun ColorScheme.withNeutralSurfaces(): ColorScheme = copy(
     surface = surface.neutral(),
     background = background.neutral(),
@@ -103,18 +98,40 @@ private fun ColorScheme.withNeutralSurfaces(): ColorScheme = copy(
     surfaceContainerHighest = surfaceContainerHighest.neutral(),
 )
 
+/** Elara brand purple (#7C4DFF) as M3 roles; secondary, tertiary and surfaces keep the purple-grey M3 baseline. */
+private val BrandLight = lightColorScheme(
+    primary = Color(0xFF7C4DFF),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFE9DDFF),
+    onPrimaryContainer = Color(0xFF23005C),
+    inversePrimary = Color(0xFFCFBCFF),
+    secondaryContainer = Color(0xFFE9DEF8),
+    onSecondaryContainer = Color(0xFF1F182B),
+    surfaceTint = Color(0xFF7C4DFF),
+)
+
+private val BrandDark = darkColorScheme(
+    primary = Color(0xFFCFBCFF),
+    onPrimary = Color(0xFF33009C),
+    primaryContainer = Color(0xFF5A22D8),
+    onPrimaryContainer = Color(0xFFE9DDFF),
+    inversePrimary = Color(0xFF7C4DFF),
+    secondaryContainer = Color(0xFF4B4358),
+    onSecondaryContainer = Color(0xFFE9DEF8),
+    surfaceTint = Color(0xFFCFBCFF),
+)
+
 /**
- * Wallpaper colours on Android 12+; the stock M3 baseline before that.
+ * The Elara brand purple, light or dark.
  * Dark mode keeps the scheme's own surfaces unless [pureBlack] asks for the AMOLED ladder.
  */
-private fun schemeFor(context: Context, dark: Boolean, pureBlack: Boolean): ColorScheme {
-    val dynamic = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+private fun schemeFor(dark: Boolean, pureBlack: Boolean): ColorScheme {
     val scheme = when {
         dark -> {
-            val scheme = if (dynamic) dynamicDarkColorScheme(context) else darkColorScheme()
+            val scheme = BrandDark
             if (pureBlack) scheme.withDarkSurfaces() else scheme
         }
-        else -> (if (dynamic) dynamicLightColorScheme(context) else lightColorScheme()).withLightSurfaces()
+        else -> BrandLight.withLightSurfaces()
     }
     return scheme.withNeutralSurfaces()
 }
@@ -189,8 +206,7 @@ fun ZenithTheme(
     pureBlack: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-    val scheme = remember(context, dark, pureBlack) { schemeFor(context, dark, pureBlack) }
+    val scheme = remember(dark, pureBlack) { schemeFor(dark, pureBlack) }
     CompositionLocalProvider(LocalDark provides dark) {
         MaterialTheme(colorScheme = scheme, typography = AppTypography) {
             // Screens draw on plain backgrounds, not Surfaces; without this, bare Icons default to black.

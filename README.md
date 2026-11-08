@@ -61,7 +61,7 @@ it needs no other Zenith app.
   rounded pills, each opening its own page. Typing (suggestions, autocorrect, capitals, spacing);
   Gestures (glide typing, backspace, space bar); Clipboard; Look & feel (theme, key height,
   key-press popup, sound, vibration). Setup sits below.
-- Material 3 Expressive look: wallpaper colours, AMOLED-black dark mode, spring key-press morph.
+- Material 3 Expressive look: Elara brand purple, AMOLED-black dark mode, spring key-press morph.
 - Key vibration (on by default) and key click sound (off by default), each also following the
   system setting.
 
