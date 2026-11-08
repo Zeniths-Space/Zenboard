@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -35,6 +36,12 @@ import androidx.compose.ui.unit.sp
 
 /** Height of the toolbar and the word strip, shared so swapping one for the other never moves the keys. */
 private val StripHeight = 36.dp
+
+/**
+ * Centres strip content between the keyboard's top edge (8dp padding) and the first key's top
+ * (2dp row gap + 2.5dp key inset): 16.5dp above vs 13dp below without this.
+ */
+private val StripLift = (-1.75).dp
 
 enum class ToolbarAction { SELECT_ALL, CUT, COPY, PASTE, CLIPBOARD, ONE_HANDED, SETTINGS }
 
@@ -57,6 +64,7 @@ fun Toolbar(
         Modifier
             .fillMaxWidth()
             .height(StripHeight)
+            .offset(y = StripLift)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -188,6 +196,7 @@ fun SuggestionStrip(suggestions: Suggestions, onPick: (String) -> Unit) {
         Modifier
             .fillMaxWidth()
             .height(StripHeight)
+            .offset(y = StripLift)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
