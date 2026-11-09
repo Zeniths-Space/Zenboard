@@ -386,6 +386,17 @@ private fun LookScreen(settings: ZenboardSettings, onBack: () -> Unit) {
                     )
                 },
                 {
+                    SliderTile(
+                        icon = KeyIcons.TextSize,
+                        title = stringResource(R.string.settings_key_text_size),
+                        value = settings.keyTextSize,
+                        range = KEY_TEXT_MIN..KEY_TEXT_MAX,
+                        steps = 9, // 5% steps from 80% to 130%
+                        valueLabel = { "${(it * 100).roundToInt()}%" },
+                        onValueChangeFinished = { scope.launch { SettingsStore.setKeyTextSize(context, it) } },
+                    )
+                },
+                {
                     SwitchTile(KeyIcons.Bubble, stringResource(R.string.settings_key_popup), stringResource(R.string.settings_key_popup_sub), settings.keyPopup) {
                         scope.launch { SettingsStore.setKeyPopup(context, it) }
                     }

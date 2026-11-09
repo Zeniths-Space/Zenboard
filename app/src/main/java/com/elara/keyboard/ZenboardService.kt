@@ -202,6 +202,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         onDeleteWord = ::deleteWord,
                         onMoveCursor = ::moveCursor,
                         keyHeight = settings.keyHeight,
+                        keyTextSize = settings.keyTextSize,
                         oneHanded = settings.oneHanded,
                         toolbarShown = settings.toolbarShown,
                         toolbarButtons = settings.toolbar,

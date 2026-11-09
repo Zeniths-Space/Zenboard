@@ -136,6 +136,8 @@ fun KeyboardView(
     onDeleteWord: () -> Unit,
     onMoveCursor: (Int) -> Unit,
     keyHeight: Float,
+    /** Multiplies the size of every key label and number hint. */
+    keyTextSize: Float,
     oneHanded: OneHanded,
     onOneHanded: (OneHanded) -> Unit,
     toolbarShown: Boolean,
@@ -259,7 +261,7 @@ fun KeyboardView(
                         // a press animation carried over (?123 into ABC) looks right.
                         KeyButton(
                             key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                            backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, keyText, Modifier.weight(keyWeight(key, row)),
+                            backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, keyText, keyTextSize, Modifier.weight(keyWeight(key, row)),
                         )
                     }
                     if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
@@ -318,6 +320,7 @@ private fun KeyButton(
     spaceLabel: Boolean,
     glide: GlideState,
     keyText: TextMeasurer,
+    textScale: Float,
     modifier: Modifier,
 ) {
     val feedback = LocalKeyFeedback.current
@@ -417,7 +420,8 @@ private fun KeyButton(
         key == Key.Space -> MaterialTheme.typography.labelMedium
         key is Key.Text -> baseStyle.merge(LetterStyle)
         else -> MaterialTheme.typography.labelLarge
-    }
+    }.let { it.copy(fontSize = it.fontSize * textScale) }
+    val hintStyle = baseStyle.merge(HintStyle).let { it.copy(fontSize = it.fontSize * textScale) }
     val labelColor = if (key == Key.Space) muted else content
     val hint = if (key is Key.Text && icon == null) hintFor(key, state.layer) else null
     val closePanel = { commit: Boolean ->
@@ -519,7 +523,7 @@ private fun KeyButton(
             }
             .drawWithCache {
                 val main = label?.let { keyText.measure(it, labelStyle, softWrap = false, maxLines = 1) }
-                val small = hint?.let { keyText.measure(it, baseStyle.merge(HintStyle), softWrap = false, maxLines = 1) }
+                val small = hint?.let { keyText.measure(it, hintStyle, softWrap = false, maxLines = 1) }
                 val hintEnd = 5.dp.toPx()
                 val hintTop = 3.dp.toPx()
                 onDrawBehind {

@@ -86,6 +86,7 @@
     <string name="settings_typing_keys">Keys</string>
     <string name="settings_typing_words">Words</string>
     <string name="settings_key_height">Key height</string>
+    <string name="settings_key_text_size">Letter size</string>
     <string name="settings_haptics">Vibrate on keypress</string>
     <string name="settings_haptics_sub">Also follows your phone\'s touch vibration setting</string>
     <string name="settings_sound">Sound on keypress</string>

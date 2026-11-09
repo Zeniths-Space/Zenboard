@@ -28,6 +28,8 @@ data class ZenboardSettings(
     val autoSpace: Boolean = true,
     /** Key height as a multiple of the standard height, [KEY_HEIGHT_MIN] to [KEY_HEIGHT_MAX]. */
     val keyHeight: Float = 1f,
+    /** Size of the letters and labels on the keys, as a multiple of the standard size, [KEY_TEXT_MIN] to [KEY_TEXT_MAX]. */
+    val keyTextSize: Float = 1f,
     val haptics: Boolean = true,
     val sound: Boolean = false,
     /** Holding space for [SPACE_SWITCH_HOLD_MS] opens the keyboard picker. */
@@ -79,6 +81,8 @@ const val ONE_HANDED_WIDTH = 0.82f
 
 const val KEY_HEIGHT_MIN = 0.8f
 const val KEY_HEIGHT_MAX = 1.3f
+const val KEY_TEXT_MIN = 0.8f
+const val KEY_TEXT_MAX = 1.3f
 
 private val Context.settingsStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -89,6 +93,7 @@ private val AUTOCORRECT = booleanPreferencesKey("autocorrect")
 private val AUTO_CAPS = booleanPreferencesKey("auto_caps")
 private val AUTO_SPACE = booleanPreferencesKey("auto_space")
 private val KEY_HEIGHT = floatPreferencesKey("key_height")
+private val KEY_TEXT_SIZE = floatPreferencesKey("key_text_size")
 private val HAPTICS = booleanPreferencesKey("haptics")
 private val SOUND = booleanPreferencesKey("sound")
 private val SPACE_SWITCH = booleanPreferencesKey("space_switch")
@@ -117,6 +122,7 @@ object SettingsStore {
                 autoCaps = it[AUTO_CAPS] ?: true,
                 autoSpace = it[AUTO_SPACE] ?: true,
                 keyHeight = (it[KEY_HEIGHT] ?: 1f).coerceIn(KEY_HEIGHT_MIN, KEY_HEIGHT_MAX),
+                keyTextSize = (it[KEY_TEXT_SIZE] ?: 1f).coerceIn(KEY_TEXT_MIN, KEY_TEXT_MAX),
                 haptics = it[HAPTICS] ?: true,
                 sound = it[SOUND] ?: false,
                 spaceSwitch = it[SPACE_SWITCH] ?: false,
@@ -159,6 +165,10 @@ object SettingsStore {
 
     suspend fun setKeyHeight(context: Context, value: Float) {
         context.applicationContext.settingsStore.edit { it[KEY_HEIGHT] = value }
+    }
+
+    suspend fun setKeyTextSize(context: Context, value: Float) {
+        context.applicationContext.settingsStore.edit { it[KEY_TEXT_SIZE] = value }
     }
 
     suspend fun setHaptics(context: Context, value: Boolean) {

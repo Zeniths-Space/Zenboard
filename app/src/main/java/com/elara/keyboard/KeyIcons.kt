@@ -167,6 +167,8 @@ object KeyIcons {
             "c0,1.66 -1.34,3 -3,3h0v2h5.97v7l1,1l1,-1v-7H19v-2h0C17.34,12 16,10.66 16,9z",
     )
     val Close = filled("M19,6.41L17.59,5 12,10.59 6.41,5 5,6.41 10.59,12 5,17.59 6.41,19 12,13.41 17.59,19 19,17.59 13.41,12z")
+    /** Material "format_size". */
+    val TextSize = filled("M9,4v3h5v12h3V7h5V4H9zM3,12h3v7h3v-7h3V9H3V12z")
     val Height = filled("M13,6.99h3L12,3 8,6.99h3v10.02H8L12,21l4,-3.99h-3z")
 
     private const val ShiftArrow = "M12,3.5L3.5,12.5H8.5V19.5H15.5V12.5H20.5Z"
