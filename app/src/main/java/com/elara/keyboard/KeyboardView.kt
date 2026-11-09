@@ -55,6 +55,12 @@ import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToUp
@@ -139,6 +145,9 @@ fun KeyboardView(
 ) = CompositionLocalProvider(LocalKeyFeedback provides feedback) {
     val preview = remember { PreviewState() }
     preview.bubbles = keyPopup
+    // Key labels are drawn, not laid out: a layer switch used to re-measure ~40 texts (most of a dropped
+    // frame). One shared cache holds every layer's labels, so switching back and forth reuses them.
+    val keyText = rememberTextMeasurer(cacheSize = KEY_TEXT_CACHE)
     val glide = remember { GlideState() }
     val glideCoords = remember { object { var c: LayoutCoordinates? = null } }
     val trailColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
@@ -250,7 +259,7 @@ fun KeyboardView(
                         // a press animation carried over (?123 into ABC) looks right.
                         KeyButton(
                             key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                            backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, Modifier.weight(keyWeight(key, row)),
+                            backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, keyText, Modifier.weight(keyWeight(key, row)),
                         )
                     }
                     if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
@@ -308,6 +317,7 @@ private fun KeyButton(
     onMoveCursor: ((Int) -> Unit)?,
     spaceLabel: Boolean,
     glide: GlideState,
+    keyText: TextMeasurer,
     modifier: Modifier,
 ) {
     val feedback = LocalKeyFeedback.current
@@ -390,6 +400,26 @@ private fun KeyButton(
             }
         }
     }
+    // What the key shows: an icon, or a label (and a number hint) drawn over its fill.
+    val icon = keyIcon(key, state, enterAction)
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val baseStyle = LocalTextStyle.current
+    val spaceText = stringResource(R.string.space_label)
+    val label: String? = when {
+        icon != null -> null
+        key == Key.Space -> spaceText.takeIf { spaceLabel }
+        key is Key.Text -> state.textFor(key)
+        key == Key.ToSymbols -> "?123"
+        key == Key.ToMoreSymbols -> "=\\<"
+        else -> "ABC"
+    }
+    val labelStyle = when {
+        key == Key.Space -> MaterialTheme.typography.labelMedium
+        key is Key.Text -> baseStyle.merge(LetterStyle)
+        else -> MaterialTheme.typography.labelLarge
+    }
+    val labelColor = if (key == Key.Space) muted else content
+    val hint = if (key is Key.Text && icon == null) hintFor(key, state.layer) else null
     val closePanel = { commit: Boolean ->
         val panel = preview.panel
         preview.panel = null
@@ -487,54 +517,30 @@ private fun KeyButton(
                 shape = keyShape(m.coerceIn(0f, 1f))
                 clip = true
             }
-            .drawBehind { drawRect(fill.value) },
+            .drawWithCache {
+                val main = label?.let { keyText.measure(it, labelStyle, softWrap = false, maxLines = 1) }
+                val small = hint?.let { keyText.measure(it, baseStyle.merge(HintStyle), softWrap = false, maxLines = 1) }
+                val hintEnd = 5.dp.toPx()
+                val hintTop = 3.dp.toPx()
+                onDrawBehind {
+                    drawRect(fill.value)
+                    main?.let {
+                        drawText(it, labelColor, Offset((size.width - it.size.width) / 2, (size.height - it.size.height) / 2))
+                    }
+                    small?.let { drawText(it, muted, Offset(size.width - it.size.width - hintEnd, hintTop)) }
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
-        val icon = keyIcon(key, state, enterAction)
-        when {
-            // The backspace glyph fills its whole 24-unit box, so it is drawn smaller to match the others.
-            icon != null -> Icon(
-                icon,
-                contentDescription = null,
-                tint = content,
-                modifier = Modifier.size(if (key == Key.Backspace) 19.dp else 24.dp),
-            )
-            key == Key.Space -> if (spaceLabel) {
-                Text(
-                    stringResource(R.string.space_label),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelMedium,
-                )
-            }
-            key is Key.Text -> {
-                Text(
-                    state.textFor(key),
-                    color = content,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-                hintFor(key, state.layer)?.let { hint ->
-                    Text(
-                        hint,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.align(Alignment.TopEnd).padding(top = 3.dp, end = 5.dp),
-                    )
-                }
-            }
-            else -> Text(
-                when (key) {
-                    Key.ToSymbols -> "?123"
-                    Key.ToMoreSymbols -> "=\\<"
-                    else -> "ABC"
-                },
-                color = content,
-                style = MaterialTheme.typography.labelLarge,
-            )
-        }
+        // The backspace glyph fills its whole 24-unit box, so it is drawn smaller to match the others.
+        if (icon != null) Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(if (key == Key.Backspace) 19.dp else 24.dp))
     }
 }
+
+/** Merged over the theme's text style, as Text(fontSize, fontWeight) did. */
+private val HintStyle = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+private val LetterStyle = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Medium)
+private const val KEY_TEXT_CACHE = 160
 
 private fun keyShape(morph: Float): Shape = RoundedCornerShape(lerp(KeyCorner, PressedCorner, morph))
 
