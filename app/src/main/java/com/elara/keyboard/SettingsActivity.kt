@@ -80,7 +80,7 @@ class SettingsActivity : ComponentActivity() {
         setContent {
             val settings by SettingsStore.settings(this).collectAsState(initial = null)
             val current = settings ?: return@setContent // first frame waits for the (fast) settings read
-            ZenithTheme(pureBlack = current.pureBlack) {
+            ZenithTheme(current.theme, current.accent) {
                 var page by rememberSaveable { mutableStateOf(Page.HOME) }
                 BackHandler(enabled = page != Page.HOME) { page = Page.HOME }
                 val slide = with(LocalDensity.current) { 30.dp.roundToPx() }
@@ -362,15 +362,9 @@ private fun LookScreen(settings: ZenboardSettings, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     CategoryPage(stringResource(R.string.settings_section_look), onBack) {
         SectionHeader(stringResource(R.string.settings_appearance_theme))
-        SegmentedGroup(
-            listOf<@Composable () -> Unit>(
-                {
-                    SwitchTile(KeyIcons.DarkMode, stringResource(R.string.settings_pure_black), stringResource(R.string.settings_pure_black_sub), settings.pureBlack) {
-                        scope.launch { SettingsStore.setPureBlack(context, it) }
-                    }
-                },
-            ),
-        )
+        ThemePicker(settings.theme, onPick = { scope.launch { SettingsStore.setTheme(context, it) } })
+        SectionHeader(stringResource(R.string.settings_accent))
+        AccentPicker(settings.accent, onPick = { scope.launch { SettingsStore.setAccent(context, it) } })
         SectionHeader(stringResource(R.string.settings_typing_keys))
         SegmentedGroup(
             listOf<@Composable () -> Unit>(

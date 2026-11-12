@@ -121,17 +121,63 @@ private val BrandDark = darkColorScheme(
     surfaceTint = Color(0xFFCFBCFF),
 )
 
-/**
- * The Elara brand purple, light or dark.
- * Dark mode keeps the scheme's own surfaces unless [pureBlack] asks for the AMOLED ladder.
- */
-private fun schemeFor(dark: Boolean, pureBlack: Boolean): ColorScheme {
+/** A keyboard theme: its accent, and whether it fixes light or dark (null follows the system). */
+enum class KeyboardTheme(val label: Int, val accent: Color, val dark: Boolean?, val amoled: Boolean = false) {
+    Brand(R.string.theme_brand, Color(0xFF7C4DFF), null),
+    Black(R.string.theme_black, Color(0xFF7C4DFF), true, amoled = true),
+    Light(R.string.theme_light, Color(0xFF7C4DFF), false),
+    Ocean(R.string.theme_ocean, Color(0xFF0E7FB8), null),
+    Forest(R.string.theme_forest, Color(0xFF2E7D4F), null),
+    Rose(R.string.theme_rose, Color(0xFFD6336C), null);
+
+    companion object {
+        fun parse(name: String?) = entries.firstOrNull { it.name == name } ?: Brand
+    }
+}
+
+/** Accent colours offered on top of a theme (ARGB); 0 keeps the theme's own. */
+val AccentChoices = listOf(0xFF7C4DFF, 0xFF0E7FB8, 0xFF2E7D4F, 0xFFD6336C, 0xFFE8590C, 0xFFC99700, 0xFF00897B, 0xFF5C6BC0).map { it.toInt() }
+
+/** Primary, container and secondary roles worked out from one accent, for light or dark. */
+private fun ColorScheme.withAccent(accent: Color, dark: Boolean): ColorScheme {
+    val white = Color.White
+    val black = Color.Black
+    return if (dark) {
+        val primary = lerp(accent, white, 0.55f)
+        copy(
+            primary = primary,
+            onPrimary = lerp(accent, black, 0.75f),
+            primaryContainer = lerp(accent, black, 0.25f),
+            onPrimaryContainer = lerp(accent, white, 0.88f),
+            inversePrimary = accent,
+            secondary = primary,
+            secondaryContainer = lerp(accent, black, 0.7f),
+            onSecondaryContainer = lerp(accent, white, 0.88f),
+            surfaceTint = primary,
+        )
+    } else {
+        copy(
+            primary = accent,
+            onPrimary = white,
+            primaryContainer = lerp(accent, white, 0.82f),
+            onPrimaryContainer = lerp(accent, black, 0.7f),
+            inversePrimary = lerp(accent, white, 0.5f),
+            secondary = accent,
+            secondaryContainer = lerp(accent, white, 0.85f),
+            onSecondaryContainer = lerp(accent, black, 0.75f),
+            surfaceTint = accent,
+        )
+    }
+}
+
+/** The scheme for [theme] and [accent] (0 for the theme's own), light or dark; dark may be the AMOLED ladder. */
+internal fun schemeFor(dark: Boolean, theme: KeyboardTheme, accent: Int): ColorScheme {
+    val seed = if (accent != 0) Color(accent) else theme.accent
+    val base = if (dark) BrandDark else BrandLight
+    val coloured = if (seed == KeyboardTheme.Brand.accent) base else base.withAccent(seed, dark)
     val scheme = when {
-        dark -> {
-            val scheme = BrandDark
-            if (pureBlack) scheme.withDarkSurfaces() else scheme
-        }
-        else -> BrandLight.withLightSurfaces()
+        dark -> if (theme.amoled) coloured.withDarkSurfaces() else coloured
+        else -> coloured.withLightSurfaces()
     }
     return scheme.withNeutralSurfaces()
 }
@@ -202,11 +248,12 @@ object Motion {
 
 @Composable
 fun ZenithTheme(
-    dark: Boolean = isSystemInDarkTheme(),
-    pureBlack: Boolean = false,
+    theme: KeyboardTheme = KeyboardTheme.Brand,
+    accent: Int = 0,
     content: @Composable () -> Unit,
 ) {
-    val scheme = remember(dark, pureBlack) { schemeFor(dark, pureBlack) }
+    val dark = theme.dark ?: isSystemInDarkTheme()
+    val scheme = remember(dark, theme, accent) { schemeFor(dark, theme, accent) }
     CompositionLocalProvider(LocalDark provides dark) {
         MaterialTheme(colorScheme = scheme, typography = AppTypography) {
             // Screens draw on plain backgrounds, not Surfaces; without this, bare Icons default to black.

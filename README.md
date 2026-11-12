@@ -139,6 +139,23 @@ the same license. `app/src/main/assets/emoji_tones.txt` (skin-tone variants) is 
 `dictionaries/en_US_wordlist.combined` (60,000 most frequent words, offensive-flagged entries
 removed), © The Android Open Source Project, [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
+### Publishing a release
+
+`.github/workflows/release.yml` runs when a tag `keyboard-v<versionName>` is pushed (for example
+`keyboard-v1.2.0`). It checks the app ID and that the tag matches `versionName`, runs the unit
+tests and lint, builds the signed release, and publishes it as a GitHub release with the APK and
+its SHA-256 checksum. It needs four repository secrets:
+
+| Secret | Value |
+|---|---|
+| `KEYBOARD_KEYSTORE_BASE64` | The keystore file, base64-encoded (`base64 -w0 release.jks`) |
+| `KEYBOARD_STORE_PASSWORD` | The keystore's password |
+| `KEYBOARD_KEY_ALIAS` | The key's alias |
+| `KEYBOARD_KEY_PASSWORD` | The key's password |
+
+Use the same key as your local release builds, or phones with the app installed can't update.
+
 ## License
 
-Not yet selected. It will be chosen before the first public release.
+Apache License 2.0; see [LICENSE](LICENSE). Third-party data and its licences are listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

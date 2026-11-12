@@ -294,17 +294,29 @@ fun suggest(dict: Dictionary, typed: String, allowAutocorrect: Boolean): Suggest
 class LearnedWords(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("learned_words", Context.MODE_PRIVATE)
 
-    fun load(): Set<String> = prefs.getStringSet(KEY, emptySet()).orEmpty()
+    /** Oldest first. Words saved before ordering existed come from the old unordered set. */
+    private fun ordered(): List<String> =
+        prefs.getString(ORDERED, null)?.split('\n')?.filter { it.isNotEmpty() }
+            ?: prefs.getStringSet(KEY, emptySet()).orEmpty().toList()
+
+    fun load(): Set<String> = ordered().toSet()
 
     fun add(word: String) {
-        val words = load().toMutableSet()
-        if (!words.add(word.lowercase())) return
-        // shortcut: keeps an arbitrary subset past the cap; switch to least-recently-used if it matters.
-        prefs.edit().putStringSet(KEY, words.take(MAX).toSet()).apply()
+        val list = ordered()
+        val next = withRecent(list, word.lowercase(), MAX)
+        if (next == list) return
+        prefs.edit().putString(ORDERED, next.joinToString("\n")).remove(KEY).apply()
     }
 
-    private companion object {
-        const val KEY = "words"
-        const val MAX = 1000
+    companion object {
+        private const val KEY = "words"
+        private const val ORDERED = "words_ordered"
+        private const val MAX = 1000
+
+        /** [words] with [word] last (most recent), and the oldest dropped past [max]. */
+        fun withRecent(words: List<String>, word: String, max: Int): List<String> {
+            if (words.lastOrNull() == word) return words
+            return (words - word + word).takeLast(max)
+        }
     }
 }

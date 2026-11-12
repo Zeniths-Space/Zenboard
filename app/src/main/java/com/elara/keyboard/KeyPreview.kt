@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import kotlinx.coroutines.delay
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import kotlin.math.roundToInt
@@ -70,14 +71,25 @@ private const val OverlayFlags = WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE o
     // Position stays relative to the IME window (FLAG_LAYOUT_IN_SCREEN would make it screen-relative).
     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 
+/** How long the overlay window stays after the last press, so a burst of typing reuses one window. */
+private const val OverlayLingerMs = 2_500L
+
 /**
- * A single transparent, untouchable window over the keyboard plus [Headroom] above it. It lives while
- * the keyboard is shown and is reused for every press, so typing never adds or removes windows.
+ * A single transparent, untouchable window over the keyboard plus [Headroom] above it. It is reused for
+ * every press of a burst of typing, so typing doesn't add or remove windows; after [OverlayLingerMs] without
+ * a press it goes. (Compose checks a popup's position on every frame while it exists, which kept the
+ * main thread awake at the display's refresh rate for as long as the keyboard was shown.)
  */
 @Composable
 fun KeyPreviewOverlay(preview: PreviewState, keyboardSize: IntSize) {
     val density = LocalDensity.current
     val headroomPx = with(density) { Headroom.roundToPx() }
+    val pressing = preview.current != null || preview.panel != null
+    var alive by remember { mutableStateOf(false) }
+    LaunchedEffect(pressing) {
+        if (pressing) alive = true else { delay(OverlayLingerMs); alive = false }
+    }
+    if (!alive && !pressing) return
     val position = remember(headroomPx) {
         object : PopupPositionProvider {
             override fun calculatePosition(
@@ -133,7 +145,7 @@ private fun Bubble(press: KeyPress, headroomPx: Int, maxWidthPx: Int) {
                 scaleY = pop.value
                 transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
                 alpha = ((pop.value - 0.6f) / 0.4f).coerceIn(0f, 1f)
-                shadowElevation = 10.dp.toPx()
+                shadowElevation = 4.dp.toPx()
                 shape = RoundedCornerShape(16.dp)
                 clip = true
             }
@@ -171,7 +183,7 @@ private fun AlternatesRow(panel: AltPanel, headroomPx: Int) {
                 scaleY = pop.value
                 transformOrigin = androidx.compose.ui.graphics.TransformOrigin(originX, 1f)
                 alpha = ((pop.value - 0.6f) / 0.4f).coerceIn(0f, 1f)
-                shadowElevation = 10.dp.toPx()
+                shadowElevation = 4.dp.toPx()
                 shape = RoundedCornerShape(18.dp)
                 clip = true
             }

@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +19,9 @@ import java.io.IOException
 
 /** User settings. Defaults: pure black, key sound and hold-space switching and backspace double tap off; space label, space slide, backspace slide, glide typing, clipboard history (1 hour), popup, suggestions, autocorrect, auto-capitalization, space after full stop, vibration on. */
 data class ZenboardSettings(
-    val pureBlack: Boolean = false,
+    val theme: KeyboardTheme = KeyboardTheme.Brand,
+    /** ARGB accent over the theme's own; 0 keeps the theme's. */
+    val accent: Int = 0,
     val keyPopup: Boolean = true,
     val suggestions: Boolean = true,
     val autocorrect: Boolean = true,
@@ -87,6 +90,8 @@ const val KEY_TEXT_MAX = 1.3f
 private val Context.settingsStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 private val PURE_BLACK = booleanPreferencesKey("pure_black")
+private val THEME = stringPreferencesKey("theme")
+private val ACCENT = intPreferencesKey("accent")
 private val KEY_POPUP = booleanPreferencesKey("key_popup")
 private val SUGGESTIONS = booleanPreferencesKey("suggestions")
 private val AUTOCORRECT = booleanPreferencesKey("autocorrect")
@@ -115,7 +120,9 @@ object SettingsStore {
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map {
             ZenboardSettings(
-                pureBlack = it[PURE_BLACK] ?: false,
+                // Pure black was a switch before themes: it lives on as the Black theme.
+                theme = it[THEME]?.let(KeyboardTheme::parse) ?: if (it[PURE_BLACK] == true) KeyboardTheme.Black else KeyboardTheme.Brand,
+                accent = it[ACCENT] ?: 0,
                 keyPopup = it[KEY_POPUP] ?: true,
                 suggestions = it[SUGGESTIONS] ?: true,
                 autocorrect = it[AUTOCORRECT] ?: true,
@@ -139,8 +146,12 @@ object SettingsStore {
             )
         }
 
-    suspend fun setPureBlack(context: Context, value: Boolean) {
-        context.applicationContext.settingsStore.edit { it[PURE_BLACK] = value }
+    suspend fun setTheme(context: Context, theme: KeyboardTheme) {
+        context.applicationContext.settingsStore.edit { it[THEME] = theme.name }
+    }
+
+    suspend fun setAccent(context: Context, accent: Int) {
+        context.applicationContext.settingsStore.edit { it[ACCENT] = accent }
     }
 
     suspend fun setKeyPopup(context: Context, value: Boolean) {

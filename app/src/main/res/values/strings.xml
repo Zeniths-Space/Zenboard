@@ -61,8 +61,6 @@
 
     <string name="settings_setup_not_enabled">Not enabled yet</string>
     <string name="settings_setup_not_selected">Enabled, but not your current keyboard</string>
-    <string name="settings_pure_black">Pure black</string>
-    <string name="settings_pure_black_sub">Black background in dark mode. Saves power on OLED screens.</string>
     <string name="settings_section_typing">Typing</string>
     <string name="settings_section_keys">Gestures</string>
     <string name="settings_section_look">Look &amp; feel</string>
@@ -83,6 +81,14 @@
     <string name="settings_key_popup">Key-press popup</string>
     <string name="settings_key_popup_sub">Show a larger letter above the key you press</string>
     <string name="settings_appearance_theme">Theme</string>
+    <string name="settings_accent">Accent colour</string>
+    <string name="accent_auto">Auto</string>
+    <string name="theme_brand">Elara</string>
+    <string name="theme_black">Black</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_ocean">Ocean</string>
+    <string name="theme_forest">Forest</string>
+    <string name="theme_rose">Rose</string>
     <string name="settings_typing_keys">Keys</string>
     <string name="settings_typing_words">Words</string>
     <string name="settings_key_height">Key height</string>

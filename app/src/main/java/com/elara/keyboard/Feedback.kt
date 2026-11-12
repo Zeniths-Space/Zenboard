@@ -30,11 +30,11 @@ class KeyFeedback(context: Context, private val audio: AudioManager, val haptics
         context.getSystemService(Vibrator::class.java)
     }?.takeIf { it.hasVibrator() }
 
-    /** [type] is a HapticFeedbackConstants value: a tap, a slide step or a long press. */
-    fun haptic(type: Int) {
-        val v = vibrator ?: return
-        if (!haptics) return
-        val effect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    // Built once: a tap is made many times a second and the effects never change.
+    private val effects = HashMap<Int, VibrationEffect>()
+
+    private fun effectFor(type: Int): VibrationEffect = effects.getOrPut(type) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             VibrationEffect.createPredefined(
                 when (type) {
                     HapticFeedbackConstants.LONG_PRESS -> VibrationEffect.EFFECT_HEAVY_CLICK
@@ -50,11 +50,24 @@ class KeyFeedback(context: Context, private val audio: AudioManager, val haptics
             }
             VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            v.vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH))
+    }
+
+    private val touchAttributes: VibrationAttributes? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH) else null
+
+    @Suppress("DEPRECATION")
+    private val legacyAttributes: AudioAttributes by lazy { AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION).build() }
+
+    /** [type] is a HapticFeedbackConstants value: a tap, a slide step or a long press. */
+    fun haptic(type: Int) {
+        val v = vibrator ?: return
+        if (!haptics) return
+        val effect = effectFor(type)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && touchAttributes != null) {
+            v.vibrate(effect, touchAttributes)
         } else {
             @Suppress("DEPRECATION")
-            v.vibrate(effect, AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION).build())
+            v.vibrate(effect, legacyAttributes)
         }
     }
 

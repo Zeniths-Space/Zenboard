@@ -147,7 +147,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         }
         return ComposeView(this).apply {
             setContent {
-                ZenithTheme(pureBlack = settings.pureBlack) {
+                ZenithTheme(settings.theme, settings.accent) {
                     val bars = with(LocalDensity.current) {
                         PaddingValues(
                             start = barInsets.left.toDp(),
