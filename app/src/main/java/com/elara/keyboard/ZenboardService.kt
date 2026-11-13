@@ -51,6 +51,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private var enterAction by mutableStateOf<Int?>(null)
     private var emoji by mutableStateOf<List<EmojiCategory>?>(null)
     private var recentEmoji by mutableStateOf<List<String>>(emptyList())
+    /** Newest-first order after emoji typed this session; shown only once the keyboard closes, so the grid doesn't jump under the finger. */
+    private var pendingRecent: List<String>? = null
     private var emojiTones by mutableStateOf(EmojiTones.NONE)
     private val emojiRecents by lazy { EmojiRecents(this) }
     /** Non-null while searching emoji: letter keys type into this query instead of the editor. */
@@ -177,10 +179,12 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         onEmojiSearch = ::openEmojiSearch,
                         onRemoveRecentEmoji = { e ->
                             recentEmoji = recentEmoji - e
-                            emojiRecents.save(recentEmoji)
+                            pendingRecent = pendingRecent?.minus(e)
+                            emojiRecents.save(pendingRecent ?: recentEmoji)
                         },
                         onClearRecentEmoji = {
                             recentEmoji = emptyList()
+                            pendingRecent = null
                             emojiRecents.save(recentEmoji)
                         },
                         onCloseEmojiSearch = ::openEmoji,
@@ -241,6 +245,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     override fun onFinishInputView(finishingInput: Boolean) {
         inputShown = false
         finishComposing()
+        pendingRecent?.let { recentEmoji = it; pendingRecent = null }
         // Offered once: ignored in a field means not wanted. A copy made in this field survives for the next one.
         if (freshClipSeen) freshClip = null
         freshClipSeen = false
@@ -647,8 +652,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         finishComposing()
         ic.commitText(value, 1)
         if (!isIncognito(currentInputEditorInfo)) {
-            recentEmoji = pushRecent(recentEmoji, value)
-            emojiRecents.save(recentEmoji)
+            val order = pushRecent(pendingRecent ?: recentEmoji, value)
+            pendingRecent = order
+            emojiRecents.save(order)
             val tones = emojiTones.withChoice(value)
             if (tones !== emojiTones) {
                 emojiTones = tones
