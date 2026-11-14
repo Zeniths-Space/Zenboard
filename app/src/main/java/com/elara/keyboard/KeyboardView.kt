@@ -36,6 +36,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -258,13 +259,15 @@ fun KeyboardView(
                                 }
                             }
                         }
-                        // Identity by slot: a layer switch updates the keys in place instead of building ~30
-                        // new ones, which cost a dropped frame per switch. Keys in one slot share colours, so
-                        // a press animation carried over (?123 into ABC) looks right.
-                        KeyButton(
-                            key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                            backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, keyText, keyTextSize, Modifier.weight(keyWeight(key, row)),
-                        )
+                        // A slot can become a different key when layers add or remove rows. Key by the
+                        // semantic key so its gesture and animation state cannot leak into that new key.
+                        // Layer-switch variants share identity to keep their down-press feedback continuous.
+                        key(keyCompositionIdentity(key)) {
+                            KeyButton(
+                                key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
+                                backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, keyText, keyTextSize, Modifier.weight(keyWeight(key, row)),
+                            )
+                        }
                     }
                     if (pad > 0f && !spread) Spacer(Modifier.weight(pad))
                 }
@@ -272,6 +275,13 @@ fun KeyboardView(
         }
         if (oneHanded == OneHanded.LEFT) OneHandedStrip(oneHanded, onOneHanded, Modifier.weight(1f - ONE_HANDED_WIDTH))
     }
+}
+
+private data object LayerSwitchCellIdentity
+
+private fun keyCompositionIdentity(key: Key): Any = when (key) {
+    Key.ToSymbols, Key.ToMoreSymbols, Key.ToLetters -> LayerSwitchCellIdentity
+    else -> key
 }
 
 /** Beside the one-handed keyboard: move it to the other side, or back to full width. */
