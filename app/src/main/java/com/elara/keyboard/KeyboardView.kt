@@ -136,7 +136,7 @@ fun KeyboardView(
     onDeleteWord: () -> Unit,
     onMoveCursor: (Int) -> Unit,
     keyHeight: Float,
-    /** Multiplies the size of every key label and number hint. */
+    /** Multiplies the size of every key label. */
     keyTextSize: Float,
     oneHanded: OneHanded,
     onOneHanded: (OneHanded) -> Unit,
@@ -403,7 +403,7 @@ private fun KeyButton(
             }
         }
     }
-    // What the key shows: an icon, or a label (and a number hint) drawn over its fill.
+    // What the key shows: an icon or a label drawn over its fill.
     val icon = keyIcon(key, state, enterAction)
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val baseStyle = LocalTextStyle.current
@@ -421,9 +421,7 @@ private fun KeyButton(
         key is Key.Text -> baseStyle.merge(LetterStyle)
         else -> MaterialTheme.typography.labelLarge
     }.let { it.copy(fontSize = it.fontSize * textScale) }
-    val hintStyle = baseStyle.merge(HintStyle).let { it.copy(fontSize = it.fontSize * textScale) }
     val labelColor = if (key == Key.Space) muted else content
-    val hint = if (key is Key.Text && icon == null) hintFor(key, state.layer) else null
     val closePanel = { commit: Boolean ->
         val panel = preview.panel
         preview.panel = null
@@ -523,15 +521,11 @@ private fun KeyButton(
             }
             .drawWithCache {
                 val main = label?.let { keyText.measure(it, labelStyle, softWrap = false, maxLines = 1) }
-                val small = hint?.let { keyText.measure(it, hintStyle, softWrap = false, maxLines = 1) }
-                val hintEnd = 5.dp.toPx()
-                val hintTop = 3.dp.toPx()
                 onDrawBehind {
                     drawRect(fill.value)
                     main?.let {
                         drawText(it, labelColor, Offset((size.width - it.size.width) / 2, (size.height - it.size.height) / 2))
                     }
-                    small?.let { drawText(it, muted, Offset(size.width - it.size.width - hintEnd, hintTop)) }
                 }
             },
         contentAlignment = Alignment.Center,
@@ -542,7 +536,6 @@ private fun KeyButton(
 }
 
 /** Merged over the theme's text style, as Text(fontSize, fontWeight) did. */
-private val HintStyle = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
 private val LetterStyle = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Medium)
 private const val KEY_TEXT_CACHE = 160
 

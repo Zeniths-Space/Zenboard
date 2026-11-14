@@ -80,12 +80,8 @@ class KeyboardModelTest {
     }
 
     @Test
-    fun `top row hints are digits, other keys have none`() {
-        assertEquals("1", hintFor(Key.Text("q"), Layer.LETTERS))
-        assertEquals("0", hintFor(Key.Text("p"), Layer.LETTERS))
-        assertNull(hintFor(Key.Text("a"), Layer.LETTERS))
-        assertNull(hintFor(Key.Text("1"), Layer.SYMBOLS))
-        assertNull(hintFor(Key.Space, Layer.LETTERS))
+    fun `letter layer has a dedicated number row`() {
+        assertEquals(("1234567890").map { Key.Text(it.toString()) }, keyboardRows(Layer.LETTERS).first())
     }
 
     @Test

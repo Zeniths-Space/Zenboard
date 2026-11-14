@@ -177,6 +177,7 @@ fun keyboardRows(layer: Layer): List<List<Key>> {
     )
     return when (layer) {
         Layer.LETTERS -> listOf(
+            row("1234567890"),
             row("qwertyuiop"),
             row("asdfghjkl"),
             listOf(Key.Shift) + row("zxcvbnm") + Key.Backspace,
@@ -211,16 +212,12 @@ fun keyWeight(key: Key, row: List<Key>): Float = when (key) {
  * shortcut: one English/Western-European set, upgrade to per-language sets with multilingual layouts.
  */
 private val ALTERNATES: Map<String, List<String>> = mapOf(
-    "q" to listOf("1"),
-    "w" to listOf("2"),
-    "e" to listOf("3", "è", "é", "ê", "ë", "ē", "ę"),
-    "r" to listOf("4"),
-    "t" to listOf("5", "þ"),
-    "y" to listOf("6", "ý", "ÿ"),
-    "u" to listOf("7", "ù", "ú", "û", "ü", "ū"),
-    "i" to listOf("8", "ì", "í", "î", "ï", "ī"),
-    "o" to listOf("9", "ò", "ó", "ô", "ö", "õ", "ø", "œ", "ō"),
-    "p" to listOf("0"),
+    "e" to listOf("è", "é", "ê", "ë", "ē", "ę"),
+    "t" to listOf("þ"),
+    "y" to listOf("ý", "ÿ"),
+    "u" to listOf("ù", "ú", "û", "ü", "ū"),
+    "i" to listOf("ì", "í", "î", "ï", "ī"),
+    "o" to listOf("ò", "ó", "ô", "ö", "õ", "ø", "œ", "ō"),
     "a" to listOf("à", "á", "â", "ä", "æ", "ã", "å", "ā"),
     "s" to listOf("ß", "ś", "š"),
     "d" to listOf("ð"),
@@ -254,10 +251,6 @@ private val ALTERNATES: Map<String, List<String>> = mapOf(
 )
 
 fun alternatesFor(key: Key): List<String> = if (key is Key.Text) ALTERNATES[key.value].orEmpty() else emptyList()
-
-/** Small corner hint: the digit on top-row letters. */
-fun hintFor(key: Key, layer: Layer): String? =
-    alternatesFor(key).firstOrNull()?.takeIf { layer == Layer.LETTERS && it.single().isDigit() }
 
 /** Where the alternates row sits: starts at the key, or ends at it (reversed) when it would overflow. */
 data class AltLayout(val left: Float, val reversed: Boolean)
