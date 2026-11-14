@@ -151,6 +151,7 @@ fun KeyboardView(
     // Key labels are drawn, not laid out: a layer switch used to re-measure ~40 texts (most of a dropped
     // frame). One shared cache holds every layer's labels, so switching back and forth reuses them.
     val keyText = rememberTextMeasurer(cacheSize = KEY_TEXT_CACHE)
+    val oneHandedScale = if (oneHanded == OneHanded.OFF) 1f else ONE_HANDED_WIDTH
     val glide = remember { GlideState() }
     val glideCoords = remember { object { var c: LayoutCoordinates? = null } }
     val trailColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
@@ -222,7 +223,7 @@ fun KeyboardView(
             }
             // Layers swap in one frame with no fade, as Gboard does: a fade only delays the keys.
             // Cap rows at 9% of screen height so landscape keeps most of the app visible.
-            val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
+            val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight * oneHandedScale
             // Emoji and clipboard keep the same five-row height as letters and both symbol pages;
             // their compact ABC/delete row leaves more room inside the panel.
             val panelLayer = state.layer == Layer.EMOJI || state.layer == Layer.CLIPBOARD
@@ -265,7 +266,7 @@ fun KeyboardView(
                         key(keyCompositionIdentity(key)) {
                             KeyButton(
                                 key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
-                                backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, keyText, keyTextSize, Modifier.weight(keyWeight(key, row)),
+                                backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, keyText, keyTextSize * oneHandedScale, oneHandedScale, Modifier.weight(keyWeight(key, row)),
                             )
                         }
                     }
@@ -333,6 +334,7 @@ private fun KeyButton(
     glide: GlideState,
     keyText: TextMeasurer,
     textScale: Float,
+    iconScale: Float,
     modifier: Modifier,
 ) {
     val feedback = LocalKeyFeedback.current
@@ -545,14 +547,14 @@ private fun KeyButton(
                         drawText(it, labelColor, Offset((size.width - it.size.width) / 2, (size.height - it.size.height) / 2))
                     }
                     hintText?.let {
-                        drawText(it, muted.copy(alpha = 0.78f), Offset(size.width - it.size.width - 5.dp.toPx(), 3.dp.toPx()))
+                        drawText(it, muted.copy(alpha = 0.78f), Offset(size.width - it.size.width - 5.dp.toPx() * iconScale, 3.dp.toPx() * iconScale))
                     }
                 }
             },
         contentAlignment = Alignment.Center,
     ) {
         // The backspace glyph fills its whole 24-unit box, so it is drawn smaller to match the others.
-        if (icon != null) Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(if (key == Key.Backspace) 19.dp else 24.dp))
+        if (icon != null) Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size((if (key == Key.Backspace) 19.dp else 24.dp) * iconScale))
     }
 }
 

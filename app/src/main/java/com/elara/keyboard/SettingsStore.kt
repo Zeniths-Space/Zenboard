@@ -77,7 +77,7 @@ fun parseToolbar(stored: String): List<ToolbarAction> {
     return TOOLBAR_CHOICES.filter { it.name in names }
 }
 
-/** One-handed mode: the keyboard narrows to [ONE_HANDED_WIDTH] of the screen on one side. */
+/** One-handed mode: the keyboard scales to [ONE_HANDED_WIDTH] on one side. */
 enum class OneHanded { OFF, LEFT, RIGHT }
 
 const val ONE_HANDED_WIDTH = 0.82f
