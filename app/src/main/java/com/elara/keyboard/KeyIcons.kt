@@ -190,6 +190,12 @@ object KeyIcons {
             "M12,17.5c2.33,0 4.31,-1.46 5.11,-3.5L6.89,14c0.8,2.04 2.78,3.5 5.11,3.5z",
     )
 
+    /** Monochrome heart for the second symbols page. */
+    val Heart = filled(
+        "M12,21.35L10.55,20.03C5.4,15.36 2,12.28 2,8.5 2,5.42 4.42,3 7.5,3c1.74,0 3.41,0.81 4.5,2.09" +
+            "C13.09,3.81 14.76,3 16.5,3 19.58,3 22,5.42 22,8.5c0,3.78-3.4,6.86-8.55,11.54L12,21.35z",
+    )
+
     /** Globe, shown small on the space bar as the "hold to change keyboard" hint. */
     val Globe = stroked(
         "M12,3A9,9 0,1 1,11.99,3ZM3,12H21M4.5,7.5H19.5M4.5,16.5H19.5" +

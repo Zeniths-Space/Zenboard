@@ -412,8 +412,9 @@ private fun KeyButton(
         icon != null -> null
         key == Key.Space -> spaceText.takeIf { spaceLabel }
         key is Key.Text -> state.textFor(key)
+        key == Key.ToSymbols && state.layer == Layer.MORE_SYMBOLS -> "2/2"
         key == Key.ToSymbols -> "?123"
-        key == Key.ToMoreSymbols -> "=\\<"
+        key == Key.ToMoreSymbols -> if (state.layer == Layer.SYMBOLS) "1/2" else "=\\<"
         else -> "ABC"
     }
     val labelStyle = when {
@@ -422,6 +423,10 @@ private fun KeyButton(
         else -> MaterialTheme.typography.labelLarge
     }.let { it.copy(fontSize = it.fontSize * textScale) }
     val labelColor = if (key == Key.Space) muted else content
+    val hint = if (state.layer == Layer.LETTERS && key is Key.Text && key.value.length == 1 && key.value[0] in 'a'..'z') {
+        alternatesFor(key).firstOrNull()
+    } else null
+    val hintStyle = TextStyle(fontSize = 10.sp * textScale, fontWeight = FontWeight.Normal)
     val closePanel = { commit: Boolean ->
         val panel = preview.panel
         preview.panel = null
@@ -521,10 +526,14 @@ private fun KeyButton(
             }
             .drawWithCache {
                 val main = label?.let { keyText.measure(it, labelStyle, softWrap = false, maxLines = 1) }
+                val hintText = hint?.let { keyText.measure(it, hintStyle, softWrap = false, maxLines = 1) }
                 onDrawBehind {
                     drawRect(fill.value)
                     main?.let {
                         drawText(it, labelColor, Offset((size.width - it.size.width) / 2, (size.height - it.size.height) / 2))
+                    }
+                    hintText?.let {
+                        drawText(it, muted.copy(alpha = 0.78f), Offset(size.width - it.size.width - 5.dp.toPx(), 3.dp.toPx()))
                     }
                 }
             },
@@ -575,6 +584,7 @@ private fun keyIcon(key: Key, state: KeyboardState, enterAction: Int?): ImageVec
         EditorInfo.IME_ACTION_DONE -> KeyIcons.Done
         else -> KeyIcons.Return
     }
+    is Key.Text -> if (key.value == "♥") KeyIcons.Heart else null
     else -> null
 }
 
