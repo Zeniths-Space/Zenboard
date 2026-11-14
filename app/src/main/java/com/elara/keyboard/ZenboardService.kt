@@ -174,6 +174,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                         recentEmoji = recentEmoji,
                         emojiTones = emojiTones,
                         onEmoji = ::onEmoji,
+                        onTextExpression = ::onTextExpression,
                         emojiQuery = emojiQuery,
                         emojiIndex = emojiIndex,
                         onEmojiSearch = ::openEmojiSearch,
@@ -661,6 +662,13 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                 emojiRecents.saveTones(tones.chosen)
             }
         }
+    }
+
+    /** Kaomoji and emoji pairs are inserted as text, without polluting emoji recents. */
+    private fun onTextExpression(value: String) {
+        val ic = currentInputConnection ?: return
+        finishComposing()
+        ic.commitText(value, 1)
     }
 
     /**

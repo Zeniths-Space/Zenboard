@@ -68,10 +68,13 @@ fun EmojiPanel(
     onSearch: () -> Unit,
     onRemoveRecent: (String) -> Unit,
     onEmoji: (String) -> Unit,
+    onTextExpression: (String) -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
     val feedback = LocalKeyFeedback.current
     val recentsLabel = stringResource(R.string.emoji_recents)
+    val kaomojiLabel = stringResource(R.string.emoji_kaomoji)
+    val pairsLabel = stringResource(R.string.emoji_pairs)
     Column(Modifier.fillMaxWidth().height(height)) {
         if (categories == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -94,7 +97,10 @@ fun EmojiPanel(
             ) {
                 Icon(KeyIcons.Search, stringResource(R.string.emoji_search), tint = cs.onSurfaceVariant, modifier = Modifier.size(20.dp))
             }
-            val tabs = listOf("🕘" to recentsLabel) + categories.map { it.icon to it.name }
+            val kaomojiTab = categories.size + 1
+            val pairsTab = categories.size + 2
+            val tabs = listOf("🕘" to recentsLabel) + categories.map { it.icon to it.name } +
+                listOf("ヅ" to kaomojiLabel, "💞" to pairsLabel)
             tabs.forEachIndexed { i, (icon, name) ->
                 val selected = i == tab
                 Box(
@@ -113,7 +119,16 @@ fun EmojiPanel(
                 ) { Text(icon, fontSize = 18.sp) }
             }
         }
-        val items = if (tab == 0) recents else categories[tab - 1].emoji
+        val kaomojiTab = categories.size + 1
+        val pairsTab = categories.size + 2
+        val kaomoji = tab == kaomojiTab
+        val pairs = tab == pairsTab
+        val items = when {
+            tab == 0 -> recents
+            kaomoji -> KAOMOJI
+            pairs -> EMOJI_PAIRS
+            else -> categories[tab - 1].emoji
+        }
         if (items.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(stringResource(R.string.emoji_recents_empty), color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
@@ -121,10 +136,18 @@ fun EmojiPanel(
         } else {
             // key(tab): each category starts at its top.
             key(tab) {
-                LazyVerticalGrid(GridCells.Adaptive(44.dp), Modifier.weight(1f).fillMaxWidth()) {
+                val text = kaomoji || pairs
+                // Own column width per tab, so the columns share the full width with no leftover gap.
+                val cells = GridCells.Adaptive(if (kaomoji) 112.dp else if (pairs) 76.dp else 44.dp)
+                LazyVerticalGrid(cells, Modifier.weight(1f).fillMaxWidth()) {
                     items(items) { emoji ->
                         // Recents: long-press also offers removing that one emoji.
-                        EmojiCell(emoji, tones, Modifier.aspectRatio(1f), onEmoji, onRemove = if (tab == 0) { { onRemoveRecent(emoji) } } else null)
+                        EmojiCell(
+                            emoji, tones, Modifier.height(44.dp),
+                            onEmoji = if (text) onTextExpression else onEmoji,
+                            fontSize = if (kaomoji) 15.sp else if (pairs) 22.sp else 26.sp,
+                            onRemove = if (tab == 0) { { onRemoveRecent(emoji) } } else null,
+                        )
                     }
                 }
             }
@@ -226,6 +249,7 @@ private fun EmojiCell(
     tones: EmojiTones,
     modifier: Modifier,
     onEmoji: (String) -> Unit,
+    fontSize: androidx.compose.ui.unit.TextUnit = 26.sp,
     onRemove: (() -> Unit)? = null,
 ) {
     val feedback = LocalKeyFeedback.current
@@ -258,7 +282,7 @@ private fun EmojiCell(
             },
         contentAlignment = Alignment.Center,
     ) {
-        Text(shown, fontSize = 26.sp)
+        Text(shown, fontSize = fontSize, maxLines = 1, softWrap = false, overflow = TextOverflow.Clip)
         if (picking) {
             Popup(
                 popupPositionProvider = AboveAnchor,
@@ -308,6 +332,69 @@ private fun EmojiCell(
         }
     }
 }
+
+private val KAOMOJI = listOf(
+    // happy
+    "(＾▽＾)", "(￣▽￣)", "ヽ(・∀・)ﾉ", "٩(◕‿◕｡)۶", "(✿◠‿◠)", "(•̀ᴗ•́)و", "(≧◡≦)", "(｡•̀ᴗ-)✧",
+    "(*^‿^*)", "o(≧▽≦)o", "\\(^o^)/", "(๑˃ᴗ˂)ﻭ", "(｡◕‿◕｡)", "ヾ(＾∇＾)", "(´▽`ʃ♡ƪ)", "(⌒‿⌒)",
+    "(ノ^_^)ノ", "＼(＾O＾)／", "(*≧ω≦)",
+    // love
+    "(｡♥‿♥｡)", "(♡˙︶˙♡)", "(づ｡◕‿‿◕｡)づ", "(づ￣ ³￣)づ", "(◍•ᴗ•◍)❤", "(ˆ⌣ˆ)♡", "( ˘ ³˘)♥", "(´,,•ω•,,)♡",
+    "(♥ω♥*)", "♡(◔◡◔)", "(*¯︶¯*)", "(⁄ ⁄>⁄ ▽ ⁄<⁄ ⁄)", "(〃▽〃)", "(/▽＼)", "(´∀`)♡", "(◕‿◕)♡",
+    // sad
+    "(╥﹏╥)", "(ಥ﹏ಥ)", "(T_T)", "(；へ：)", "(；︵；)", "(ノД`)", "(｡•́︿•̀｡)", "(つ﹏⊂)",
+    "(இ﹏இ`｡)", "(´;ω;`)", "( ´•̥̥̥ω•̥̥̥` )", "(ㄒoㄒ)", "(｡ŏ﹏ŏ)", "(◞‸◟)",
+    // angry
+    "ლ(ಠ益ಠლ)", "(ノಠ益ಠ)ノ彡┻━┻", "(╬ಠ益ಠ)", "(｀Д´)", "(ㆆ_ㆆ)", "(¬_¬)", "(눈_눈)", "(҂◡_◡)",
+    "٩(╬ʘ益ʘ╬)۶", "(⋟﹏⋞)", "(ง'̀-'́)ง", "(｀皿´＃)", "ヽ(`Д´)ﾉ", "ಠ_ಠ", "(`ε´)",
+    // shrug / meh / confused
+    "¯\\_(ツ)_/¯", "(¬‿¬)", "(・_・;)", "(°ー°〃)", "(・・ ) ?", "(´･_･`)", "(￢_￢)", "(－‸ლ)",
+    "(°△°|||)", "(⊙_⊙)", "(◎_◎;)", "(⊙ˍ⊙)", "(;¬_¬)", "(._.)", "(・–・)",
+    // surprised / shy / embarrassed
+    "Σ(°ロ°)", "(☉_☉)", "(ﾟДﾟ;)", "w(ﾟДﾟ)w", "(*ﾟーﾟ)", "(⁄⁄•⁄ω⁄•⁄⁄)", "(〃＞＿＜;〃)", "(>_<)",
+    "(⁄ ⁄•⁄ω⁄•⁄ ⁄)", "(///▽///)", "(๑•́ ₃ •̀๑)", "(*/ω＼)",
+    // cool / smug / wink
+    "(⌐■_■)", "( ͡° ͜ʖ ͡°)", "(｀∀´)Ψ", "(¬‿¬ )", "(◕‿↼)", "(^_~)", "(＾ｖ＾)",
+    "(☞ﾟヮﾟ)☞", "☜(ﾟヮﾟ☜)", "(ᵔᴥᵔ)", "(◔‿◔)", "(≖‿≖)", "(｡•̀ᴗ-)b", "d(^_^)b", "(^_−)☆",
+    // celebrate / magic
+    "(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧", "✧٩(ˊᗜˋ*)و✧", "(ﾉ´ヮ`)ﾉ*: ･ﾟ", "(∩^o^)⊃━☆ﾟ.*", "(҂‾ ▵‾)︻デ═一", "ヽ(´▽`)/", "(ﾉ≧∀≦)ﾉ",
+    // tired / sleep / sick
+    "(－_－) zzz", "(´-ω-`)", "( ˘ω˘ )ｽﾔｧ", "(✖╭╮✖)", "(×_×)", "(@_@)", "(*_*)", "(︶｡︶)",
+    "(x_x)", "(~_~;)", "(´Д`)", "(ー_ー)!!", "(_ _)zzZ",
+    // animals
+    "ʕ•ᴥ•ʔ", "ʕ´•ᴥ•`ʔ", "(=^･ω･^=)", "(=^･ｪ･^=)", "(ΦωΦ)", "(＾• ω •＾)", "ฅ^•ﻌ•^ฅ", "U・ᴥ・U",
+    "(◕ᴥ◕ʋ)", "⊂(・(ェ)・)⊃", "(´(ｪ)`)", "(ᵔᴥᵔ)", "૮ ˶ᵔ ᵕ ᵔ˶ ა", "(=①ω①=)", "(◕ᴥ◕)", "ʕ·͡ᴥ·ʔ",
+    "(°◡°♡)", "~(˘▾˘~)", "(⁎˃ᆺ˂)", "(•ᴗ•)ღ",
+    // actions / gestures
+    "┬─┬ノ( º _ ºノ)", "(╯°□°)╯︵ ┻━┻", "(ﾉ°益°)ﾉ", "(ﾉ°Д°)ﾉ︵ ┻━┻", "(._.) ~ ┬─┬",
+    "(∩｀-´)⊃━☆ﾟ.*･｡ﾟ", "o(´^`)o", "m(_ _)m", "orz", "_(:3 」∠)_", "(ᕗ ͜ʖ ᕗ)", "ᕕ( ᐛ )ᕗ", "ᕦ(ò_óˇ)ᕤ",
+    "(ノ・∀・)ノ", "(´∩｡• ᵕ •｡∩`)", "(ง •̀_•́)ง", "(｡•̀ᴗ-)", "(ᗒᗣᗕ)", "(ﾉ´з｀)ノ", "(づ•ᴗ•)づ",
+    "(⌒ω⌒)", "(⊃｡•́‿•̀｡)⊃", "(ノ_ヽ)", "(^人^)", "(人 •͈ᴗ•͈)", "(•‿•)", "(•ω•)", "(ᵕ—ᴗ—)",
+    "(☕️•ᴗ•☕️)", "(｡･∀･)ﾉﾞ", "(^_^)/", "(｡･ω･｡)ﾉ", "(ㅅ´ ˘ `)", "(´｡• ω •｡`)",
+).distinct()
+
+/** Common two-emoji text combinations, inserted as ordinary Unicode text. */
+private val EMOJI_PAIRS = listOf(
+    // shy / cute
+    "🥹👉👈", "🥺👉👈", "🥺🙏", "🥹🫶", "🥰🫶", "🫶💖", "💖✨", "😳👉👈", "🙈🙉", "🙈💕",
+    // laughing / dead
+    "😭💀", "💀🔥", "🤭💀", "😂💀", "😂😭", "🤣😭", "💀💀", "😭😭", "😭🙏", "😂🤣",
+    // hype / vibe
+    "🤌✨", "💅✨", "👑✨", "🔥🔥", "✨🌟", "💫✨", "🎉🥳", "🙌🔥", "💯🔥", "⚡🔥", "😎🤏", "😎👍",
+    // love / friends
+    "❤️‍🔥💞", "💔❤️‍🩹", "🤝❤️", "💕💕", "💞💗", "😍😘", "😘💋", "🥰💕", "🫂💖", "👫💕", "💑🌹", "💍💒",
+    // greetings / thanks / ok
+    "👋😊", "🙏❤️", "🫡🫶", "👍👍", "👌😌", "🤞🍀", "✌️😎", "🫰💸", "🙌🥳", "👏👏", "🤗💖", "🤝🤝",
+    // animals
+    "🐱💖", "🐶🦴", "🐻🍯", "🐼🎋", "🐰🥕", "🦊🍂", "🐸☕", "🦋🌸", "🐝🍯", "🐢🌊", "🦄🌈", "🐧❄️", "🐨🍃", "🐥🌱",
+    // nature / weather
+    "☀️🌈", "🌙✨", "🌙⭐", "🌧️☔", "⛈️⚡", "🌸🌷", "🌻☀️", "🍂🍁", "❄️⛄", "🌊🏄", "🏔️🌄", "🌅🏖️", "🪴🌱", "🌴🥥",
+    // food / drink
+    "🍓🍰", "🍕❤️", "🍔🍟", "🍣🥢", "🍜🥢", "🌮🌯", "🍩☕", "🍦🍨", "🧋🧋", "☕📖", "🍺🍻", "🥂🍾", "🍫🍬", "🍳🥓", "🥑🍞", "🍉🍹",
+    // everyday / activities
+    "🎧🎶", "📚☕", "🎂🎉", "🧠💡", "💃🕺", "🎮🕹️", "⚽🥅", "🏀🔥", "🏋️💪", "🧘🌿", "✈️🌍", "🏖️🍹", "🎬🍿", "📸✨", "🎨🖌️", "🎸🎤",
+    "💻☕", "📱💬", "🔑🔒", "🎁🎀", "💰🤑", "🏠❤️", "🚗💨", "🚀🌙", "😴💤", "🤒🤧", "🥵🔥", "🥶❄️", "🤔💭", "🧐🔍", "😤💢", "😡🤬",
+).distinct()
 
 /** No tone first, then light to dark: the order of [EmojiTones.options]. */
 private val TONE_LABELS = listOf(

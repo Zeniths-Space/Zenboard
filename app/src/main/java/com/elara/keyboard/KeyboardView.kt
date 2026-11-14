@@ -116,6 +116,7 @@ fun KeyboardView(
     recentEmoji: List<String>,
     emojiTones: EmojiTones,
     onEmoji: (String) -> Unit,
+    onTextExpression: (String) -> Unit,
     /** Non-null while searching emoji: the query typed so far. */
     emojiQuery: String?,
     emojiIndex: List<EmojiInfo>?,
@@ -236,7 +237,7 @@ fun KeyboardView(
                 EmojiPanel(
                     emoji, recentEmoji, emojiTones, emojiTab, { emojiTab = it },
                     height = panelHeight, onSearch = onEmojiSearch,
-                    onRemoveRecent = onRemoveRecentEmoji, onEmoji = onEmoji,
+                    onRemoveRecent = onRemoveRecentEmoji, onEmoji = onEmoji, onTextExpression = onTextExpression,
                 )
             }
             if (state.layer == Layer.CLIPBOARD) {
