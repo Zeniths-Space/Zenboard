@@ -222,22 +222,24 @@ fun KeyboardView(
             // Layers swap in one frame with no fade, as Gboard does: a fade only delays the keys.
             // Cap rows at 9% of screen height so landscape keeps most of the app visible.
             val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight
-            // Emoji and clipboard: a shorter bottom row (ABC, delete) gives the panel more room.
+            // Emoji and clipboard keep the same five-row height as letters and both symbol pages;
+            // their compact ABC/delete row leaves more room inside the panel.
             val panelLayer = state.layer == Layer.EMOJI || state.layer == Layer.CLIPBOARD
             val emojiRowHeight = rowHeight * 0.7f
+            val panelHeight = rowHeight * 5 - emojiRowHeight + 6.dp
             // Tab 0 (recents) each time the panel opens; it lives here so the bottom row can show "Clear all".
             var emojiTab by remember(state.layer == Layer.EMOJI) { mutableIntStateOf(0) }
             if (state.layer == Layer.EMOJI) {
-                // Takes the place of the three upper rows, so the keyboard height does not jump.
+                // Fills the panel area while the compact bottom row preserves the regular total height.
                 EmojiPanel(
                     emoji, recentEmoji, emojiTones, emojiTab, { emojiTab = it },
-                    height = rowHeight * 4 - emojiRowHeight + 4.dp, onSearch = onEmojiSearch,
+                    height = panelHeight, onSearch = onEmojiSearch,
                     onRemoveRecent = onRemoveRecentEmoji, onEmoji = onEmoji,
                 )
             }
             if (state.layer == Layer.CLIPBOARD) {
                 ClipboardPanel(
-                    clips, clipHistoryOn, height = rowHeight * 4 - emojiRowHeight + 4.dp,
+                    clips, clipHistoryOn, height = panelHeight,
                     onPaste = onPasteClip, onPin = onPinClip, onDelete = onDeleteClip,
                 )
             }
