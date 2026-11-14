@@ -21,8 +21,8 @@ android {
         applicationId = "com.elara.keyboard"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.2.3"
+        versionCode = 10
+        versionName = "1.10.0"
     }
 
     signingConfigs {
