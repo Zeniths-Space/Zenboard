@@ -157,7 +157,7 @@ private fun Bubble(press: KeyPress, headroomPx: Int, maxWidthPx: Int) {
     }
 }
 
-/** Long-press alternates: tinted row above the key, selected option in solid secondary. */
+/** Long-press alternates: neutral surface with a clearly selected option. */
 @Composable
 private fun AlternatesRow(panel: AltPanel, headroomPx: Int) {
     val density = LocalDensity.current
@@ -187,7 +187,7 @@ private fun AlternatesRow(panel: AltPanel, headroomPx: Int) {
                 shape = RoundedCornerShape(18.dp)
                 clip = true
             }
-            .background(ZenithColors.indicator),
+            .background(cs.surfaceContainerHighest),
     ) {
         val order = if (panel.layout.reversed) panel.options.indices.reversed() else panel.options.indices
         for (i in order) {
@@ -196,12 +196,12 @@ private fun AlternatesRow(panel: AltPanel, headroomPx: Int) {
                 Modifier
                     .size(cellW, cellH)
                     .padding(3.dp)
-                    .background(if (selected) cs.secondary else Color.Transparent, RoundedCornerShape(14.dp)),
+                    .background(if (selected) cs.secondaryContainer else Color.Transparent, RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     panel.options[i],
-                    color = if (selected) cs.onSecondary else ZenithColors.onIndicator,
+                    color = if (selected) cs.onSecondaryContainer else cs.onSurface,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
