@@ -131,7 +131,11 @@ fun KeyboardView(
     onPinClip: (Clip) -> Unit,
     onDeleteClip: (Clip) -> Unit,
     stripShown: Boolean,
-    suggestions: Suggestions,
+    /**
+     * Read where the strip is composed, not here: a suggestion for every keystroke would otherwise
+     * recompose this whole function and re-measure all 40 keys, which is most of a dropped frame.
+     */
+    suggestions: () -> Suggestions,
     onPick: (String) -> Unit,
     onToolbar: (ToolbarAction) -> Unit,
     onChangeKeyboard: () -> Unit,
@@ -195,33 +199,24 @@ fun KeyboardView(
                 },
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            val topRow = when {
-                emojiQuery != null -> TopRow.SEARCH
-                stripShown && (suggestions.primary != null || suggestions.others.isNotEmpty()) -> TopRow.SUGGESTIONS
-                !toolbarShown -> if (stripShown) TopRow.IDLE else TopRow.NONE
-                else -> TopRow.TOOLBAR
-            }
-            // A quick fade between toolbar, suggestions and search; the rows are one height, so nothing moves.
-            Crossfade(topRow, animationSpec = Motion.effects(150), label = "top row") { row ->
-                when (row) {
-                    TopRow.SEARCH -> if (emojiQuery != null) EmojiSearchBar(emojiQuery, emojiIndex, recentEmoji, emojiTones, onCloseEmojiSearch, onEmoji)
-                    TopRow.SUGGESTIONS -> SuggestionStrip(suggestions, onPick)
-                    // No toolbar: with suggestions on, the empty strip keeps its row. A row that came and
-                    // went with each word would resize the keyboard while typing, and fast taps land on
-                    // the wrong keys during the resize (tested: "hello there now" came out garbled).
-                    TopRow.IDLE -> IdleStrip()
-                    TopRow.NONE -> {}
-                    // Shown with suggestions on or off: editing, clipboard and settings are one tap away.
-                    TopRow.TOOLBAR -> Toolbar(
-                        onToolbar,
-                        freshClip,
-                        onPasteFresh = { freshClip?.let(onPasteClip) },
-                        clipboardOpen = state.layer == Layer.CLIPBOARD,
-                        oneHandedOn = oneHanded != OneHanded.OFF,
-                        buttons = toolbarButtons,
-                    )
-                }
-            }
+            TopBar(
+                suggestions = suggestions,
+                emojiQuery = emojiQuery,
+                emojiIndex = emojiIndex,
+                recentEmoji = recentEmoji,
+                emojiTones = emojiTones,
+                onCloseEmojiSearch = onCloseEmojiSearch,
+                onEmoji = onEmoji,
+                stripShown = stripShown,
+                toolbarShown = toolbarShown,
+                onPick = onPick,
+                onToolbar = onToolbar,
+                freshClip = freshClip,
+                onPasteClip = onPasteClip,
+                clipboardOpen = state.layer == Layer.CLIPBOARD,
+                oneHandedOn = oneHanded != OneHanded.OFF,
+                toolbarButtons = toolbarButtons,
+            )
             // Layers swap in one frame with no fade, as Gboard does: a fade only delays the keys.
             // Cap rows at 9% of screen height so landscape keeps most of the app visible.
             val rowHeight = minOf(56.dp, (LocalConfiguration.current.screenHeightDp * 0.09f).dp) * keyHeight * oneHandedScale
@@ -276,6 +271,59 @@ fun KeyboardView(
             }
         }
         if (oneHanded == OneHanded.LEFT) OneHandedStrip(oneHanded, onOneHanded, Modifier.weight(1f - ONE_HANDED_WIDTH))
+    }
+}
+
+/**
+ * The strip above the keys. Separate from [KeyboardView] so a new suggestion per keystroke
+ * recomposes this row alone instead of the whole keyboard.
+ */
+@Composable
+private fun TopBar(
+    suggestions: () -> Suggestions,
+    emojiQuery: String?,
+    emojiIndex: List<EmojiInfo>?,
+    recentEmoji: List<String>,
+    emojiTones: EmojiTones,
+    onCloseEmojiSearch: () -> Unit,
+    onEmoji: (String) -> Unit,
+    stripShown: Boolean,
+    toolbarShown: Boolean,
+    onPick: (String) -> Unit,
+    onToolbar: (ToolbarAction) -> Unit,
+    freshClip: String?,
+    onPasteClip: (String) -> Unit,
+    clipboardOpen: Boolean,
+    oneHandedOn: Boolean,
+    toolbarButtons: List<ToolbarAction>,
+) {
+    val current = suggestions()
+    val topRow = when {
+        emojiQuery != null -> TopRow.SEARCH
+        stripShown && (current.primary != null || current.others.isNotEmpty()) -> TopRow.SUGGESTIONS
+        !toolbarShown -> if (stripShown) TopRow.IDLE else TopRow.NONE
+        else -> TopRow.TOOLBAR
+    }
+    // A quick fade between toolbar, suggestions and search; the rows are one height, so nothing moves.
+    Crossfade(topRow, animationSpec = Motion.effects(150), label = "top row") { row ->
+        when (row) {
+            TopRow.SEARCH -> if (emojiQuery != null) EmojiSearchBar(emojiQuery, emojiIndex, recentEmoji, emojiTones, onCloseEmojiSearch, onEmoji)
+            TopRow.SUGGESTIONS -> SuggestionStrip(current, onPick)
+            // No toolbar: with suggestions on, the empty strip keeps its row. A row that came and
+            // went with each word would resize the keyboard while typing, and fast taps land on
+            // the wrong keys during the resize (tested: "hello there now" came out garbled).
+            TopRow.IDLE -> IdleStrip()
+            TopRow.NONE -> {}
+            // Shown with suggestions on or off: editing, clipboard and settings are one tap away.
+            TopRow.TOOLBAR -> Toolbar(
+                onToolbar,
+                freshClip,
+                onPasteFresh = { freshClip?.let(onPasteClip) },
+                clipboardOpen = clipboardOpen,
+                oneHandedOn = oneHandedOn,
+                buttons = toolbarButtons,
+            )
+        }
     }
 }
 

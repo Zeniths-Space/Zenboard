@@ -103,6 +103,17 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     /** Positions set by cursor moves whose onUpdateSelection has not arrived yet. */
     private val pendingMoves = ArrayDeque<Int>()
 
+    /**
+     * The text before the cursor as the keyboard itself last left it, kept current by the keys it
+     * types. Auto-capitalization reads this instead of asking the editor on every keystroke: that
+     * call is an IPC to the app, and in a busy app it blocked this thread for 2-14 ms per key, long
+     * enough to delay the next frame and make typing feel laggy. Null when it cannot be trusted.
+     */
+    private var capsTail: CharSequence? = null
+
+    /** Characters the keyboard added to [capsTail] since the editor last reported the selection. */
+    private var capsDelta = 0
+
     override fun onCreate() {
         super.onCreate()
         savedStateController.performRestore(null)
@@ -200,7 +211,8 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                             updateClips(clips.filter { it.text != c.text })
                         },
                         stripShown = stripShown,
-                        suggestions = suggestions,
+                        // A lambda, so a new suggestion per keystroke does not recompose the whole keyboard.
+                        suggestions = { suggestions },
                         onPick = ::onPick,
                         onToolbar = ::onToolbar,
                         onChangeKeyboard = ::showKeyboardPicker,
@@ -236,6 +248,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         lastCorrection = null
         cursor = info.initialSelEnd.coerceAtLeast(0)
         pendingMoves.clear()
+        forgetCaps()
         glideField = glideAllowed(info.inputType)
         glided = false
         autoSpaced = false
@@ -258,6 +271,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         candidatesStart: Int, candidatesEnd: Int,
     ) {
         super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+        val known = cursor
         val echo = pendingMoves.indexOf(newSelEnd)
         if (newSelStart == newSelEnd && echo >= 0) {
             // Our own move arriving late: only the newest one is current.
@@ -267,6 +281,10 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
             pendingMoves.clear()
             cursor = newSelEnd
         }
+        // The caret is not where the keys' own text put it (a tap elsewhere, a selection, an edit
+        // by the app): the locally kept text before it is no longer the text that is there.
+        if (capsTail != null && newSelEnd != known + capsDelta) capsTail = null
+        capsDelta = 0
         // The cursor left the word we were composing (tap elsewhere, selection, app edit): let it go.
         if (composing.isNotEmpty() && (newSelStart != newSelEnd || newSelEnd != candidatesEnd)) {
             composing.clear()
@@ -306,8 +324,32 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         if (!autoCapsAllowed(inputType) || !fieldWantsCaps(inputType)) return false
         val ic = currentInputConnection ?: return false
         if (inputType and WORD_CAPS_FLAGS != 0) return ic.getCursorCapsMode(inputType) != 0
-        val before = ic.getTextBeforeCursor(CAPS_LOOKBACK, 0) ?: return false
+        // Read the editor only when the local picture has been lost (a tap elsewhere, a paste, a
+        // word delete): one call, then it is kept current by the keys themselves.
+        val before = capsTail ?: ic.getTextBeforeCursor(CAPS_LOOKBACK, 0)?.also { capsTail = it } ?: return false
         return sentenceStart(before)
+    }
+
+    /** Text just typed, added to the local picture of the text before the cursor. */
+    private fun rememberTyped(text: CharSequence) {
+        if (capsTail == null || text.isEmpty()) return
+        capsDelta += text.length
+        val joined = capsTail.toString() + text
+        capsTail = if (joined.length > CAPS_LOOKBACK) joined.substring(joined.length - CAPS_LOOKBACK) else joined
+    }
+
+    /** Text just deleted from before the cursor. */
+    private fun forgetTyped(count: Int) {
+        if (capsTail == null || count <= 0) return
+        capsDelta -= count
+        val tail = capsTail!!
+        capsTail = if (count >= tail.length) "" else tail.subSequence(0, tail.length - count)
+    }
+
+    /** The editor's text changed in a way the keyboard cannot mirror (paste, selection, undo). */
+    private fun forgetCaps() {
+        capsTail = null
+        capsDelta = 0
     }
 
     private fun onKey(key: Key) {
@@ -322,7 +364,10 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                 key == Key.Space -> return
                 // "3.14", "e.g.", "...": a digit or punctuation joins the full stop, so the space goes.
                 key is Key.Text && joinsFullStop(state.textFor(key)) &&
-                    ic.getTextBeforeCursor(2, 0)?.toString() == ". " -> ic.deleteSurroundingText(1, 0)
+                    ic.getTextBeforeCursor(2, 0)?.toString() == ". " -> {
+                    ic.deleteSurroundingText(1, 0)
+                    forgetTyped(1)
+                }
             }
         }
         // Undo only applies to the very next key.
@@ -337,6 +382,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                     (stripShown || autocorrectOn) && isWordChar(text, composing) && startOrContinueWord(ic) -> {
                         composing.append(text)
                         ic.setComposingText(composing, 1)
+                        rememberTyped(text)
                         refreshSuggestions()
                     }
                     endsWord(text) -> {
@@ -350,6 +396,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                     else -> {
                         finishComposing()
                         ic.commitText(text, 1)
+                        rememberTyped(text)
                     }
                 }
                 state = state.afterText()
@@ -362,17 +409,22 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
                 ic.setComposingText("", 1)
                 composing.clear()
                 suggestions = Suggestions.NONE
+                forgetCaps()
             } else if (composing.isNotEmpty()) {
                 composing.deleteCharAt(composing.lastIndex)
                 ic.setComposingText(composing, 1)
+                forgetTyped(1)
                 refreshSuggestions()
             } else {
                 // A key event deletes the selection or a whole emoji, which deleteSurroundingText does not.
                 sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)
+                forgetCaps()
             }
             Key.Enter -> {
                 commitWord(ic, "", record = false)
                 enterAction?.let { ic.performEditorAction(it) } ?: sendDownUpKeyEvents(KeyEvent.KEYCODE_ENTER)
+                // An editor action can clear or leave the field; the caret is then not where we left it.
+                forgetCaps()
             }
             Key.Shift -> state = state.tapShift(SystemClock.uptimeMillis())
             Key.ToSymbols -> state = state.copy(layer = Layer.SYMBOLS)
@@ -426,6 +478,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         if (fix != null) ic.commitText(fix, 1) else ic.finishComposingText()
         if (separator.isNotEmpty()) ic.commitText(separator, 1)
         ic.endBatchEdit()
+        // The composing word was already counted as typed; the fix may have replaced it.
+        forgetTyped(typed.length)
+        rememberTyped((fix ?: typed) + separator)
         composing.clear()
         suggestions = Suggestions.NONE
         if (fix != null && record) lastCorrection = Correction(typed, fix, separator)
@@ -442,6 +497,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         composing.clear()
         composing.append(undo.original)
         keep(undo.original)
+        forgetCaps()
         refreshSuggestions()
         return true
     }
@@ -492,6 +548,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         ic.endBatchEdit()
         composing.clear()
         suggestions = Suggestions.NONE
+        forgetCaps()
     }
 
     /** Backspace slid left: delete the word being typed, else the word before the cursor. */
@@ -502,6 +559,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
             return
         }
         lastCorrection = null
+        forgetCaps()
         when {
             composing.isNotEmpty() -> {
                 ic.setComposingText("", 1)
@@ -526,6 +584,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         if (emojiQuery != null) return
         finishComposing()
         lastCorrection = null
+        forgetCaps()
         val n = kotlin.math.abs(steps)
         val forward = steps > 0
         // Twice the steps: room for emoji, which take two characters each.
@@ -540,6 +599,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
     private fun onToolbar(action: ToolbarAction) {
         val ic = currentInputConnection ?: return
         lastCorrection = null
+        forgetCaps()
         if (action == ToolbarAction.ONE_HANDED) {
             val next = if (settings.oneHanded == OneHanded.OFF) OneHanded.RIGHT else OneHanded.OFF
             lifecycleScope.launch { SettingsStore.setOneHanded(this@ZenboardService, next) }
@@ -619,6 +679,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         ic.endBatchEdit()
         suggesting?.cancel()
         suggestions = Suggestions(words[0], words.drop(1), autocorrect = null, typedIsUnknown = false)
+        forgetCaps()
         glided = true
         state = state.afterText()
     }
@@ -652,6 +713,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         val ic = currentInputConnection ?: return
         finishComposing()
         ic.commitText(value, 1)
+        forgetCaps()
         if (!isIncognito(currentInputEditorInfo)) {
             val order = pushRecent(pendingRecent ?: recentEmoji, value)
             pendingRecent = order
@@ -669,6 +731,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         val ic = currentInputConnection ?: return
         finishComposing()
         ic.commitText(value, 1)
+        forgetCaps()
     }
 
     /**
@@ -712,6 +775,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         finishComposing()
         lastCorrection = null
         ic.commitText(text, 1)
+        forgetCaps()
         freshClip = null
     }
 

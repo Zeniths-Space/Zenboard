@@ -251,7 +251,8 @@ fun matchCase(word: String, typed: String): String = when {
  * autocorrect would type); [others] go either side. [typedIsUnknown] marks [typed] as offered
  * verbatim so the user can keep it.
  */
-class Suggestions(val primary: String?, val others: List<String>, val autocorrect: String?, val typedIsUnknown: Boolean) {
+// A data class so an unchanged result reads equal: the strip does not recompose for it.
+data class Suggestions(val primary: String?, val others: List<String>, val autocorrect: String?, val typedIsUnknown: Boolean) {
     companion object {
         val NONE = Suggestions(null, emptyList(), null, false)
     }
