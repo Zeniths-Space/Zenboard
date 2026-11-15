@@ -239,6 +239,9 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         emojiQuery = null
         if (System.currentTimeMillis() - freshClipTime > FRESH_CLIP_MS) freshClip = null
         freshClipSeen = freshClip != null
+        // Before the caps check: the old field's text must not decide caps here (a chat app that
+        // restarts input on send would otherwise keep the sent message's text and stay lowercase).
+        forgetCaps()
         state = KeyboardState(layer = initialLayer(info.inputType)).withAutoCaps(capsAtCursor())
         enterAction = enterAction(info.imeOptions)
         composing.clear()
@@ -248,7 +251,6 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
         lastCorrection = null
         cursor = info.initialSelEnd.coerceAtLeast(0)
         pendingMoves.clear()
-        forgetCaps()
         glideField = glideAllowed(info.inputType)
         glided = false
         autoSpaced = false
@@ -291,8 +293,7 @@ class ZenboardService : InputMethodService(), LifecycleOwner, SavedStateRegistry
             currentInputConnection?.finishComposingText()
             suggestions = Suggestions.NONE
         }
-        state = state.withAutoCaps(capsAtCursor())
-    }
+        state = state.withAutoCaps(capsAtCursor())    }
 
     /** Dark nav-strip buttons (back, switch keyboard) on a light keyboard, light ones on a dark keyboard. */
     private fun updateNavBarAppearance() {
