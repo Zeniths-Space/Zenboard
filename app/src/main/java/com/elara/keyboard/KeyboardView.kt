@@ -241,7 +241,7 @@ fun KeyboardView(
                     onPaste = onPasteClip, onPin = onPinClip, onDelete = onDeleteClip,
                 )
             }
-            keyboardRows(state.layer).forEach { row ->
+            keyboardRows(state.layer).forEachIndexed { rowIndex, row ->
                 Row(Modifier.fillMaxWidth().height(if (panelLayer) emojiRowHeight else rowHeight)) {
                     val pad = (ROW_UNITS - row.sumOf { keyWeight(it, row).toDouble() }.toFloat()) / 2
                     // Short rows are centred, except the panel row: ABC at the left edge, delete at the right.
@@ -259,7 +259,7 @@ fun KeyboardView(
                         // A slot can become a different key when layers add or remove rows. Key by the
                         // semantic key so its gesture and animation state cannot leak into that new key.
                         // Layer-switch variants share identity to keep their down-press feedback continuous.
-                        key(keyCompositionIdentity(key)) {
+                        key(keyCompositionIdentity(key, rowIndex, i)) {
                             KeyButton(
                                 key, state, enterAction, preview, onKey, onChangeKeyboard.takeIf { spaceSwitch }, onDeleteWord,
                                 backspaceSlide, backspaceDoubleTap, onMoveCursor.takeIf { spaceSlide }, spaceLabel, glide, keyText, keyTextSize * oneHandedScale, oneHandedScale, Modifier.weight(keyWeight(key, row)),
@@ -329,8 +329,17 @@ private fun TopBar(
 
 private data object LayerSwitchCellIdentity
 
-private fun keyCompositionIdentity(key: Key): Any = when (key) {
+private data class TextCellIdentity(val row: Int, val column: Int)
+
+/**
+ * What keeps a key's composed state. Character keys are kept by position, so a layer switch rewrites
+ * them in place instead of building ~30 new ones (that cost a dropped frame per switch). Function keys
+ * keep their own identity, so a slot that becomes a different kind of key (shift into more-symbols)
+ * cannot carry its gesture or press state over.
+ */
+private fun keyCompositionIdentity(key: Key, row: Int, column: Int): Any = when (key) {
     Key.ToSymbols, Key.ToMoreSymbols, Key.ToLetters -> LayerSwitchCellIdentity
+    is Key.Text -> TextCellIdentity(row, column)
     else -> key
 }
 
